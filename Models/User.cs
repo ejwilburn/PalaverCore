@@ -6,8 +6,11 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Palaver.Models
 {
-    // Add profile data for application users by adding properties to the User class
     public class User : IdentityUser<int>
     {
+        public ICollection<Thread> Threads { get; set; }
+        public ICollection<Comment> Comments { get; set; }
+        public ICollection<Subscription> Subscriptions { get; set; }
+        public ICollection<UnreadComment> UnreadComments { get; set; }
     }
 }

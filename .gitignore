@@ -6,6 +6,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+.vscode/settings.json
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -13,6 +14,9 @@
 # Environment-specific files.
 *.Development.json
 *.Production.json
+
+# Skip README for now, it's a scaffold default.
+README.md
 
 # Build results
 [Dd]ebug/
