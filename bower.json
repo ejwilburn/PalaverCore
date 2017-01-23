@@ -1,0 +1,11 @@
+{
+    "name": "palaver",
+    "private": true,
+    "dependencies": {
+        "bootstrap": null,
+        "jquery": null,
+        "jquery-validation": null,
+        "jquery-validation-unobtrusive": null,
+        "tether": null
+    }
+}
