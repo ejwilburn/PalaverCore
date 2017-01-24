@@ -1,20 +1,56 @@
-html,
 body {
-    height: 100%;
+    overflow-x: hidden;
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+#wrapper {
+    padding: 10px;
+}
+
+#content-wrapper {
+    padding: 0px;
+}
+
+
+/*body {
+  padding-top: 70px;
+}*/
+
+footer {
+    padding: 30px 0;
 }
 
 
 /*
-.fill-height {
-    min-height: 100%;
-    height: auto !important;
-    height: 100%;
-}
+ * Off Canvas
+ * --------------------------------------------------
+ */
 
-body {
-    padding-top: 50px;
-    padding-bottom: 20px;
-}*/
+@media screen and (max-width: 767px) {
+    .row-offcanvas {
+        position: relative;
+        -webkit-transition: all .25s ease-out;
+        -o-transition: all .25s ease-out;
+        transition: all .25s ease-out;
+    }
+    .sidebar-offcanvas {
+        position: absolute;
+        width: 60%;
+        /* 6 columns */
+        display: none;
+    }
+    .row-offcanvas-right {
+        right: 0;
+    }
+    .row-offcanvas-right.active .sidebar-offcanvas {
+        display: block;
+        right: 0;
+        top: 0;
+        z-index: 1;
+    }
+    .row-offcanvas-right.active {}
+}
 
 
 /* Wrapping element */
@@ -22,36 +58,24 @@ body {
 
 /* Set some basic padding to keep content from hitting the edges */
 
-
-/*.body-content {
-    padding-left: 15px;
-    padding-right: 15px;
-}*/
+.body-content {
+    padding-left: 10px;
+    padding-right: 10px;
+}
 
 
 /* Set widths on the form inputs since otherwise they're 100% wide */
 
-
-/*input,
+input,
 select,
 textarea {
     max-width: 280px;
-}*/
-
-
-/* Carousel */
-
-
-/*.carousel-caption p {
-    font-size: 20px;
-    line-height: 1.4;
-}*/
+}
 
 
 /* buttons and links extension to use brackets: [ click me ] */
 
-
-/*.btn-bracketed::before {
+.btn-bracketed::before {
     display: inline-block;
     content: "[";
     padding-right: 0.5em;
@@ -61,27 +85,4 @@ textarea {
     display: inline-block;
     content: "]";
     padding-left: 0.5em;
-}*/
-
-
-/* Make .svg files in the carousel display properly in older browsers */
-
-
-/*.carousel-inner .carousel-item img[src$=".svg"] {
-    width: 600px;
-}*/
-
-.carousel-item img {
-    height: auto;
-    width: 100%;
 }
-
-
-/* Hide/rearrange for smaller screens */
-
-
-/*@media screen and (max-width: 767px) {
-    .carousel-caption {
-        display: none
-    }
-}*/

@@ -81,12 +81,12 @@ namespace Palaver
                 // Signin options
                 // TODO: Enable this.
                 //options.SignIn.RequireConfirmedEmail = true;
-                
+
                 // Lockout settings
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
                 options.Lockout.MaxFailedAccessAttempts = 10;
                 options.Lockout.AllowedForNewUsers = true;
-                
+
                 // Cookie settings
                 options.Cookies.ApplicationCookie.CookieName = Configuration["CookieName"];
                 options.Cookies.ApplicationCookie.ExpireTimeSpan = TimeSpan.FromDays(150);
@@ -95,7 +95,7 @@ namespace Palaver
                 options.Cookies.ApplicationCookie.AutomaticAuthenticate = true;
                 options.Cookies.ApplicationCookie.AuthenticationScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
                 options.Cookies.ApplicationCookie.ReturnUrlParameter = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.ReturnUrlParameter;
-                
+
                 // User settings
                 options.User.RequireUniqueEmail = true;
             });
