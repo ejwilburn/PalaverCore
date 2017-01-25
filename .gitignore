@@ -15,6 +15,9 @@
 *.Development.json
 *.Production.json
 
+# Skip paket downloaded packages.
+paket-files
+
 # Skip README for now, it's a scaffold default.
 README.md
 
@@ -193,7 +196,6 @@ ClientBin/
 *~
 *.dbmdl
 *.dbproj.schemaview
-*.pfx
 *.publishsettings
 node_modules/
 orleans.codegen.cs
