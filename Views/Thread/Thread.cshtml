@@ -1,0 +1,47 @@
+@model IEnumerable<Palaver.Models.Thread>
+
+@{
+    ViewData["Title"] = "Palaver";
+}
+
+        <div id="threads" class="row row-offcanvas row-offcanvas-left body-content">
+            <div class="col-sm-3 col-md-2 sidebar-offcanvas" id="sidebar" role="navigation">
+                <ul class="nav nav-sidebar">
+                    <li class="sidebar-header"><h3>Threads</h3></li>
+                    <form class="navbar-form" role="new">
+                    <div class="input-group">
+                        <input id="newthread" type="text" class="form-control" placeholder="New Thread" name="q">
+                        <div class="input-group-btn">
+                            <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-plus"></i></button>
+                        </div>
+                    </div>
+                    </form>
+                </ul>
+@if (Model != null && Model.Count > 0)
+{
+                <ul class="nav nav-sidebar">
+    @foreach (var thread in Model)
+    {
+                    <li><a href="#" data-id="@Model.Id"><span class="thread-date">[@thread.Updated.ToLocalTime().ToString("t")]</span> @thread.Title</a></li>
+    }
+                </ul>
+}
+            </div>
+
+            <div id="comments" class="col-sm-9 col-md-10 main container-fluid">
+                <!--toggle sidebar button-->
+                <p class="visible-xs">
+                    <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas"><i class="glyphicon glyphicon-chevron-left"></i></button>
+                </p>
+@{
+    var thread = ViewData["SelectedThread"];
+    if (thread != null )
+    {
+                <h3 class="page-header">
+                    <text>Thread Title</text>
+                </h3>
+        RenderPartial("~/Views/Comment/_CommentsPartial.cshtml", thread.Comments);
+    }
+}
+            </div><!--/comments-->
+        </div><!--/row-->

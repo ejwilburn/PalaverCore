@@ -8,12 +8,12 @@ namespace Palaver.Models
     public class User : IdentityUser<int>
     {
         public DateTime Created { get; set; }
-        public ICollection<Thread> Threads { get; set; }
-        public ICollection<Comment> Comments { get; set; }
-        public ICollection<FavoriteThread> FavoriteThreads { get; set; }
-        public ICollection<FavoriteComment> FavoriteComments { get; set; }
-        public ICollection<Subscription> Subscriptions { get; set; }
-        public ICollection<UnreadComment> UnreadComments { get; set; }
+        public List<Thread> Threads { get; set; }
+        public List<Comment> Comments { get; set; }
+        public List<FavoriteThread> FavoriteThreads { get; set; }
+        public List<FavoriteComment> FavoriteComments { get; set; }
+        public List<Subscription> Subscriptions { get; set; }
+        public List<UnreadComment> UnreadComments { get; set; }
 
         static User()
         {

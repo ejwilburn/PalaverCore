@@ -8,7 +8,7 @@ using Palaver.Data;
 namespace Palaver.Data.Migrations
 {
     [DbContext(typeof(PalaverDbContext))]
-    [Migration("20170124072125_Initial")]
+    [Migration("20170126032819_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -322,7 +322,7 @@ namespace Palaver.Data.Migrations
                         .HasForeignKey("ParentCommentId");
 
                     b.HasOne("Palaver.Models.Thread", "Thread")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("ThreadId")
                         .OnDelete(DeleteBehavior.Cascade);
 

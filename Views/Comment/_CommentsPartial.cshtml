@@ -1,0 +1,21 @@
+@model ICollection<Palaver.Models.Comment>
+
+@if (Model != null && Model.Count > 0)
+{
+    @foreach (var comment in Model)
+    {
+                <div class="panel panel-default comment@(comment.IsUnread() ? " newcomment" : "")" data-id="@comment.Id">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">@comment.User.UserName<small class="pull-right">[@comment.Created.ToLocalTime().ToString("t")]</small></h3>
+                    </div>
+                    <div class="panel-body">
+                        comment.Text
+                    </div>
+        RenderPartial("_CommentsPartial.cshtml", comment.Comments);
+                    <div class="panel-footer btn-group btn-group-xs">
+                        <button type="button" class="btn btn-default" onclick="newReply(@comment.CommentId, @comment.ParentCommentId)"><span class="glyphicon glyphicon-console" /></button>
+                        <button type="button" class="btn btn-default" onclick="newReply(@comment.CommentId)"><span class="glyphicon glyphicon-share-alt flip" /></button>
+                    </div>
+                </div>
+    }
+}

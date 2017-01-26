@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,15 +11,21 @@ namespace Palaver.Models
         [Required]
         public string Text { get; set; }
         [Required]
+        public int UserId { get; set; }
+        [Required]
         public User User { get; set; }
+        [Required]
+        public int ThreadId { get; set; }
         [Required]
         public Thread Thread { get; set; }
         public int? ParentCommentId { get; set; }
         public Comment Parent { get; set; }
+        [NotMapped]
+        public bool IsUnread { get; set; }
 
-        public ICollection<Comment> Comments { get; set; }
-        public ICollection<UnreadComment> UnreadComments { get; set; }
-        public ICollection<FavoriteComment> FavoriteComments { get; set; }
+        public List<Comment> Comments { get; set; }
+        public List<UnreadComment> UnreadComments { get; set; }
+        public List<FavoriteComment> FavoriteComments { get; set; }
 
         public Comment(string text, User creator, Thread thread)
         {
@@ -28,6 +33,7 @@ namespace Palaver.Models
             this.User = creator;
             this.Thread = thread;
             this.Parent = null;
+            this.IsUnread = false;
         }
 
         public Comment(string text, User creator, Thread thread, Comment parent)
@@ -36,16 +42,7 @@ namespace Palaver.Models
             this.User = creator;
             this.Thread = thread;
             this.Parent = parent;
-        }
-
-		[NotMapped]
-		public bool IsUnread {
-            get {
-                if (UnreadComments == null || UnreadComments.Count == 0)
-                    return false;
-                else
-                    return true;
-            }
+            this.IsUnread = false;
         }
     }
 }

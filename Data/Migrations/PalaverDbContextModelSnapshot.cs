@@ -321,7 +321,7 @@ namespace Palaver.Data.Migrations
                         .HasForeignKey("ParentCommentId");
 
                     b.HasOne("Palaver.Models.Thread", "Thread")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("ThreadId")
                         .OnDelete(DeleteBehavior.Cascade);
 
