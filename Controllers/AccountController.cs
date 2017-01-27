@@ -189,14 +189,26 @@ namespace Palaver.Controllers
             {
                 return View("Lockout");
             }
-            else
+
+            // If the email address already exists then associate the account to the existing one automatically.
+            string email = (string)info.Principal.FindFirstValue(ClaimTypes.Email);
+            User user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
             {
-                // If the user does not have an account, then ask the user to create an account.
-                ViewData["ReturnUrl"] = returnUrl;
-                ViewData["LoginProvider"] = info.LoginProvider;
-                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = email });
+                var addLoginResult = await _userManager.AddLoginAsync(user, info);
+                if (addLoginResult.Succeeded)
+                {
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    _logger.LogInformation(6, "User associated an existing account using {Name} provider.", info.LoginProvider);
+                    return RedirectToLocal(returnUrl);
+                }
+                AddErrors(addLoginResult);
             }
+
+            // If the user does not have an account, then ask the user to create an account.
+            ViewData["ReturnUrl"] = returnUrl;
+            ViewData["LoginProvider"] = info.LoginProvider;
+            return View("ExternalLoginConfirmation", new ExternalLoginConfirmationViewModel { Email = email });
         }
 
         //
@@ -214,7 +226,7 @@ namespace Palaver.Controllers
                 {
                     return View("ExternalLoginFailure");
                 }
-                var user = new User { UserName = model.Email, Email = model.Email };
+                var user = new User { UserName = model.Username, Email = model.Email };
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {

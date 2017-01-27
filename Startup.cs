@@ -2,6 +2,7 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -106,7 +107,7 @@ namespace Palaver
                 app.UseBrowserLink();
             }
             else
-            {
+                {
                 app.UseExceptionHandler("/Home/Error");
             }
 
@@ -114,13 +115,14 @@ namespace Palaver
 
             app.UseIdentity();
 
-            // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
+            app.UseGoogleAuthentication(new GoogleOptions()
+            {
+                ClientId = Configuration["Authentication:Google:ClientId"],
+                ClientSecret = Configuration["Authentication:Google:ClientSecret"]
+            });
 
             app.UseMvc(routes =>
             {
-                // routes.MapRoute(
-                //     name: "api",
-                //     template: "api/{controller}/{id?}");
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");

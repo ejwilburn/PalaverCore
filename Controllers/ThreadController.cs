@@ -22,7 +22,7 @@ namespace Palaver.Controllers
             _userManager = userManager;
         }
 
-        [HttpGet("Show")]
+        [HttpGet("show")]
         public async Task<IActionResult> Show()
         {
             int userId = int.Parse(_userManager.GetUserId(HttpContext.User));
@@ -30,7 +30,7 @@ namespace Palaver.Controllers
             return View("~/Views/Thread/Thread.cshtml", threads);
         }
 
-        [HttpGet("Show/{threadId}")]
+        [HttpGet("show/{threadId}")]
         public async Task<IActionResult> Show(int threadId)
         {
             List<Thread> threads = await _context.GetThreadsListAsync(GetUserId());
@@ -38,7 +38,7 @@ namespace Palaver.Controllers
             return View("~/Views/Thread/Thread.cshtml", threads);
         }
 
-        [HttpGet("Show/{threadId}/{commentId}")]
+        [HttpGet("show/{threadId}/{commentId}")]
         public async Task<IActionResult> Show(int threadId, int commentId)
         {
             List<Thread> threads = await _context.GetThreadsListAsync(GetUserId());

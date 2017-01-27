@@ -1,5 +1,5 @@
 {
-  "userSecretsId": "aspnet-Palaver-9164cf35-1720-49f3-bb6e-c6315de516bb",
+  "userSecretsId": "aspnet-Palaver-bleepity-bopitty-boo",
   "dependencies": {
     "Microsoft.NETCore.App": {
       "version": "1.1.0",
@@ -38,7 +38,9 @@
     "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.1.0",
     "MailKit": "*",
     "Microsoft.AspNetCore.Server.Kestrel.Https": "*",
-    "EntityFrameworkCore.Triggers": "*"
+    "EntityFrameworkCore.Triggers": "*",
+    "Microsoft.AspNetCore.Authentication.JwtBearer": "*",
+    "Microsoft.AspNetCore.Authentication.Google": "*"
   },
   "tools": {
     "BundlerMinifier.Core": "2.2.306",
