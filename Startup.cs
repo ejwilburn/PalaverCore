@@ -89,6 +89,8 @@ namespace Palaver
                 // User settings
                 options.User.RequireUniqueEmail = true;
             });
+
+            services.Configure<SmtpOptions>(Configuration.GetSection(SmtpOptions.CONFIG_SECTION_NAME));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

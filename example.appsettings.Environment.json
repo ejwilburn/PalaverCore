@@ -1,0 +1,24 @@
+/*
+ * Example environment sepecific appsettings file.  Customize the settings and rename to appsettings.<Environment>.json
+ * The environment name will be pulled from the ASPNETCORE_ENVIRONMENT environment variable set before launch or via .vscode/launch.json
+ * By default VSCode use Development for the dev environment name.
+ */
+{
+    "ConnectionStrings": {
+        "Palaver": "User ID=;Password=;Host=;Port=;Database=;Pooling=true;"
+    },
+    "CookieName": "ExampleCookieName",
+    "Smtp": {
+        "Server": "localhost",
+        "Port": 25,
+        "Username": "",
+        "Password": "",
+        "RequireTls": false,
+        "FromName": "Palaver",
+        "FromAddress": "noreply@noreply.com"
+    },
+    "Https": {
+        "CertFile": "",
+        "CertPassword": ""
+    }
+}
