@@ -39,6 +39,12 @@ namespace Palaver.Models
 
         private List<Comment> _immediateChildren;
 
+        public Thread()
+        {
+            this.IsSticky = false;
+            this.UnreadCount = 0;
+        }
+
         public Thread(string newTitle, User creator)
         {
             this.Title = newTitle;

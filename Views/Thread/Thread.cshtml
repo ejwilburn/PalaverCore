@@ -1,4 +1,4 @@
-@model IEnumerable<Palaver.Models.Thread>
+@model ICollection<Palaver.Models.Thread>
 
 @{
     ViewData["Title"] = "Palaver";
@@ -20,9 +20,9 @@
 @if (Model != null && Model.Count > 0)
 {
                 <ul class="nav nav-sidebar">
-    @foreach (var thread in Model)
+    @foreach (Thread curThread in Model)
     {
-                    <li><a href="#" data-id="@Model.Id"><span class="thread-date">[@thread.Updated.ToLocalTime().ToString("t")]</span> @thread.Title</a></li>
+                    <li><a href="#" data-id="@curThread.Id"><span class="thread-date">[@curThread.Updated.ToLocalTime().ToString("t")]</span> @curThread.Title</a></li>
     }
                 </ul>
 }
@@ -34,13 +34,13 @@
                     <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas"><i class="glyphicon glyphicon-chevron-left"></i></button>
                 </p>
 @{
-    var thread = ViewData["SelectedThread"];
+    Thread thread = (Thread)ViewData["SelectedThread"];
     if (thread != null )
     {
                 <h3 class="page-header">
                     <text>Thread Title</text>
                 </h3>
-        RenderPartial("~/Views/Comment/_CommentsPartial.cshtml", thread.Comments);
+        await Html.RenderPartialAsync("~/Views/Comment/_CommentsPartial.cshtml", thread.Comments);
     }
 }
             </div><!--/comments-->

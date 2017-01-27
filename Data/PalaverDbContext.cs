@@ -78,7 +78,7 @@ namespace Palaver.Data
             else
             {
                 thread = await Threads.Where(t => t.Id == threadId)
-                    .Include(t => t.User).SingleAsync();
+                    .Include(t => t.User).SingleOrDefaultAsync();
                 return thread;
             }
 

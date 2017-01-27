@@ -1,0 +1,6 @@
+POST https://localhost:5001/thread HTTP/1.1
+content-type: application/json
+
+{
+    "Title": "New thread test."
+}

@@ -27,6 +27,12 @@ namespace Palaver.Models
         public List<UnreadComment> UnreadComments { get; set; }
         public List<FavoriteComment> FavoriteComments { get; set; }
 
+        public Comment()
+        {
+            this.Parent = null;
+            this.IsUnread = false;
+        }
+
         public Comment(string text, User creator, Thread thread)
         {
             this.Text = text;
