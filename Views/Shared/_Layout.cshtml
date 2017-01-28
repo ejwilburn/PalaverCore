@@ -7,12 +7,23 @@
 
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-        <link rel="stylesheet" href="~/css/site.css" />
+        <link rel="stylesheet" href="~/lib/summernote/dist/summernote.css" />
     </environment>
     <environment names="Staging,Production">
         <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
+        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.2/summernote.css"
+            asp-fallback-href="~/lib/summernote/dist/summernote.css"
+            asp-fallback-test-class="note-editor" asp-fallback-test-property="position" asp-fallback-test-value="relative" />
+    </environment>
+
+    @RenderSection("styles", required: false)
+
+    <environment names="Development">
+        <link rel="stylesheet" href="~/css/site.css" />
+    </environment>
+    <environment names="Staging,Production">
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
     </environment>
 </head>
@@ -57,6 +68,9 @@
     </footer>
     *@
 
+    <script type="text/javascript">
+        var _baseUrl = "~";
+    </script>
     <environment names="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
@@ -75,5 +89,6 @@
     </environment>
 
     @RenderSection("scripts", required: false)
+
 </body>
 </html>

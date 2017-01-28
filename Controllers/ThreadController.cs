@@ -10,7 +10,7 @@ namespace Palaver.Controllers
 {
     [Authorize]
     [RequireHttps]
-    [Route("[controller]")]
+//    [Route("[controller]")]
     public class ThreadController : Controller
     {
         private readonly PalaverDbContext _context;
@@ -23,14 +23,15 @@ namespace Palaver.Controllers
         }
 
         [HttpGet("show")]
+        [Route("/thread")]
         public async Task<IActionResult> Show()
         {
-            int userId = int.Parse(_userManager.GetUserId(HttpContext.User));
-            List<Thread> threads = await _context.GetThreadsListAsync(userId);
+            List<Thread> threads = await _context.GetThreadsListAsync(GetUserId());
             return View("~/Views/Thread/Thread.cshtml", threads);
         }
 
-        [HttpGet("show/{threadId}")]
+        [HttpGet]
+        [Route("/thread/{threadId}")]
         public async Task<IActionResult> Show(int threadId)
         {
             List<Thread> threads = await _context.GetThreadsListAsync(GetUserId());
@@ -38,7 +39,8 @@ namespace Palaver.Controllers
             return View("~/Views/Thread/Thread.cshtml", threads);
         }
 
-        [HttpGet("show/{threadId}/{commentId}")]
+        [HttpGet]
+        [Route("/thread/{threadId}/{commentId}")]
         public async Task<IActionResult> Show(int threadId, int commentId)
         {
             List<Thread> threads = await _context.GetThreadsListAsync(GetUserId());
@@ -48,13 +50,15 @@ namespace Palaver.Controllers
         }
 
         [HttpGet]
+        [Route("/api/thread")]
         public async Task<IEnumerable<Thread>> Get()
         {
             List<Thread> threads = await _context.GetThreadsListAsync(GetUserId());
             return threads;
         }
 
-        [HttpGet("{threadId}")]
+        [HttpGet]
+        [Route("/api/thread/{threadId}")]
         public async Task<IActionResult> Get(int threadId)
         {
             Thread thread = await _context.GetThreadAsync(threadId, GetUserId());
@@ -66,6 +70,7 @@ namespace Palaver.Controllers
         }
 
         [HttpPost]
+        [Route("/api/thread")]
         public async Task<IActionResult> Create([FromBody] Thread thread)
         {
             if (thread == null)

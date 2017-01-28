@@ -48,6 +48,8 @@ namespace Palaver
                 options.Filters.Add(new RequireHttpsAttribute());
             });
 
+            services.AddSignalR(options => options.Hubs.EnableDetailedErrors = true);
+
             // Add framework services.
             services.AddDbContext<PalaverDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("Palaver")));
@@ -127,6 +129,8 @@ namespace Palaver
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            app.UseSignalR();
         }
     }
 }

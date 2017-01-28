@@ -1,6 +1,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Palaver.Data;
 
 namespace Palaver.Models
 {
@@ -33,22 +37,49 @@ namespace Palaver.Models
             this.IsUnread = false;
         }
 
-        public Comment(string text, User creator, Thread thread)
+        public static async Task<Comment> CreateAsync(string text, int threadId, int? parentId, int userId, PalaverDbContext db)
         {
-            this.Text = text;
-            this.User = creator;
-            this.Thread = thread;
-            this.Parent = null;
-            this.IsUnread = false;
-        }
+            Comment newComment = new Comment {
+                Text = text,
+                ThreadId = threadId,
+                UserId = userId,
+                ParentCommentId = parentId,
+                IsUnread = false
+            };
 
-        public Comment(string text, User creator, Thread thread, Comment parent)
-        {
-            this.Text = text;
-            this.User = creator;
-            this.Thread = thread;
-            this.Parent = parent;
-            this.IsUnread = false;
+            List<Subscription> subs = await db.Subscriptions.Where(s => s.ThreadId == threadId && s.UserId != userId).ToListAsync();
+
+            foreach (Subscription sub in subs)
+            {
+                db.UnreadComments.Add( new UnreadComment { Comment = newComment, User = sub.User });
+            }
+
+            /*
+            //User currentUser = _dbContext.Users.Find( (new User { UserId = CodeFirstSecurity.GetUserId(Context.User.Identity.Name) }).UserId );
+            User currentUser = _dbContext.Users.Find( CodeFirstSecurity.GetUserId(Context.User.Identity.Name) );
+            Comment comment = new Comment(replyText, currentUser);
+            Comment parentComment = _dbContext.Comments.Include("Comments").First(pc => pc.CommentId == parentId);
+
+            if (parentComment.SubjectId != null)
+                comment.SubjectId = parentComment.SubjectId;
+            else
+                comment.SubjectId = parentComment.CommentId;
+
+            comment.ParentCommentId = parentComment.CommentId;
+
+            Comment thread = _dbContext.Comments.Find(comment.SubjectId);
+            thread.LastUpdatedTime = DateTime.UtcNow;
+
+            parentComment.Comments.Add(comment);
+
+            foreach (User uu in _dbContext.Users)
+            {
+                if (uu.UserId != currentUser.UserId)
+                    _dbContext.UnreadItems.Add(new UnreadItem { User = uu, Comment = comment });
+            }
+            */
+
+            return newComment;
         }
     }
 }

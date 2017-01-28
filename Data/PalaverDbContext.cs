@@ -98,6 +98,20 @@ namespace Palaver.Data
 			return thread;
 		}
 
+        public async Task<Palaver.Models.Thread> CreateThreadAsync(string title, int userId)
+        {
+            Palaver.Models.Thread newThread = await Palaver.Models.Thread.CreateAsync(title, userId, this);
+            await SaveChangesAsync();
+            return newThread;
+        }
+
+        public async Task<Comment> CreateCommentAsync(string text, int threadId, int? parentId, int userId)
+        {
+            Comment newComment = await Comment.CreateAsync(text, threadId, parentId, userId, this);
+            await SaveChangesAsync();
+            return newComment;
+        }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);

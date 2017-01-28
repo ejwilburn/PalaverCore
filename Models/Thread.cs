@@ -1,6 +1,10 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Palaver.Data;
 
 namespace Palaver.Models
 {
@@ -11,6 +15,8 @@ namespace Palaver.Models
         [Required]
         public string Title { get; set; }
         public bool IsSticky { get; set; }
+        [Required]
+        public int UserId { get; set; }
         [Required]
         public User User { get; set; }
 
@@ -45,22 +51,25 @@ namespace Palaver.Models
             this.UnreadCount = 0;
         }
 
-        public Thread(string newTitle, User creator)
+        public static async Task<Thread> CreateAsync(string newTitle, int userId, PalaverDbContext db)
         {
-            this.Title = newTitle;
-            this.User = creator;
+            List<User> allUsers = await db.Users.ToListAsync();
 
-            this.IsSticky = false;
-            this.UnreadCount = 0;
-        }
+            Thread newThread = new Thread {
+                Title = newTitle,
+                User = db.Users.Find(userId),
+                IsSticky = false,
+                UnreadCount = 0
+            };
 
-        public Thread(string newTitle, User creator, bool isSticky)
-        {
-            this.Title = newTitle;
-            this.User = creator;
-            this.IsSticky = isSticky;
+            db.Threads.Add(newThread);
 
-            this.UnreadCount = 0;
+            foreach (User user in db.Users.ToList())
+            {
+                db.Subscriptions.Add(new Subscription { Thread = newThread, User = user} );
+            }
+
+            return newThread;
         }
     }
 }
