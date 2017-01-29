@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 using Palaver.Services;
@@ -47,6 +48,8 @@ namespace Palaver
                 options.SslPort = 5001;
                 options.Filters.Add(new RequireHttpsAttribute());
             });
+
+            services.AddAutoMapper();
 
             services.AddSignalR(options => options.Hubs.EnableDetailedErrors = true);
 

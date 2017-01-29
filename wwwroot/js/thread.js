@@ -24,40 +24,14 @@ var _srConnection;
 var _allowBack = false;
 var _pageTitle = 'Palaver';
 var NOTIFICATION_SNIPPET_SIZE = 100;
-var NOTIFICATION_DURATION = 5000;
+var NOTIFICATION_DURATION = 5000; // In ms
 var wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
-
-// Establish state variables
-var History = window.History, // Note: We are using a capital H instead of a lower h
-    State = History.getState();
 
 $(document).ready(function() {
     initPage();
 });
 
-function initPage(baseUrl, threadId, commentId) {
-    var currentThreadId;
-
-    // Bind to State Change
-    /*
-    if (History.enabled) {
-        setTimeout(function () {
-            History.Adapter.bind(window, 'popstate', function () { // Note: We are using statechange instead of popstate
-                var State = History.getState(); // Note: We are using History.getState() instead of event.state
-                if (_allowBack) {
-                    if (State.data.threadId != null) {
-                        if (State.data.commentId != null)
-                            _initialCommentId = State.data.commentId;
-                        GetComments(State.data.threadId, true);
-                    }
-                    else
-                        $('#comments').html('');
-                }
-            });
-        }, 1000);
-    }
-    */
-
+function initPage() {
     // Register our primary key event handler for the page.
     $(document).keydown(pageKeyDown);
 
@@ -70,24 +44,8 @@ function initPage(baseUrl, threadId, commentId) {
     // Setup signalr connection.
     startSignalr();
 
-    // Load the selected thread if there is one.
-    //if (threadId != null)
-    //    GetComments(threadId);
-
     // Update the page title.
     updateTitle();
-
-    // Set up hover for the unsubscribe buttons for threads.
-    // Disabled for now.
-    /*
-    $('div#threads .unsubscribe').hide();
-    $('div#threads ul li').hover(function () {
-        $(this).children('.unsubscribe').show();
-    },
-    function () {
-        $(this).children('.unsubscribe').hide();
-    });
-    */
 
     // Load wowhead script after the page is loaded to stop it from blocking.
     $.getScript('//wow.zamimg.com/widgets/power.js');
@@ -187,7 +145,7 @@ function addComment(comment) {
         //updateTitle();
     }
 
-    if (_initialThreadId == comment.ThreadId) {
+    if (_threadId == comment.ThreadId) {
         // TODO: Flesh this out.  Copy fromm a hidden template div.
         var commentHtml = '<div>' + comment.Text + '</div>';
         if (comment.ParentCommentId != null)
@@ -205,7 +163,7 @@ function addComment(comment) {
 
     var newcomment = $('div[data-id="' + reply.commentId + '"]')[0];
     if (user != reply.userid) {
-        $(newcomment).addClass('newcomment');
+        $(newcomment).addClass('unread');
         $(newcomment).click(function() {
             markRead(this);
         });
@@ -260,7 +218,7 @@ function notifyNewThread(title, threadTitle, threadId) {
     var filteredMessage = innerDiv.textContent || innerDiv.innerText;
     filteredMessage = $.trim(filteredMessage.substring(0, NOTIFICATION_SNIPPET_SIZE));
     var notification = new Notification(title, {
-        icon: _baseUrl + 'Content/images/new_message-icon.gif',
+        icon: _baseUrl + 'images/new_message-icon.gif',
         body: filteredMessage
     });
     notification.onclick = function() {
@@ -285,12 +243,12 @@ function notify(title, commentText, threadId, commentId) {
     var filteredMessage = innerDiv.textContent || innerDiv.innerText;
     filteredMessage = $.trim(filteredMessage.substring(0, NOTIFICATION_SNIPPET_SIZE));
     var notification = new Notification(title, {
-        icon: _baseUrl + 'Content/images/new_message-icon.gif',
+        icon: _baseUrl + 'images/new_message-icon.gif',
         body: filteredMessage
     });
     notification.onclick = function() {
         window.focus();
-        _initialCommentId = commentId;
+        _commentId = commentId;
         GetComments(threadId);
         this.cancel();
     };
@@ -338,9 +296,9 @@ function updateThreadUnread(threadId) {
     // If the count is greater than 0, simply update the unread counter next to the thread.
     // Otherwise, clear the unread counter for the thread.
     if (unreadCount > 0)
-        $('#newCommentsCount' + threadId).html('(' + unreadCount + ')');
+        $('#unreadCount' + threadId).html('(' + unreadCount + ')');
     else {
-        $('#newCommentsCount' + threadId).html('');
+        $('#unreadCount' + threadId).html('');
         $('li[data-thread-id="' + threadId + '"]').removeClass('unread');
     }
 
@@ -350,7 +308,7 @@ function updateThreadUnread(threadId) {
 
 function incrementThreadUnread(threadId) {
     // First, get the thread's unread count span.
-    var threadCounter = $('#newCommentsCount' + threadId);
+    var threadCounter = $('#unreadCount' + threadId);
     // If the counter is empty, set it to (1)
     if (threadCounter.html() == null || threadCounter.html() == '')
         threadCounter.html('(1)');
@@ -361,7 +319,7 @@ function incrementThreadUnread(threadId) {
         threadCounter.html('(' + count + ')');
     }
 
-    // Make sure that thread has the newcomments class.
+    // Make sure that thread has the unread class.
     $('li[data-threadId="' + threadId + '"]').addClass('unread');
 
     // Update the page title with the unread count.
@@ -378,46 +336,37 @@ function GetComments(id, isBack) {
         'id': id
     };
 
-    currentThreadId = id;
+    _threadId = id;
 
-    // If we have pushState() available, use that + Ajax to open our comments.
-    // Otherwise, use a redirect.
-
-    if (!History.enabled) {
-        window.location.href = _baseUrl + 'Thread/' + id;
-        return;
-    } else {
-        // Change our URL.
-        if (!isBack) {
-            _allowBack = false;
-            if (_initialCommentId != null)
-                History.pushState({ threadId: id, commentId: _initialCommentId }, document.title, _baseUrl + 'Thread/' + id + '/' + _initialCommentId);
-            else
-                History.pushState({ threadId: id }, document.title, _baseUrl + 'Thread/' + id);
-            _allowBack = true;
-        }
-        // Blank out current comments change the class to commentsLoading.
-        $(document).addClass('busy');
-
-        $('#comments').html('');
-        $.get(
-            _baseUrl + 'home/GetComments',
-            thread,
-            function(data) {
-                $('#comments').html(data);
-                $('.newcomment').click(function() {
-                    markRead(this);
-                });
-                $(document).removeClass('busy');
-                if (_initialCommentId != null) {
-                    focusAndMarkReadCommentId(_initialCommentId);
-                    _initialCommentId = null;
-                }
-                selectThread(id);
-                updateTitle();
-            }
-        );
+    // Change our URL.
+    if (!isBack) {
+        _allowBack = false;
+        if (_commentId != null)
+            history.pushState({ threadId: id, commentId: _commentId }, document.title, _baseUrl + 'thread/' + id + '/' + _commentId);
+        else
+            history.pushState({ threadId: id }, document.title, _baseUrl + 'thread/' + id);
+        _allowBack = true;
     }
+    // Blank out current comments change the class to commentsLoading.
+    $(document).addClass('busy');
+
+    $('#comments').html('');
+    $.get(
+        _baseUrl + 'threadPartial/' + _threadId; thread,
+        function(data) {
+            $('#comments').html(data);
+            $('.unread').click(function() {
+                markRead(this);
+            });
+            $(document).removeClass('busy');
+            if (_commentId != null) {
+                focusAndMarkReadCommentId(_commentId);
+                _commentId = null;
+            }
+            selectThread(id);
+            updateTitle();
+        }
+    );
 }
 
 function selectThread(threadId) {

@@ -3,8 +3,6 @@
 @{
     ViewData["Title"] = "Palaver";
     Thread thread = (Thread)ViewData["SelectedThread"];
-    int? threadId = (thread == null ? thread.Id : null );
-    int? commentId = (int?)ViewData["SelectedCommentId"];
 }
 
 @section Styles
@@ -21,8 +19,9 @@
 @section Scripts
 {
     <script type="text/javascript">
-        var _initialThreadId = @threadId;
-        var _initialCommentId = @commentId;
+        var _threadId = @ViewData["threadId"];
+        var _commentId = @ViewData["commentId"];
+        var _userId = @ViewData["userId"];
     </script>
     <script src="@Url.Content("~/signalr/hubs")"></script>
     <environment names="Development">
