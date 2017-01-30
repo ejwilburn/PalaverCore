@@ -17,5 +17,10 @@ Features:
         ☐ Disable gif auto-play
         ☐ Notifications
         ☐ Email alert for new signups
+        ☐ Option to auto-subscribe to threads or Notifications
+
+Things to figure out:
+    ☐ How should unsubscribed threads show up in the sidebar?  Hidden by default?  Below subscribed & stickied?
+    ☐ Should we show message counts for threads even when there aren't new messages?  Unsubscribed threads?
 
 

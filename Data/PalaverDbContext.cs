@@ -1,9 +1,28 @@
+/*
+Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+This program is distributed under the terms of the GNU General Public License.
+
+This file is part of Palaver.
+
+Palaver is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+Palaver is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -35,13 +54,24 @@ namespace Palaver.Data
                 .Join(Comments, uc => uc.CommentId, c => c.Id, (uc, c) => new { UnreadComment = uc, Comment = c })
                 .GroupBy(ucAndc => ucAndc.Comment.ThreadId)
                 .Select(g => new { ThreadId = g.Key, Count = g.Count() }).ToListAsync();
-			// if (countTotals != null && countTotals.Count() > 0)
-			// {
+
+            // Unread counts
             foreach (var count in countTotals)
             {
                 threads.Find(t => t.Id == (int)count.ThreadId).UnreadCount = (int)count.Count;
             }
-			// }
+
+            // Subscribed or not
+            foreach (Subscription sub in await Subscriptions.Where(s => s.UserId == userId).ToListAsync())
+            {
+                sub.Thread.IsSubscribed = true;
+            }
+
+            // Favorites
+            foreach (FavoriteThread fav in await FavoriteThreads.Where(ft => ft.UserId == userId).ToListAsync())
+            {
+                fav.Thread.IsFavorite = true;
+            }
 
 			return threads;
 		}
@@ -67,47 +97,109 @@ namespace Palaver.Data
             List<Comment> comments = await Comments.Where(c => c.ThreadId == threadId)
                 .Include(c => c.Thread)
                     .ThenInclude(t => t.User)
+                .Include(c => c.Thread)
+                    .ThenInclude(t => t.FavoriteThreads)
+                .Include(c => c.Thread)
+                    .ThenInclude(t => t.Subscriptions)
                 .Include(c => c.User)
                 .Include(c => c.Parent)
                 .Include(c => c.Comments)
+                .Include(c => c.FavoriteComments)
                 .OrderBy(c => c.Created).ToListAsync();
 
             // If there are comments, get the thread from there, otherwise load the thread and return it.
             if (comments.Count > 0)
+            {
                 thread = comments[0].Thread;
+
+                // Sort comment.comments by creation date and mark favorites.
+                foreach (Comment comment in comments)
+                {
+                    comment.IsFavorite = comment.FavoriteComments.Exists(fc => fc.UserId == userId);
+                    comment.Comments = (List<Comment>)comment.Comments.OrderBy(c => c.Created);
+                }
+
+                // Get unread counts for threads.
+                List<int> unreadIds = await UnreadComments.Where(uc => uc.UserId == userId && uc.Comment.ThreadId == threadId)
+                    .Select(uc => uc.CommentId)
+                    .ToListAsync();
+                foreach (Comment comment in comments.FindAll(c => unreadIds.Contains(c.Id)))
+                {
+                    comment.IsUnread = true;
+                }
+            }
             else
             {
                 thread = await Threads.Where(t => t.Id == threadId)
-                    .Include(t => t.User).SingleOrDefaultAsync();
-                return thread;
+                    .Include(t => t.User)
+                    .Include(t => t.FavoriteThreads)
+                    .Include(t => t.Subscriptions)
+                    .SingleOrDefaultAsync();
             }
 
-            // Sort comment.comments by creation date.
-            foreach (Comment comment in comments)
-                comment.Comments = (List<Comment>)comment.Comments.OrderBy(c => c.Created);
-
-            // Get unread counts for threads.
-            List<int> unreadIds = await UnreadComments.Where(uc => uc.UserId == userId && uc.Comment.ThreadId == threadId)
-                .Select(uc => uc.CommentId)
-                .ToListAsync();
-            foreach (Comment comment in comments.FindAll(c => unreadIds.Contains(c.Id)))
-            {
-                comment.IsUnread = true;
-            }
+            thread.IsFavorite = thread.FavoriteThreads.Exists(ft => ft.UserId == userId);
+            thread.IsSubscribed = thread.Subscriptions.Exists(s => s.UserId == userId);
 
 			return thread;
 		}
 
+		public async Task<Palaver.Models.Comment> GetCommentAsync(int id, int userId)
+		{
+            Comment comment = await Comments.Where(c => c.Id == id)
+                .Include(c => c.Thread)
+                    .ThenInclude(t => t.Comments)
+                        .ThenInclude(c => c.FavoriteComments)
+                .Include(c => c.Thread)
+                    .ThenInclude(t => t.Subscriptions)
+                .Include(c => c.User)
+                .Include(c => c.Parent)
+                .Include(c => c.Comments)
+                .Include(c => c.FavoriteComments)
+                .OrderBy(c => c.Created).SingleAsync();
+
+            if (comment != null)
+            {
+                // Sort comment.comments by creation date and mark favorites.
+                foreach (Comment curComment in comment.Thread.Comments)
+                {
+                    curComment.IsFavorite = curComment.FavoriteComments.Exists(fc => fc.UserId == userId);
+                    curComment.Comments = (List<Comment>)curComment.Comments.OrderBy(c => c.Created);
+                }
+
+                // Get unread flag for comments.
+                List<int> unreadIds = await UnreadComments.Where(uc => uc.UserId == userId && uc.Comment.ThreadId == comment.ThreadId)
+                    .Select(uc => uc.CommentId)
+                    .ToListAsync();
+                foreach (Comment curComment in comment.Thread.Comments.FindAll(c => unreadIds.Contains(c.Id)))
+                {
+                    curComment.IsUnread = true;
+                }
+            }
+
+			return comment;
+		}
+
         public async Task<Palaver.Models.Thread> CreateThreadAsync(string title, int userId)
         {
-            Palaver.Models.Thread newThread = await Palaver.Models.Thread.CreateAsync(title, userId, this);
+            List<User> allUsers = await Users.ToListAsync();
+            Palaver.Models.Thread newThread = Palaver.Models.Thread.CreateThread(title, userId, this);
+
+            // Subscribe everyone to all threads by default.
+            foreach (User user in allUsers)
+            {
+                Subscriptions.Add(new Subscription { Thread = newThread, User = user} );
+            }
+
+            Threads.Add(newThread);
             await SaveChangesAsync();
             return newThread;
         }
 
         public async Task<Comment> CreateCommentAsync(string text, int threadId, int? parentId, int userId)
         {
-            Comment newComment = await Comment.CreateAsync(text, threadId, parentId, userId, this);
+            Palaver.Models.Thread thread = await Threads.Where(t => t.Id == threadId).Include(t => t.Subscriptions).SingleAsync();
+            Comment newComment = Comment.CreateComment(text, thread, parentId, userId, this);
+            Comments.Add(newComment);
             await SaveChangesAsync();
             return newComment;
         }

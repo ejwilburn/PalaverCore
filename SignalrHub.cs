@@ -1,12 +1,31 @@
+/*
+Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+This program is distributed under the terms of the GNU General Public License.
+
+This file is part of Palaver.
+
+Palaver is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+Palaver is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Hubs;
+using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 
@@ -20,17 +39,18 @@ namespace Palaver
 
         private readonly PalaverDbContext _dbContext;
         private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
         private static Dictionary<string, int> _userIdsByConnection = new Dictionary<string, int>();
 
-        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager)
+        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper)
         {
             _dbContext = dbContext;
             _userManager = userManager;
+            _mapper = mapper;
         }
 
         public Task OnConnected()
         {
-
             _userIdsByConnection.Add(Context.ConnectionId, GetUserId());
             System.Diagnostics.Debug.WriteLine("Connected ConnectionId: " + Context.ConnectionId);
             return Clients.Client(Context.ConnectionId).SetConnectionId(Context.ConnectionId);
@@ -70,10 +90,10 @@ namespace Palaver
         /// <param name="threadTitle">Text of the thread subject.</param>
         public async Task NewThread(string threadTitle)
         {
-            int userId = GetUserId();
-            Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, userId);
-
-            Clients.All.addThread(newThread);
+            Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
+            Palaver.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, Palaver.Models.ThreadViewModels.CreateResultViewModel>(newThread);
+            Clients.Caller.addOwnThread(resultView);
+            Clients.Others.addThread(resultView);
         }
 
         /// <summary>
@@ -84,10 +104,10 @@ namespace Palaver
         /// <param name="replyText">Text of the reply.</param>
         public async Task NewComment(string commentText, int threadId, int? parentId)
         {
-            int userId = GetUserId();
-            Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, userId);
-
-            Clients.All.addComment(newComment);
+            Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, GetUserId());
+            Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
+            Clients.Caller.addOwnComment(resultView);
+            Clients.Others.addComment(resultView);
         }
 
         private int GetUserId()

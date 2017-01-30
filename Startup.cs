@@ -1,8 +1,27 @@
+/*
+Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+This program is distributed under the terms of the GNU General Public License.
+
+This file is part of Palaver.
+
+Palaver is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+Palaver is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +30,7 @@ using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 using Palaver.Services;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace Palaver
 {
@@ -116,7 +136,15 @@ namespace Palaver
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            app.UseStaticFiles();
+            // Set up custom content types -associating file extension to MIME type
+            // This has to be done for supporting the .mustache template files, either
+            // that or allow all unknown types.
+            var provider = new FileExtensionContentTypeProvider();
+            provider.Mappings[".mustache"] = "text/html";
+
+            app.UseStaticFiles(new StaticFileOptions {
+                ContentTypeProvider = provider
+            });
 
             app.UseIdentity();
 
@@ -130,7 +158,7 @@ namespace Palaver
             {
                 routes.MapRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    template: "{controller=Thread}/{action=Index}/{id?}");
             });
 
             app.UseSignalR();

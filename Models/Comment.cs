@@ -1,9 +1,28 @@
+/*
+Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+This program is distributed under the terms of the GNU General Public License.
+
+This file is part of Palaver.
+
+Palaver is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+Palaver is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+using EntityFrameworkCore.Triggers;
 using Palaver.Data;
 
 namespace Palaver.Models
@@ -26,6 +45,8 @@ namespace Palaver.Models
         public Comment Parent { get; set; }
         [NotMapped]
         public bool IsUnread { get; set; }
+        [NotMapped]
+        public bool IsFavorite { get; set; }
 
         public List<Comment> Comments { get; set; }
         public List<UnreadComment> UnreadComments { get; set; }
@@ -35,49 +56,19 @@ namespace Palaver.Models
         {
             this.Parent = null;
             this.IsUnread = false;
+            Triggers<Comment>.Inserting += entry => entry.Entity.Thread.Updated = DateTime.UtcNow;
+            Triggers<Comment>.Updating += entry => entry.Entity.Thread.Updated = DateTime.UtcNow;
         }
 
-        public static async Task<Comment> CreateAsync(string text, int threadId, int? parentId, int userId, PalaverDbContext db)
+        public static Comment CreateComment(string text, Thread thread, int? parentId, int userId, PalaverDbContext db)
         {
             Comment newComment = new Comment {
                 Text = text,
-                ThreadId = threadId,
+                Thread = thread,
                 UserId = userId,
                 ParentCommentId = parentId,
-                IsUnread = false
+                IsUnread = true
             };
-
-            List<Subscription> subs = await db.Subscriptions.Where(s => s.ThreadId == threadId && s.UserId != userId).ToListAsync();
-
-            foreach (Subscription sub in subs)
-            {
-                db.UnreadComments.Add( new UnreadComment { Comment = newComment, User = sub.User });
-            }
-
-            /*
-            //User currentUser = _dbContext.Users.Find( (new User { UserId = CodeFirstSecurity.GetUserId(Context.User.Identity.Name) }).UserId );
-            User currentUser = _dbContext.Users.Find( CodeFirstSecurity.GetUserId(Context.User.Identity.Name) );
-            Comment comment = new Comment(replyText, currentUser);
-            Comment parentComment = _dbContext.Comments.Include("Comments").First(pc => pc.CommentId == parentId);
-
-            if (parentComment.SubjectId != null)
-                comment.SubjectId = parentComment.SubjectId;
-            else
-                comment.SubjectId = parentComment.CommentId;
-
-            comment.ParentCommentId = parentComment.CommentId;
-
-            Comment thread = _dbContext.Comments.Find(comment.SubjectId);
-            thread.LastUpdatedTime = DateTime.UtcNow;
-
-            parentComment.Comments.Add(comment);
-
-            foreach (User uu in _dbContext.Users)
-            {
-                if (uu.UserId != currentUser.UserId)
-                    _dbContext.UnreadItems.Add(new UnreadItem { User = uu, Comment = comment });
-            }
-            */
 
             return newComment;
         }

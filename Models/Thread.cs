@@ -1,9 +1,26 @@
+/*
+Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+This program is distributed under the terms of the GNU General Public License.
+
+This file is part of Palaver.
+
+Palaver is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+Palaver is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using Palaver.Data;
 
 namespace Palaver.Models
@@ -24,6 +41,10 @@ namespace Palaver.Models
         public List<Subscription> Subscriptions { get; set; }
         public List<FavoriteThread> FavoriteThreads { get; set; }
 
+        [NotMapped]
+        public bool IsSubscribed { get; set; }
+        [NotMapped]
+        public bool IsFavorite { get; set; }
 		[NotMapped]
 		public int UnreadCount { get; set; }
         [NotMapped]
@@ -51,23 +72,15 @@ namespace Palaver.Models
             this.UnreadCount = 0;
         }
 
-        public static async Task<Thread> CreateAsync(string newTitle, int userId, PalaverDbContext db)
+        public static Thread CreateThread(string newTitle, int userId, PalaverDbContext db)
         {
-            List<User> allUsers = await db.Users.ToListAsync();
-
             Thread newThread = new Thread {
                 Title = newTitle,
-                User = db.Users.Find(userId),
+                UserId = userId,
                 IsSticky = false,
+                IsSubscribed = true,
                 UnreadCount = 0
             };
-
-            db.Threads.Add(newThread);
-
-            foreach (User user in db.Users.ToList())
-            {
-                db.Subscriptions.Add(new Subscription { Thread = newThread, User = user} );
-            }
 
             return newThread;
         }

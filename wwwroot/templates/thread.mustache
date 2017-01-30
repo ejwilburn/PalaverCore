@@ -1,0 +1,12 @@
+            <div id="thread" data-id="{{Id}}" class="col-sm-9 col-md-10 main container-fluid">
+                <!--toggle sidebar button-->
+                <p class="visible-xs">
+                    <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas"><i class="glyphicon glyphicon-chevron-left"></i></button>
+                </p>
+                <h3 id="threadTitle" class="page-header">
+                    {{Title}}
+                </h3>
+                {{#Comments}}
+                    {{>comment}}
+                {{/Comments}}
+            </div><!--/thread-->

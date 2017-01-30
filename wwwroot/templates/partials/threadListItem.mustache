@@ -1,0 +1,10 @@
+                {{#UnreadCount}}
+                    <li><a class="unread" href="/Thread/{{Id}}" data-id="{{Id}}" onclick="loadThread({{Id}}); return false;">
+                        <span class="thread-date">[{{UpdatedDisplay}}]</span> <span class="badge">{{UnreadCount}}</span>{{Title}}
+                    </a></li>
+                {{/UnreadCount}}
+                {{^UnreadCount}}
+                    <li><a href="/Thread/{{Id}}" data-id="{{Id}}" onclick="loadThread({{Id}}); return false;">
+                        <span class="thread-date">[{{UpdatedDisplay}}]</span> {{Title}} <span class="badge">0</span>
+                    </a></li>
+                {{/UnreadCount}}

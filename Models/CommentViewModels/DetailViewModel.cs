@@ -18,22 +18,27 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace Palaver.Services
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace Palaver.Models.CommentViewModels
 {
-    public class SmtpOptions
+    public class DetailViewModel
     {
-        public static readonly string CONFIG_SECTION_NAME = "Smtp";
-
-        public string Server { get; set; } = "localhost";
-        public int Port { get; set; } = 25;
-        public bool RequireTls { get; set; } = false;
-        public string Username { get; set; } = null;
-        public string Password { get; set; } = null;
-        public string FromName { get; set; }
-        public string FromAddress { get; set; }
-
-        public SmtpOptions()
-        {
-        }
+        [Required]
+        public int Id { get; set; }
+        [Required]
+        public string Text { get; set; }
+        [Required]
+        public int? ParentCommentId { get; set; }
+        [Required]
+        public string UserName { get; set; }
+        [Required]
+        public bool IsUnread { get; set; }
+        [Required]
+        public bool IsFavorite { get; set; }
+        [Required]
+        public string CreatedDisplay { get; set; }
+        public IEnumerable<DetailViewModel> Comments { get; set; }
     }
 }

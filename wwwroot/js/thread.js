@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -23,9 +23,11 @@ var _editorDefaultHeight = 100;
 var _srConnection;
 var _allowBack = false;
 var _pageTitle = 'Palaver';
+var HUB_ACTION_RETRY_DELAY = 5000; // in ms
 var NOTIFICATION_SNIPPET_SIZE = 100;
 var NOTIFICATION_DURATION = 5000; // In ms
 var wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
+window.templates = {};
 
 $(document).ready(function() {
     initPage();
@@ -40,6 +42,9 @@ function initPage() {
         keyboard: false,
         show: false
     });
+
+    // Load mustache templates for rendering new content.
+    loadTemplates();
 
     // Setup signalr connection.
     startSignalr();
@@ -60,9 +65,11 @@ function hideDisconnected() {
 }
 
 function startSignalr() {
-    _srConnection = $.connection.SignalrHub;
+    _srConnection = $.connection.signalrHub;
     _srConnection.client.addThread = addThread;
+    _srConnection.client.addOwnThread = addOwnThread;
     _srConnection.client.addComment = addComment;
+    _srConnection.client.addOwnComment = addOwnComment;
 
     $.connection.hub.error(function(error) {
         if (console) {
@@ -75,7 +82,7 @@ function startSignalr() {
 
     $.connection.hub.connectionSlow(function() {
         if (console)
-            console.log('SignalR is currently experiencing difficulties with the connection.')
+            console.log('SignalR is currently experiencing difficulties with the connection.');
     });
 
     $.connection.hub.reconnecting(function() {
@@ -118,71 +125,66 @@ function startHub() {
     });
 }
 
-function addThread(thread) {
-    var newClass = '';
-    var newBadge = '';
-    if (_userId != thread.UserId) {
-        newClass = ' class="unread"';
-        newBadge = '<span class="badge">1</span>';
-        notifyNewThread('Palaver thread posted by ' + thread.User.Name + '.', thread.Title, thread.ThreadId);
-        updateTitle();
-    } else
-        window.location.hash = '#' + thread.ThreadId;
+function loadTemplates() {
+    $('script[type=x-mustache-template]').each(function(index) {
+        var name = this.attributes.name.value;
+        $.get(this.src, function(data) {
+            window.templates[name] = data;
+        });
+    });
+}
 
-    $('#threads').prepend(
-        '<li' + newClass + '><a href="#' + thread.Id + '" data-id="' + thread.Id + '"><span class="thread-date">[' +
-        formatDateTime(thread.Updated) + ']</span> ' + thread.Title + ' ' + newBadge + '</a></li>'
-    );
+function addThread(thread) {
+    notifyNewThread(thread);
+    updateTitle();
+
+    $('#threads').prepend(Mustache.render(window.templates.threadListItem, thread));
+}
+
+function addOwnThread(thread) {
+    thread.UnreadCount = 0;
+    var element = $(Mustache.render(window.templates.threadListItem, thread));
+    $('#threads').prepend(element);
+    loadOwnThread(thread);
+    writeReply();
 }
 
 function addComment(comment) {
-    var newClass = '';
-    var newBadge = '';
-    if (_userId != comment.UserId) {
-        newClass = ' class="unread"';
-        newBadge = '<span class="badge">9999</span>';
-        notifyNewComment('Palaver comment posted by ' + comment.User.Name + '.', comment.Text, comment.ThreadId, comment.Id);
-        //updateTitle();
-    }
+    notifyNewComment(comment);
 
-    if (_threadId == comment.ThreadId) {
-        // TODO: Flesh this out.  Copy fromm a hidden template div.
-        var commentHtml = '<div>' + comment.Text + '</div>';
-        if (comment.ParentCommentId != null)
-            $('#comments[data-id="' + comment.ParentCommentId + ' div.panel-body]').append(commentHtml);
-        else
-            $('#comments h3').append(commentHtml);
-        $('#comments[data-id=' + comment.Id + ']').focus();
-    }
+    var renderedComment = $(Mustache.render(window.templates.comment, comment));
+    if (typeof comment.ParentCommentId === 'number')
+        $('#thread .panel[data-id="' + comment.ParentCommentId + '"]')[0].children('.panel').append(renderedComment);
+    else
+        $(renderedComment).insertAfter('#thread h3');
 
-    /*
-    // get the comment's parent
-    var commentItem = $('li[data-id="' + reply.parentId + '"]')[0];
-    // Add the comment to the parent.
-    $(commentItem).children('ul').append(reply.text);
+    popThread(comment.ThreadId);
+    updateTitle();
+}
 
-    var newcomment = $('div[data-id="' + reply.commentId + '"]')[0];
-    if (user != reply.userid) {
-        $(newcomment).addClass('unread');
-        $(newcomment).click(function() {
-            markRead(this);
-        });
-        // Update the new comment count for the thread.
-        incrementThreadUnread(reply.threadId);
-        notify('Palaver comment posted by ' + reply.authorName + '.', reply.text, reply.threadId, reply.commentId);
-    } else {
-        $(newcomment).focus();
-    }
-    // Move the new comment's thread to the top of the thread list.
-    var thread = $('li[data-thread-id="' + reply.threadId + '"]');
-    $(thread).prependTo('div#threads ul');
+function addOwnComment(comment) {
+    var renderedComment = Mustache.render(window.templates.comment, comment);
+    if (typeof comment.ParentCommentId === 'number')
+        $('#thread .panel[data-id="' + comment.ParentCommentId + '"]').children('.panel').append(renderedComment);
+    else
+        $('#thread').children('.panel').append(renderedComment);
+    $('#thread [data-id="' + comment.Id + '"]').focus();
+
+    popThread(comment.ThreadId);
+    updateTitle();
+}
+
+// Move the new comment's thread to the top of the thread list.
+function popThread(threadId) {
+    var thread = $('#threads [data-id="' + threadId + '"]');
+    thread.prependTo('#threads');
     // Update the thread's time.
     var now = new Date();
     var hour = now.getHours(),
         minutes, ampm = 'AM';
-    if (hour == 0)
+    if (hour === 0)
         hour = 12;
-    else if (hour == 12)
+    else if (hour === 12)
         ampm = 'PM';
     else if (hour > 12) {
         hour -= 12;
@@ -193,8 +195,6 @@ function addComment(comment) {
     else
         minutes = now.getMinutes().toString();
     $(thread).children('.threadTime').html('[' + hour + ':' + minutes + ' ' + ampm + ']');
-    */
-    updateTitle();
 }
 
 function formatDateTime(value) {
@@ -205,43 +205,37 @@ function formatDateTime(value) {
 }
 
 // Notify the user of new threads
-function notifyNewThread(title, threadTitle, threadId) {
+function notifyNewThread(thread) {
     if (!Notification || Notification.permission !== "granted")
         return;
 
-    // Strip the message of any HTML using a temporary div.
-    var tempDiv = document.createElement('DIV');
-    tempDiv.innerHTML = (threadTitle == null ? '' : '<ul>' + threadTitle + '</ul>');
-    var innerDiv = $(tempDiv).find('div')[0];
-    $(innerDiv).children('span.user').remove();
-    $(innerDiv).children('span.commentTime').remove();
-    var filteredMessage = innerDiv.textContent || innerDiv.innerText;
-    filteredMessage = $.trim(filteredMessage.substring(0, NOTIFICATION_SNIPPET_SIZE));
+    var title = 'Palaver thread posted by ' + thread.UserName + '.';
+    var filteredThread = {
+        Title: $.trim(stripHtml(thread.Title).substring(0, NOTIFICATION_SNIPPET_SIZE))
+    };
+
     var notification = new Notification(title, {
         icon: _baseUrl + 'images/new_message-icon.gif',
-        body: filteredMessage
+        body: Mustache.render(window.templates.threadNotification, filteredThread)
     });
     notification.onclick = function() {
         window.focus();
-        window.location.href = _baseUrl + 'thread/' + threadId;
+        window.location.href = _baseUrl + 'Thread/' + thread.Id;
         this.cancel();
     };
     setTimeout(function() { if (notification) notification.close(); }, NOTIFICATION_DURATION);
 }
 
 // Notify the user of new comments
-function notify(title, commentText, threadId, commentId) {
+function notifyNewComment(comment) {
     if (!Notification || Notification.permission !== "granted")
         return;
 
-    // Strip the message of any HTML using a temporary div.
-    var tempDiv = document.createElement('DIV');
-    tempDiv.innerHTML = (commentText == null ? '' : '<ul>' + commentText + '</ul>');
-    var innerDiv = $(tempDiv).find('div')[0];
-    $(innerDiv).children('span.user').remove();
-    $(innerDiv).children('span.commentTime').remove();
-    var filteredMessage = innerDiv.textContent || innerDiv.innerText;
-    filteredMessage = $.trim(filteredMessage.substring(0, NOTIFICATION_SNIPPET_SIZE));
+    var title = 'Palaver comment posted by ' + comment.UserName + '.';
+    var filteredComment = {
+        Text: $.trim(stripHtml(comment.Text).substring(0, NOTIFICATION_SNIPPET_SIZE))
+    };
+
     var notification = new Notification(title, {
         icon: _baseUrl + 'images/new_message-icon.gif',
         body: filteredMessage
@@ -249,22 +243,32 @@ function notify(title, commentText, threadId, commentId) {
     notification.onclick = function() {
         window.focus();
         _commentId = commentId;
-        GetComments(threadId);
+        loadThread(threadId);
         this.cancel();
     };
     setTimeout(function() { if (notification) notification.close(); }, NOTIFICATION_DURATION);
 }
 
+// Strip the message of any HTML using a temporary div.
+function stripHtml(text) {
+    if (typeof text !== 'string' || text.length === 0)
+        return '';
+
+    var tempDiv = document.createElement('DIV');
+    tempDiv.innerHTML = text;
+    return innerDiv.textContent || innerDiv.innerText;
+}
+
 function updateTitle() {
-    var threadCounts = $('.unread');
+    var threadCounts = $('#threads.unread .badge');
     var totalUnread = 0;
 
     // Loop through the thread counters and total them.
     if (threadCounts.length > 0) {
         for (var x = 0; x < threadCounts.length; x++) {
-            var countString = $(threadCounts[x]).html();
-            if (countString != null && countString != '') {
-                totalUnread += parseInt(countString.replace('(', '').replace(')', ''));
+            var countString = $(threadCounts[x]).innerText;
+            if (typeof countString === 'string' && countString.length > 0) {
+                totalUnread += parseInt(countString);
             }
         }
     }
@@ -284,22 +288,31 @@ function markRead(comment) {
 
         updateThreadUnread($(comment).attr("data-threadId"));
 
-        jQuery.get(_baseUrl + 'api/markread', data);
+        jQuery.put(_baseUrl + 'api/Comment/MarkRead/' + id)
+            .fail(function(error) {
+                if (console) {
+                    console.error('Error marking comment ' + id + ' as read.');
+                    console.error(error);
+                }
+            });
     }
     updateTitle();
 }
 
 function updateThreadUnread(threadId) {
     // First, get our current unread count.
-    var unreadCount = $('.unread').length;
+    var unreadCount = $('#thread .unread').length;
 
     // If the count is greater than 0, simply update the unread counter next to the thread.
     // Otherwise, clear the unread counter for the thread.
-    if (unreadCount > 0)
-        $('#unreadCount' + threadId).html('(' + unreadCount + ')');
-    else {
-        $('#unreadCount' + threadId).html('');
-        $('li[data-thread-id="' + threadId + '"]').removeClass('unread');
+    var thread = $('#threads[data-id="' + threadId + '"]');
+    var unreadBadge = thread.children('.badge');
+    if (unreadCount > 0) {
+        unreadBadge.html(unreadCount.toString());
+        thread.addClass('unread');
+    } else {
+        unreadBadge.html('0');
+        thread.removeClass('unread');
     }
 
     // Update the page title with the unread count.
@@ -307,85 +320,104 @@ function updateThreadUnread(threadId) {
 }
 
 function incrementThreadUnread(threadId) {
-    // First, get the thread's unread count span.
-    var threadCounter = $('#unreadCount' + threadId);
+    // Get the thread.
+    var thread = $('#threads[data-id="' + threadId + '"]');
+    // Get the thread's unread count span.
+    var threadCounter = thead.children('.badge');
     // If the counter is empty, set it to (1)
-    if (threadCounter.html() == null || threadCounter.html() == '')
-        threadCounter.html('(1)');
+    var threadCounterHtml = threadCounter.html();
+    if (threadCounterHtml === null || threadCounterHtml.length === 0 || threadCounterHtml === '0')
+        threadCounter.html('1');
     else {
         // Convert the counter to an int and increment it.
-        var count = parseInt(threadCounter.html().replace('(', '').replace(')', '')) + 1;
+        var count = parseInt(threadCounterHtml) + 1;
         // Update the page display.
-        threadCounter.html('(' + count + ')');
+        threadCounter.html(count.toString());
     }
 
     // Make sure that thread has the unread class.
-    $('li[data-threadId="' + threadId + '"]').addClass('unread');
+    thread.addClass('unread');
 
     // Update the page title with the unread count.
     updateTitle();
 }
 
-function GetComments(id) {
-    GetComments(id, false);
+function loadOwnThread(thread) {
+    _threadId = thread.Id;
+
+    // Change our URL.
+    _allowBack = false;
+    history.pushState({ threadId: thread.Id }, document.title, _baseUrl + 'Thread/' + thread.Id);
+    _allowBack = true;
+
+    var element = $(Mustache.render(window.templates.thread, thread));
+    $('#thread').html(element);
+    $('#thread h3').focus();
+    selectThread(thread.Id);
 }
 
-function GetComments(id, isBack) {
-
-    var thread = {
-        'id': id
-    };
-
+function loadThread(id) {
     _threadId = id;
 
     // Change our URL.
-    if (!isBack) {
-        _allowBack = false;
-        if (_commentId != null)
-            history.pushState({ threadId: id, commentId: _commentId }, document.title, _baseUrl + 'thread/' + id + '/' + _commentId);
-        else
-            history.pushState({ threadId: id }, document.title, _baseUrl + 'thread/' + id);
-        _allowBack = true;
-    }
-    // Blank out current comments change the class to commentsLoading.
-    $(document).addClass('busy');
+    _allowBack = false;
+    if (typeof _commentId === 'number')
+        history.pushState({ threadId: id, commentId: _commentId }, document.title, _baseUrl + 'Thread/' + id + '/' + _commentId);
+    else
+        history.pushState({ threadId: id }, document.title, _baseUrl + 'Thread/' + id);
+    _allowBack = true;
 
-    $('#comments').html('');
+    // Blank out current comments change the class to commentsLoading.
+    showBusy();
+
+    $('#thread').html('');
     $.get(
-        _baseUrl + 'threadPartial/' + _threadId; thread,
+        _baseUrl + 'api/RenderThread/' + _threadId,
         function(data) {
-            $('#comments').html(data);
-            $('.unread').click(function() {
-                markRead(this);
-            });
-            $(document).removeClass('busy');
-            if (_commentId != null) {
+            $('#thread').html(data);
+            clearBusy();
+            if (typeof _commentId === 'number') {
                 focusAndMarkReadCommentId(_commentId);
                 _commentId = null;
             }
             selectThread(id);
             updateTitle();
         }
-    );
+    ).fail(function(error) {
+        if (console) {
+            console.error('Error loading thread via AJAX.');
+            console.error(error);
+        }
+        clearBusy();
+    });
 }
 
 function selectThread(threadId) {
     $('#threads .active').removeClass('active');
-    $('#threads li[data-id="' + threadId + '"]').addClass('active');
+    $('#threads [data-id="' + threadId + '"]').addClass('active');
 }
 
-function WriteReply(id) {
+function writeReply(id) {
     // Close other reply divs.
     try {
-        $('#replyBox').summernote('destroy');
-    } catch (ex) {; // Do nothing.
+        $('#replyDivInner').summernote('destroy');
+    } catch (ex) {
+        // Do nothing.
     }
     $('#replyDiv').remove();
 
+    var replyingTo;
+    if (typeof threadId !== 'number' || threadId === null)
+        replyingTo = $('#thread h3');
+    else
+        replyingTo = $('#thread .panel[data-id="' + id + '"]');
+
     // Create a new reply div.
-    $('div.comment[data-id="' + id + '"]').append('<div id="replyDiv" style="margin-left: 20px;"><textarea id="replyBox" style="height: 15px; width: 100%; margin:0;" /><a id="sendReplyLink" tabindex="1" href="javascript:;" onclick="SendReply(' + id + ')" class="submit">submit</a><a tabindex="2" href="javascript:;" onclick="CancelReply()">cancel</a></div>');
-    var replyBox = $('#replyBox');
-    replyBox.summernote().on('summernote.keydown', function(we, e) { replyKeyDown(we, e, id); })
+    replyingTo.append('<div id="replyDiv" class="editor"><div id="replyDivInner" class="editor-inner"></div>' +
+        '<a id="sendReplyLink" tabindex="1" href="javascript:;" onclick="sendReply(' + id + ')" class="submit">submit</a>' +
+        '<a tabindex="2" href="javascript:;" onclick="cancelReply()">cancel</a>' +
+        '</div>');
+    $('#replyDivInner').summernote().on('summernote.keydown', function(we, e) { replyKeyDown(we, e, id); })
         .on('summernote.keyup', function(we, e) { replyKeyUp(we, e, id); })
         .on('summernote.image.upload', function(we, files) {
             imgurUpload(we, files);
@@ -394,17 +426,10 @@ function WriteReply(id) {
     $('#summernote').summernote({
         callbacks: {
             onImageUpload: function(files) {
-                var fileUrl = imgurUpload(files)
-
+                var fileUrl = imgurUpload(files);
             }
         }
     });
-    /*
-    var currScrollTop = $('#commentsArea').scrollTop();
-    var scrollNeeded = currScrollTop + $('#sendReplyLink').position().top + $('#sendReplyLink').height() - ($('#commentsArea').offset().top + $('#commentsArea').height());
-    if ( scrollNeeded > currScrollTop )
-        $('#commentsArea').scrollTop(scrollNeeded);
-        */
 }
 
 // Handle shift+enter to save and escape to cancel.
@@ -431,45 +456,91 @@ function replyKeyUp(we, e, commentId) {
     return true;
 }
 
-function SendReply(commentId) {
-    var text = $('#replyBox').summernote('code');
-    $('#replyBox').summernote('destroy');
+function cancelReply() {
+    $('#replyDivInner').summernote('destroy');
+    $('#replyDiv').remove();
+}
+
+function sendReply(parentCommentId) {
+    var text = $('#replyDivInner').summernote('code');
+    $('#replyDivInner').summernote('destroy');
     $('#replyDiv').remove();
 
     // Make sure all URLs in the reply have a target.  If not, set it to _blank.
     // We're doing this by using a fake DIV with jquery to find the links.
     var tempDiv = document.createElement('DIV');
-    tempDiv.innerHTML = (text == null ? '' : text);
-    var links = $(tempDiv).children('a');
-    for (var x = 0; x < links.length; x++)
-        if (!$(links[x]).attr('target'))
-            $(links[x]).attr('target', '_blank');
-    text = tempDiv.innerHTML;
+    tempDiv.innerHTML = (typeof text !== 'string' ? '' : text);
+    var links = $(tempDiv).children('a').each(function(index) {
+        if (!$(this).attr('target'))
+            $(this).attr('target', '_blank');
+    });
 
-    if (!_isSafariMobile)
-        _srConnection.server.newReply(commentId, text);
-    else {
-        // Send the message in 50ms so Safari mobile won't get stuck in loading mode.
-        window.setTimeout(function() { _srConnection.server.newReply(commentId, text); }, IPAD_SIGNALR_DELAY);
-    }
+    newComment({
+        "Text": tempDiv.innerHTML,
+        "ThreadId": _threadId,
+        "ParentCommentId": parentCommentId
+    });
 }
 
-function CancelReply() {
-    $('#replyBox').summernote('destroy');
-    $('#replyDiv').remove();
+function newComment(comment) {
+    showBusy();
+    if (typeof comment.ParentCommentId !== 'number')
+        comment.ParentCommentId = null;
+    _srConnection.server.newComment(comment.Text, comment.ThreadId, comment.ParentCommentId).done(function() {
+        clearBusy();
+    }).fail(function(error) {
+        newCommentFailed(error, comment);
+        clearBusy();
+    });
 }
 
-function AddComment() {
-    var text = $('#newcomment').val();
-
-    $('#newcomment').val('')
-
-    if (!_isSafariMobile)
-        _srConnection.server.newThread(text);
-    else {
-        // Send the message in 50ms so Safari mobile won't get stuck in loading mode.
-        window.setTimeout(function() { _srConnection.server.newThread(text); }, IPAD_SIGNALR_DELAY);
+function newCommentFailed(error, title) {
+    if (console) {
+        console.error(error);
+        console.info('Retrying in ' + HUB_ACTION_RETRY_DELAY / 1000 + ' seconds...');
     }
+
+    setTimeout(function() {
+        newComment(comment);
+    }, HUB_ACTION_RETRY_DELAY);
+}
+
+function newThread(title) {
+    if (typeof title !== 'string') {
+        title = $('#newthread').val();
+        $('#newthread').val('');
+    }
+
+    if (typeof title !== 'string' || title.length === 0) {
+        alert('Unable to determine thread title.');
+    }
+
+    showBusy();
+    _srConnection.server.newThread(title).done(function() {
+        clearBusy();
+    }).fail(function(error) {
+        newThreadFailed(error, title);
+        clearBusy();
+    });
+}
+
+function showBusy() {
+    $(document).addClass('busy');
+}
+
+function clearBusy() {
+    $(document).removeClass('busy');
+}
+
+function newThreadFailed(error, title) {
+    if (console) {
+        console.error(error);
+        console.info('Retrying in ' + HUB_ACTION_RETRY_DELAY / 1000 + ' seconds...');
+    }
+
+    setTimeout(function() {
+        newThread(title);
+    }, HUB_ACTION_RETRY_DELAY);
 }
 
 function imgurUpload(files) {
@@ -498,7 +569,7 @@ function imgurUpload(files) {
 function pageKeyDown(e) {
     // If we're entering a new comment, skip checking for unread.
     var focusedInput = $('input:focus');
-    if (focusedInput == null || focusedInput.length == 0) {
+    if (typeof focusedInput !== 'string' || focusedInput.length === 0) {
         if (e.keyCode == 32) { // space
             goToNextUnread();
             return false;
@@ -507,11 +578,11 @@ function pageKeyDown(e) {
             // If not, find the first comment.
             var focusedComment = $('.comment:focus');
             var comment;
-            if (focusedComment != null && focusedComment.length > 0)
+            if (typeof focusedComment === 'string' && focusedComment.length > 0)
                 comment = focusedComment[0];
             else {
                 comments = $('.comment');
-                if (comments != null && comments.length > 0)
+                if (comments !== null && comments.length > 0)
                     comment = comments[0];
                 else
                     return false; // No comments, do nothing.
@@ -519,12 +590,12 @@ function pageKeyDown(e) {
 
             // Reply to this comment if shift isn't pressed.
             // Indented reply if shift is pressed.
-            if (e.shiftKey == false) {
+            if (e.shiftKey === false) {
                 var parentId = $(comment).attr("data-parent-id");
-                WriteReply(parentId);
+                writeReply(parentId);
             } else {
                 var id = $(comment).attr("data-id");
-                WriteReply(id);
+                writeReply(id);
             }
             return false;
         } else if (e.keyCode == 39 || e.keyCode == 40 || e.keyCode == 78) { // right, down, 'n'
@@ -539,9 +610,9 @@ function pageKeyDown(e) {
 }
 
 function goToNextUnread() {
-    var unreadItems = $('#comments .unread');
+    var unreadItems = $('#thread .unread');
     // Exit if there are no unread items.
-    if (unreadItems == null || unreadItems.length == 0)
+    if (unreadItems === null || unreadItems.length === 0)
         return;
     // If there is only one, focus on that one and mark it read.
     if (unreadItems.length == 1) {
@@ -549,10 +620,10 @@ function goToNextUnread() {
         return;
     }
     // Get the currently selected item.
-    var focusedComments = $('#comments .panel:focus');
+    var focusedComments = $('#thread .panel:focus');
     var focusedId;
     // If we don't have a focused comment, focus and mark the first unread comment as read.
-    if (focusedComments == null || focusedComments.length == 0) {
+    if (focusedComments === null || focusedComments.length === 0) {
         focusAndMarkRead($(unreadItems[0]));
         return;
     } else
@@ -561,7 +632,7 @@ function goToNextUnread() {
     // Find the next unread item.
     var nextUnread = findNextUnreadComment(focusedId);
     // If there isn't a next one, just focus & mark the first.
-    if (nextUnread == null)
+    if (nextUnread === null)
         focusAndMarkRead($(unreadItems[0]));
     else
         focusAndMarkRead(nextUnread);
@@ -573,24 +644,25 @@ function focusAndMarkRead(unreadComment) {
 }
 
 function focusCommentId(commentId) {
-    focusComment($('#comments div[data-id="' + commentId + '"]'));
+    focusComment($('#thread div[data-id="' + commentId + '"]'));
 }
 
 function focusAndMarkReadCommentId(commentId) {
-    var comment = $('#comments div[data-id="' + commentId + '"]');
+    var comment = $('#thread div[data-id="' + commentId + '"]');
     focusComment(comment);
     markRead(comment);
 }
 
 function focusComment(comment) {
-    $('#comments').scrollTop($('#comments').scrollTop() + ($(comment).position().top - $('#comments').offset().top));
-    $(comment).focus();
+    $(comment).scrollTo();
+    // $('#thread').scrollTop($('#thread').scrollTop() + ($(comment).position().top - $('#thread').offset().top));
+    // $(comment).focus();
 }
 
 function focusNext() {
     // Find all comments, exit if there are none.
-    var comments = $('#comments .panel');
-    if (comments == null || comments.length == 0)
+    var comments = $('#thread .panel');
+    if (comments === null || comments.length === 0)
         return;
 
     // If we only have one comment, focus on that one.
@@ -600,10 +672,10 @@ function focusNext() {
     }
 
     // Find the first focused comment.
-    var focusedComments = $('#comments .panel:focus');
+    var focusedComments = $('#thread .panel:focus');
     var focusedId;
     // If we don't have a focused comment, find the first one and focus that then exit.
-    if (focusedComments == null || focusedComments.length == 0) {
+    if (focusedComments === null || focusedComments.length === 0) {
         $(comments[0]).focus();
         return;
     } else
@@ -611,14 +683,14 @@ function focusNext() {
 
     // Find the next comment after this one and focus it.
     var nextComment = findNextComment(focusedId);
-    if (nextComment != null)
+    if (nextComment !== null)
         nextComment.focus();
 }
 
 function findNextComment(commentId) {
     // Find all comments, exit if there are none.
-    var comments = $('#comments .panel');
-    if (comments == null || comments.length == 0)
+    var comments = $('#thread .panel');
+    if (comments === null || comments.length === 0)
         return;
 
     // Loop through our comment divs until we get to the currentId, then return the one after that.
@@ -639,8 +711,8 @@ function findNextComment(commentId) {
 
 function findNextUnreadComment(commentId) {
     // Find all comments, exit if there are none.
-    var comments = $('#comments .panel');
-    if (comments == null || comments.length == 0)
+    var comments = $('#thread .panel');
+    if (comments === null || comments.length === 0)
         return;
 
     // Loop through our comment divs until we get to the currentId, then return the one after that.
@@ -666,8 +738,8 @@ function findNextUnreadComment(commentId) {
 
 function focusPrev() {
     // Find all comments, exit if there are none.
-    var comments = $('#comments .panel');
-    if (comments == null || comments.length == 0)
+    var comments = $('#thread .panel');
+    if (comments === null || comments.length === 0)
         return;
 
     // If we only have one comment, focus on that one.
@@ -677,10 +749,10 @@ function focusPrev() {
     }
 
     // Find the first focused comment.
-    var focusedComments = $('#comments .panel:focus');
+    var focusedComments = $('#thread .panel:focus');
     var focusedId;
     // If we don't have a focused comment, find the last one and focus that then exit.
-    if (focusedComments == null || focusedComments.length == 0) {
+    if (focusedComments === null || focusedComments.length === 0) {
         comments.last().focus();
         return;
     } else
