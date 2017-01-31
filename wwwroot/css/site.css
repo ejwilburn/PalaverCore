@@ -14,12 +14,27 @@ footer {
     background-color: #fff;
 }
 
-#rowBody {
+#bodyRow {
     overflow: hidden;
 }
 
 .hide {
     display: none;
+}
+
+html,
+body,
+#sidebar,
+#bodyRow,
+#thread,
+.body-content,
+.container-fluid {
+    height: 100%;
+}
+
+#sidebar,
+#thread {
+    overflow-y: scroll;
 }
 
 
@@ -52,10 +67,6 @@ footer {
 
 /* Sidebar navigation */
 
-#sidebar {
-    overflow-y: auto;
-}
-
 .nav-sidebar {
     background-color: #f5f5f5;
     margin-right: -15px;
@@ -78,7 +89,7 @@ footer {
 
 .nav-sidebar>.active>a {
     color: #fff;
-    background-color: #428bca;
+    background-color: #428bca !important;
 }
 
 .nav-sidebar li.active a:after {
@@ -120,18 +131,6 @@ ul.nav-sidebar form {
     background-color: #fff;
 }
 
-html,
-body,
-#bodyRow,
-#thread,
-.container-fluid {
-    height: 100%;
-}
-
-.body-content {
-    height: 100%;
-}
-
 #threadTitle {
     position: relative;
     padding: 0;
@@ -163,7 +162,7 @@ body,
     background-color: #E5FFEB;
 }
 
-#thread .comment:focus .panel-heading {
+#thread .comment:focus.panel-heading {
     background-color: #97C1C1;
 }
 
@@ -178,10 +177,22 @@ body,
     position: relative;
 }
 
-.replyButtons {
+#thread .unread {
+    background-color: #FFB74D;
+}
+
+#thread .unread .panel-heading {
+    background-color: #FF7043;
+}
+
+.reply-btns {
     background-color: #fff;
     position: absolute;
     bottom: 0;
+}
+
+#threadReplyButton {
+    background-color: #fff;
 }
 
 
@@ -200,4 +211,9 @@ body,
 
 #editorButtons {
     display: inherit;
+}
+
+#thread .comment>#replyDiv {
+    margin-left: 10px;
+    margin-right: 10px;
 }

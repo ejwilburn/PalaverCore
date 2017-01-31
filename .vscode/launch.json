@@ -1,17 +1,11 @@
 {
     "version": "0.2.0",
     "configurations": [{
-            "name": ".NET Core Launch (web)",
+            "name": "Kestrel Server",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceRoot}\\bin\\Debug\\netcoreapp1.1\\Palaver.dll",
-            "args": [],
-            "cwd": "${workspaceRoot}",
-            "stopAtEntry": false,
-            "internalConsoleOptions": "openOnSessionStart",
             "launchBrowser": {
-                "enabled": true,
+                "enabled": false,
                 "args": "${auto-detect-url}",
                 "windows": {
                     "command": "cmd.exe",
@@ -24,6 +18,12 @@
                     "command": "xdg-open"
                 }
             },
+            "preLaunchTask": "build",
+            "program": "${workspaceRoot}/bin/Debug/netcoreapp1.1/Palaver.dll",
+            "args": [],
+            "cwd": "${workspaceRoot}",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart",
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
@@ -31,11 +31,33 @@
                 "/Views": "${workspaceRoot}/Views"
             }
         },
+        /*
         {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach",
             "processId": "${command.pickProcess}"
+        },
+        */
+        {
+            "name": "Launch Chrome",
+            "type": "chrome",
+            "request": "launch",
+            "sourceMaps": true,
+            "userDataDir": "${workspaceRoot}/.chrometemp",
+            "runtimeArgs": [
+                "--high-dpi-support=1",
+                "--force-device-scale-factor=1"
+            ],
+            "url": "https://localhost:5001/",
+            "webRoot": "${workspaceRoot}/wwwroot"
         }
-    ]
+    ],
+    "compounds": [{
+        "name": "Full Debugging",
+        "configurations": [
+            "Kestrel Server",
+            "Launch Chrome"
+        ]
+    }]
 }

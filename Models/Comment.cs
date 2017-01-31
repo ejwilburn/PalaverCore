@@ -60,12 +60,12 @@ namespace Palaver.Models
             Triggers<Comment>.Updating += entry => entry.Entity.Thread.Updated = DateTime.UtcNow;
         }
 
-        public static Comment CreateComment(string text, Thread thread, int? parentId, int userId, PalaverDbContext db)
+        public static Comment CreateComment(string text, Thread thread, int? parentId, User user, PalaverDbContext db)
         {
             Comment newComment = new Comment {
                 Text = text,
                 Thread = thread,
-                UserId = userId,
+                User = user,
                 ParentCommentId = parentId,
                 IsUnread = true
             };

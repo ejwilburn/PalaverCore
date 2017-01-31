@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*  Functionality just for the Index.cshtml page */
+/*  Functionality just for the Thread.cshtml page */
 var _editorDefaultHeight = 100;
 var _srConnection;
 var _allowBack = false;
@@ -54,13 +54,17 @@ function initPage() {
         show: false
     });
 
-    setupAllReplyButtons();
+    setupAllCommentEvents();
 
     // Load mustache templates for rendering new content.
     loadTemplates();
 
     // Setup signalr connection.
     startSignalr();
+
+    // Select the current thread if one is loaded.
+    if (typeof _threadId === 'number')
+        selectThread(_threadId);
 
     // Update the page title.
     updateTitle();
@@ -69,54 +73,50 @@ function initPage() {
     $.getScript('//wow.zamimg.com/widgets/power.js');
 }
 
-function setupAllReplyButtons() {
-    setupReplyButtons($('#threadTitle, #thread .comment'));
+function setupAllCommentEvents() {
+    setupCommentEvents($('#thread .comment'));
 }
 
-function setupReplyButtons(elements) {
+function setupCommentEvents(elements) {
     $(elements).on('mouseenter', function() { showHoverButtons(this); })
         .on('mouseleave', function() { hideHoverButtons(this); })
         .on('focus', function() { showFocusButtons(this); })
-        .on('blur', function() { hideFocusButtons(this); });
+        .on('blur', function() { hideFocusButtons(this); })
+        .filter('.unread').on('click', function() { markRead(this); });
+
 }
 
 function showHoverButtons(element) {
+    if (isEditorInUse())
+        return;
+
     // Exit if the element is already focused, it'll have focus buttons.
     if ($(element).is(':focus'))
         return;
 
-    var buttons = $('replyHoverButtons');
-    buttons.data('id', $(element).data('id'));
-    buttons.data('parentId', $(element).data('parentId'));
-    buttons.insertAfter($(element).children(':last-child')).removeClass('hide');
+    $('#replyHoverButtons').insertAfter($(element).children(':last-child')).removeClass('hide');
 }
 
 function hideHoverButtons(element) {
-    var buttons = $('replyHoverButtons');
-    buttons.removeData('id');
-    buttons.removeData('parentId');
-    buttons.insertAfter('#bodyRow').addClass('hide');
+    $('#replyHoverButtons').insertAfter('#bodyRow').addClass('hide');
 }
 
 function showFocusButtons(element) {
+    if (isEditorInUse())
+        return;
+
     // Hide hover buttons if they're on this element.
     if ($(element).children('#replyHoverButtons').length > 0)
         $('#replyHoverButtons').addClass('hide').insertAfter('#bodyRow');
 
-    var buttons = $('replyFocusButtons');
-    buttons.data('id', $(element).data('id'));
-    buttons.data('parentId', $(element).data('parentId'));
-    buttons.insertAfter($(element).children(':last-child')).removeClass('hide');
+    $('#replyFocusButtons').insertAfter($(element).children(':last-child')).removeClass('hide');
 }
 
 function hideFocusButtons(element) {
-    var buttons = $('replyFocusButtons');
-    buttons.removeData('id');
-    buttons.removeData('parentId');
-    buttons.insertAfter('#bodyRow').addClass('hide');
+    $('#replyFocusButtons').insertAfter('#bodyRow').addClass('hide');
 
     // Show hover buttons if the element still has hover.
-    if ($(element).is(':hover'))
+    if (typeof element !== 'undefined' && $(element).is(':hover'))
         showHoverButtons(element);
 }
 
@@ -172,7 +172,6 @@ function startSignalr() {
         if (console)
             console.log('SignalR reconnected.');
 
-        triedReconnecting = false;
         hideDisconnected();
     });
 
@@ -182,7 +181,6 @@ function startSignalr() {
 function startHub() {
     $.connection.hub.logging = true;
     $.connection.hub.start().done(function() {
-        triedReconnecting = false;
         hideDisconnected();
         if (console)
             console.log("Connected, transport = " + $.connection.hub.transport.name);
@@ -228,14 +226,14 @@ function addOwnComment(comment) {
 
 function renderComment(comment, focus) {
     var renderedComment = $(Mustache.render(window.templates.comment, comment));
-    setupReplyButtons(renderedComment);
+    setupCommentEvents(renderedComment);
     if (typeof comment.ParentCommentId === 'number')
-        $('#thread .comment[data-id="' + comment.ParentCommentId + '"]').children('.panel').append(renderedComment);
+        renderedComment.insertAfter($('#thread .comment[data-id="' + comment.ParentCommentId + '"]').children(':last-child'));
     else
-        $('#thread').children('.comment').append(renderedComment);
+        renderedComment.insertAfter($('#thread').children(':last-child'));
 
     if (focus)
-        focusComment(comment);
+        focusComment(renderedComment);
 
     popThread(comment.ThreadId);
     updateTitle();
@@ -243,7 +241,7 @@ function renderComment(comment, focus) {
 
 // Move the new comment's thread to the top of the thread list.
 function popThread(threadId) {
-    var thread = $('#threads [data-id="' + threadId + '"]');
+    var thread = $('#threads li[data-id="' + threadId + '"]');
     thread.prependTo('#threads');
     // Update the thread's time.
     $(thread).children('.threadTime').html('[' + getCurrentTimeString() + ']');
@@ -333,17 +331,19 @@ function markRead(comment) {
         $(comment).removeClass('unread');
 
         var id = $(comment).data('id');
-        var data = { 'id': id };
 
         updateThreadUnread($(comment).data('threadId'));
 
-        jQuery.put(_baseUrl + 'api/Comment/MarkRead/' + id)
-            .fail(function(error) {
-                if (console) {
-                    console.error('Error marking comment ' + id + ' as read.');
-                    console.error(error);
-                }
-            });
+        showBusy();
+        _srConnection.server.markRead(id).done(function() {
+            clearBusy();
+        }).fail(function(error) {
+            if (console) {
+                console.error('Error marking comment ' + id + ' as read.');
+                console.error(error);
+            }
+            clearBusy();
+        });
     }
     updateTitle();
 }
@@ -370,7 +370,7 @@ function updateThreadUnread(threadId) {
 
 function incrementThreadUnread(threadId) {
     // Get the thread.
-    var thread = $('#threads[data-id="' + threadId + '"]');
+    var thread = $('#threads [data-id="' + threadId + '"]');
     // Get the thread's unread count span.
     var threadCounter = thead.children('.badge');
     // If the counter is empty, set it to (1)
@@ -403,7 +403,7 @@ function loadOwnThread(thread) {
     // $('#thread').html(element);
     $('#thread').html(Mustache.render(window.templates.thread, thread));
     var threadTitle = $('#threadTitle');
-    setupReplyButtons(threadTitle);
+    //setupReplyButton(threadTitle);
     threadTitle.focus();
     selectThread(thread.Id);
     writeReply(threadTitle, null);
@@ -429,12 +429,12 @@ function loadThread(id, isBack) {
     $.get(
         _baseUrl + 'api/RenderThread/' + _threadId,
         function(data) {
-            $('#thread').html(data);
+            $('#thread').replaceWith(data);
             if (typeof _commentId === 'number') {
                 focusAndMarkReadCommentId(_commentId);
                 _commentId = null;
             }
-            setupAllReplyButtons();
+            setupAllCommentEvents();
             selectThread(id);
             updateTitle();
             clearBusy();
@@ -454,11 +454,11 @@ function selectThread(threadId) {
 }
 
 function writeDirectReply(source) {
-    var parentId = $(source).data('parentId');
+    var parentId = $(source).data('parentid');
     if (typeof parentId !== 'number')
         writeReply($('#thread'), null);
     else
-        writeReply($('#thread .comment[data-id"' + parentId + '"]'), parentId);
+        writeReply($('#thread .comment[data-id="' + parentId + '"]'), parentId);
 }
 
 function writeIndentedReply(source) {
@@ -474,11 +474,12 @@ function writeReply(replyingTo, parentId) {
     }
     $('#replyDiv').remove();
 
+    // Hide hover and focus buttons while editor is open.
+    hideHoverButtons();
+    hideFocusButtons();
+
     // Create a new reply div.
-    replyingTo.append('<div id="replyDiv" class="editor"><div id="replyDivInner" class="editor-inner"></div>' +
-        '<a id="sendReplyLink" tabindex="1" href="javascript:;" onclick="sendReply(' + parentId + ')" class="submit">submit</a>' +
-        '<a tabindex="2" href="javascript:;" onclick="cancelReply()">cancel</a>' +
-        '</div>');
+    replyingTo.append(Mustache.render(window.templates.editor, { parentId: parentId }));
     $('#replyDivInner').summernote().on('summernote.keydown', function(we, e) { replyKeyDown(we, e, parentId); })
         .on('summernote.keyup', function(we, e) { replyKeyUp(we, e, parentId); })
         .on('summernote.image.upload', function(we, files) {
@@ -629,36 +630,35 @@ function imgurUpload(files) {
     });
 }
 
+function isEditorInUse() {
+    if ($('input:focus').length > 0 || $('#replyDiv').length > 0)
+        return true;
+    return false;
+}
+
 function pageKeyDown(e) {
-    // If we're entering a new comment, skip checking for unread.
-    var focusedInput = $('input:focus');
-    if (typeof focusedInput !== 'string' || focusedInput.length === 0) {
+    // Only handle these key events if not in an editor or the new thread box.
+    if (!isEditorInUse()) {
         if (e.keyCode == 32) { // space
             goToNextUnread();
             return false;
         } else if (e.keyCode == 82) { // 'r'
             // Find the selected comment if there is one.
             // If not, find the first comment.
-            var focusedComment = $('.comment:focus');
+            var focusedComment = $('#thread .comment:focus');
             var comment;
-            if (typeof focusedComment === 'string' && focusedComment.length > 0)
-                comment = focusedComment[0];
+            if (focusedComment.length > 0)
+                comment = $(focusedComment[0]);
             else {
-                comments = $('.comment');
-                if (comments !== null && comments.length > 0)
-                    comment = comments[0];
-                else
-                    return false; // No comments, do nothing.
+                comment = $('#thread');
             }
 
             // Reply to this comment if shift isn't pressed.
             // Indented reply if shift is pressed.
             if (e.shiftKey === false) {
-                var parentId = $(comment).data('parentId');
-                writeReply(parentId);
+                writeDirectReply(comment);
             } else {
-                var id = $(comment).data('id');
-                writeReply(id);
+                writeIndentedReply(comment);
             }
             return false;
         } else if (e.keyCode == 39 || e.keyCode == 40 || e.keyCode == 78) { // right, down, 'n'
@@ -683,7 +683,7 @@ function goToNextUnread() {
         return;
     }
     // Get the currently selected item.
-    var focusedComments = $('#thread .panel:focus');
+    var focusedComments = $('#thread .comment:focus');
     var focusedId;
     // If we don't have a focused comment, focus and mark the first unread comment as read.
     if (focusedComments === null || focusedComments.length === 0) {
@@ -707,55 +707,39 @@ function focusAndMarkRead(unreadComment) {
 }
 
 function focusCommentId(commentId) {
-    focusComment($('#thread div[data-id="' + commentId + '"]'));
+    focusComment($('#thread .comment[data-id="' + commentId + '"]'));
 }
 
 function focusAndMarkReadCommentId(commentId) {
-    var comment = $('#thread div[data-id="' + commentId + '"]');
-    focusComment(comment);
-    markRead(comment);
+    focusAndMarkRead($('#thread .comment[data-id="' + commentId + '"]'));
 }
 
 function focusComment(comment) {
-    $(comment).scrollTo();
+    var thread = $('#thread');
+    thread.scrollTop(thread.scrollTop() + ($(comment).position().top - thread.offset().top));
     $(comment).focus();
-    // $('#thread').scrollTop($('#thread').scrollTop() + ($(comment).position().top - $('#thread').offset().top));
-    // $(comment).focus();
 }
 
 function focusNext() {
-    // Find all comments, exit if there are none.
-    var comments = $('#thread .panel');
-    if (comments === null || comments.length === 0)
-        return;
-
-    // If we only have one comment, focus on that one.
-    if (comments.length == 1) {
-        $(comments[0]).focus();
+    // Find the first focused comment.
+    var focusedComments = $('#thread .comment:focus');
+    // If we don't have a focused comment, find the first one and focus that then exit.
+    if (focusedComments.length === 0) {
+        focusComment($('#thread .comment').first());
         return;
     }
 
-    // Find the first focused comment.
-    var focusedComments = $('#thread .panel:focus');
-    var focusedId;
-    // If we don't have a focused comment, find the first one and focus that then exit.
-    if (focusedComments === null || focusedComments.length === 0) {
-        $(comments[0]).focus();
-        return;
-    } else
-        focusedId = $(focusedComments[0]).data('id');
-
     // Find the next comment after this one and focus it.
-    var nextComment = findNextComment(focusedId);
+    var nextComment = findNextComment($(focusedComments[0]).data('id'));
     if (nextComment !== null)
-        nextComment.focus();
+        focusComment(nextComment);
 }
 
 function findNextComment(commentId) {
     // Find all comments, exit if there are none.
-    var comments = $('#thread .panel');
-    if (comments === null || comments.length === 0)
-        return;
+    var comments = $('#thread .comment');
+    if (comments.length === 0)
+        return null;
 
     // Loop through our comment divs until we get to the currentId, then return the one after that.
     // If we don't find the Id or there isn't another comment after this one, return null.
@@ -775,9 +759,9 @@ function findNextComment(commentId) {
 
 function findNextUnreadComment(commentId) {
     // Find all comments, exit if there are none.
-    var comments = $('#thread .panel');
-    if (comments === null || comments.length === 0)
-        return;
+    var comments = $('#thread .comment');
+    if (comments.length === 0)
+        return null;
 
     // Loop through our comment divs until we get to the currentId, then return the one after that.
     // If we don't find the Id or there isn't another comment after this one, return null.
@@ -802,31 +786,30 @@ function findNextUnreadComment(commentId) {
 
 function focusPrev() {
     // Find all comments, exit if there are none.
-    var comments = $('#thread .panel');
-    if (comments === null || comments.length === 0)
+    var comments = $('#thread .comment');
+    if (comments.length === 0)
         return;
 
     // If we only have one comment, focus on that one.
     if (comments.length == 1) {
-        $(comments[0]).focus();
+        focusComment($(comments)[0]);
         return;
     }
 
     // Find the first focused comment.
-    var focusedComments = $('#thread .panel:focus');
-    var focusedId;
+    var focusedComments = $('#thread .comment:focus');
     // If we don't have a focused comment, find the last one and focus that then exit.
-    if (focusedComments === null || focusedComments.length === 0) {
-        comments.last().focus();
+    if (focusedComments.length === 0) {
+        focusComment(comments.last());
         return;
-    } else
-        focusedId = $(focusedComments[0]).data('id');
+    }
 
     // Loop through our comment divs until we get to our currently selected one, then focus the one before that, if there is one.
+    var focusedId = $(focusedComments[0]).data('id');
     for (var x = comments.length - 1; x > -1; x--) {
         if ($(comments[x]).data('id') == focusedId) {
             if (x - 1 > -1)
-                $(comments[x - 1]).focus();
+                focusComment($(comments[x - 1]));
 
             return;
         }

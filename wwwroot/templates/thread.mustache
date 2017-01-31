@@ -1,12 +1,15 @@
-            <div id="thread" data-id="{{Id}}" class="col-sm-9 col-md-10 main container-fluid">
-                <!--toggle sidebar button-->
-                <p class="visible-xs">
-                    <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas"><i class="glyphicon glyphicon-chevron-left"></i></button>
-                </p>
-                <div id="threadTitle" class="container page-header" tabindex="-1">
-                    <h3>{{Title}}</h3>
-                </div>
-                {{#Comments}}
-                    {{>comment}}
-                {{/Comments}}
-            </div><!--/thread-->
+<div id="thread" data-id="{{Id}}" class="col-sm-9 col-md-10 main container-fluid">
+    <!--toggle sidebar button-->
+    <p class="visible-xs">
+        <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas"><i class="glyphicon glyphicon-chevron-left"></i></button>
+    </p>
+    <div id="threadTitle" class="container" tabindex="-1">
+        <h3>{{Title}}</h3>
+    </div>
+    <div id="threadReplyButton" class="thread-reply-btn btn-group btn-group-xs">
+        <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
+    </div>
+    {{#Comments}}
+        {{>comment}}
+    {{/Comments}}
+</div><!--/thread-->

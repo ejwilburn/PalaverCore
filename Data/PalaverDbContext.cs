@@ -195,11 +195,21 @@ namespace Palaver.Data
             return newThread;
         }
 
-        public async Task<Comment> CreateCommentAsync(string text, int threadId, int? parentId, int userId)
+        public async Task<Comment> CreateCommentAsync(string text, int threadId, int? parentId, User user)
         {
             Palaver.Models.Thread thread = await Threads.Where(t => t.Id == threadId).Include(t => t.Subscriptions).SingleAsync();
-            Comment newComment = Comment.CreateComment(text, thread, parentId, userId, this);
+            Comment newComment = Comment.CreateComment(text, thread, parentId, user, this);
             Comments.Add(newComment);
+
+            // Add unread comments for subscribed users.
+            foreach (Subscription sub in thread.Subscriptions)
+            {
+                UnreadComments.Add(new UnreadComment {
+                    UserId = sub.UserId,
+                    Comment = newComment
+                });
+            }
+
             await SaveChangesAsync();
             return newComment;
         }

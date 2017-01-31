@@ -33,7 +33,6 @@
         <script src="~/signalr/hubs" asp-append-version="true"></script>
         <script src="~/lib/summernote/dist/summernote.js"></script>
         <script src="~/lib/mustache.js/mustache.js"></script>
-        <script src="~/lib/jquery.scrollTo/jquery.scrollTo.js"></script>
         <script src="~/js/thread.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
@@ -50,10 +49,6 @@
             asp-fallback-src="~/lib/mustache.js/mustache.js"
             asp-fallback-test="Mustache">
         </script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-scrollTo/2.1.2/jquery.scrollTo.min.js"
-            asp-fallback-src="~/lib/jquery.scrollTo/jquery.scrollTo.js"
-            asp-fallback-test="$().scrollTo">
-        </script>
         <script src="~/js/thread.min.js" asp-append-version="true"></script>
     </environment>
     <!-- Mustache templates to be loaded via AJAX later for formatting new threads & comments -->
@@ -62,6 +57,7 @@
     <script src="~/templates/thread.mustache" type="x-mustache-template" name="thread"></script>
     <script src="~/templates/commentNotification.mustache" type="x-mustache-template" name="commentNotification"></script>
     <script src="~/templates/threadNotification.mustache" type="x-mustache-template" name="threadNotification"></script>
+    <script src="~/templates/editor.mustache" type="x-mustache-template" name="editor"></script>
 }
 
         <div id="bodyRow" class="row row-offcanvas row-offcanvas-left body-content">
@@ -76,11 +72,11 @@
                 </div>
             </div>
         </div>
-        <div id="replyFocusButtons" class="replyButtons btn-group btn-group-xs hide">
-            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode)"><span class="glyphicon glyphicon-console" /></button>
-            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode)"><span class="glyphicon glyphicon-share-alt flip" /></button>
+        <div id="replyFocusButtons" class="reply-btns btn-group btn-group-xs hide">
+            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
+            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-share-alt flip" /></button>
         </div>
-        <div id="replyHoverButtons" class="replyButtons btn-group btn-group-xs hide">
-            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode)"><span class="glyphicon glyphicon-console" /></button>
-            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode)"><span class="glyphicon glyphicon-share-alt flip" /></button>
+        <div id="replyHoverButtons" class="reply-btns btn-group btn-group-xs hide">
+            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
+            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-share-alt flip" /></button>
         </div>

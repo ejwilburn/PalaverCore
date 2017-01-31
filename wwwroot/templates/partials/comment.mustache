@@ -1,11 +1,11 @@
-                <div class="panel panel-default comment{{#IsUnread}} unread{{/IsUnread}}"  tabindex="-1" data-id="{{Id}} data-parentId="{{ParentCommentId}}">
-                    <div class="panel-heading">
-                        <h3 class="panel-title username">{{UserName}}<small class="pull-right time">[{{CreatedDisplay}}]</small></h3>
-                    </div>
-                    <div class="panel-body">
-                        {{{Text}}}
-                    </div>
-                    {{#Comments}}
-                        {{>comment}}
-                    {{/Comments}}
-                </div> <!-- Comment {{Id}} -->
+<div class="panel panel-default comment{{#IsUnread}} unread{{/IsUnread}}"  tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}">
+    <div class="panel-heading">
+        <h3 class="panel-title username">{{UserName}}<small class="pull-right time">[{{CreatedDisplay}}]</small></h3>
+    </div>
+    <div class="panel-body">
+        {{{Text}}}
+    </div>
+    {{#Comments}}
+        {{>comment}}
+    {{/Comments}}
+</div> <!-- Comment {{Id}} -->

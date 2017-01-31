@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -27,6 +28,7 @@ using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 using Palaver.Models.CommentViewModels;
+using Microsoft.EntityFrameworkCore;
 
 namespace Palaver.Controllers
 {
@@ -68,7 +70,7 @@ namespace Palaver.Controllers
             {
                 return BadRequest();
             }
-            Comment newComment = await _context.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, _userId);
+            Comment newComment = await _context.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
             return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, CreateResultViewModel>(newComment));
         }
 
@@ -76,14 +78,21 @@ namespace Palaver.Controllers
         [Route("MarkRead/{id}")]
         public async Task<IActionResult> MarkRead(int id)
         {
-            UnreadComment unread = await _context.UnreadComments.FindAsync(new UnreadComment { CommentId = id, UserId = _userId });
-            if (unread == null)
+            _context.Remove(new UnreadComment { UserId = _userId, CommentId = id });
+            try 
             {
-                return NotFound();
+                await _context.SaveChangesAsync();
             }
-            _context.UnreadComments.Remove(unread);
-            await _context.SaveChangesAsync();
+            catch (DbUpdateConcurrencyException)
+            {
+                // This means the unreadcomment is already deleted, ignore it.
+            }
             return new NoContentResult();
+        }
+
+        private async Task<User> GetUserAsync()
+        {
+            return await _userManager.GetUserAsync(_httpContextAccessor.HttpContext.User);
         }
     }
 }

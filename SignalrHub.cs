@@ -28,6 +28,8 @@ using Microsoft.AspNetCore.SignalR.Hubs;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace Palaver
 {
@@ -104,15 +106,34 @@ namespace Palaver
         /// <param name="replyText">Text of the reply.</param>
         public async Task NewComment(string commentText, int threadId, int? parentId)
         {
-            Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, GetUserId());
+            User curUser = await GetUserAsync();
+            Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
             Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
             Clients.Caller.addOwnComment(resultView);
             Clients.Others.addComment(resultView);
         }
 
+        public async Task MarkRead(int id)
+        {
+            _dbContext.Remove(new UnreadComment { UserId = GetUserId(), CommentId = id });
+            try 
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                // This means the unreadcomment is already deleted, ignore it.
+            }
+        }
+
         private int GetUserId()
         {
             return int.Parse(_userManager.GetUserId((ClaimsPrincipal)Context.User));
+        }
+
+        private async Task<User> GetUserAsync()
+        {
+            return await _userManager.GetUserAsync((ClaimsPrincipal)Context.User);
         }
 
         public void Dispose()
