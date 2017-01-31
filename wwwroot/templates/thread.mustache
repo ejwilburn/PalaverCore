@@ -3,9 +3,9 @@
                 <p class="visible-xs">
                     <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas"><i class="glyphicon glyphicon-chevron-left"></i></button>
                 </p>
-                <h3 id="threadTitle" class="page-header">
-                    {{Title}}
-                </h3>
+                <div id="threadTitle" class="container page-header" tabindex="-1">
+                    <h3>{{Title}}</h3>
+                </div>
                 {{#Comments}}
                     {{>comment}}
                 {{/Comments}}

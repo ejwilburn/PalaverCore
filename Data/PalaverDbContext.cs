@@ -116,7 +116,7 @@ namespace Palaver.Data
                 foreach (Comment comment in comments)
                 {
                     comment.IsFavorite = comment.FavoriteComments.Exists(fc => fc.UserId == userId);
-                    comment.Comments = (List<Comment>)comment.Comments.OrderBy(c => c.Created);
+                    comment.Comments = comment.Comments.OrderBy(c => c.Created).ToList();
                 }
 
                 // Get unread counts for threads.
@@ -163,7 +163,7 @@ namespace Palaver.Data
                 foreach (Comment curComment in comment.Thread.Comments)
                 {
                     curComment.IsFavorite = curComment.FavoriteComments.Exists(fc => fc.UserId == userId);
-                    curComment.Comments = (List<Comment>)curComment.Comments.OrderBy(c => c.Created);
+                    curComment.Comments = curComment.Comments.OrderBy(c => c.Created).ToList();
                 }
 
                 // Get unread flag for comments.

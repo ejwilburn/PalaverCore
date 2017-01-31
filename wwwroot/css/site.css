@@ -18,6 +18,10 @@ footer {
     overflow: hidden;
 }
 
+.hide {
+    display: none;
+}
+
 
 /*
  * Off Canvas
@@ -128,6 +132,12 @@ body,
     height: 100%;
 }
 
+#threadTitle {
+    position: relative;
+    padding: 0;
+    width: 100%;
+}
+
 
 /*
 @media (min-width: 768px) {
@@ -144,9 +154,17 @@ body,
 
 /* Comments */
 
-#thread .panel>.panel {
+#thread .comment>.comment {
     margin-left: 10px;
     margin-right: 10px;
+}
+
+#thread .comment:focus {
+    background-color: #E5FFEB;
+}
+
+#thread .comment:focus .panel-heading {
+    background-color: #97C1C1;
 }
 
 #thread .flip {
@@ -156,15 +174,14 @@ body,
     -ms-transform: scaleY(-1);
 }
 
-#thread .panel-footer {
-    display: none;
-    background-color: #fff;
-    border-top: 0;
-    height: 0;
+#thread .comment {
+    position: relative;
 }
 
-#thread .panel-default:hover .panel-footer {
-    display: inherit;
+.replyButtons {
+    background-color: #fff;
+    position: absolute;
+    bottom: 0;
 }
 
 
@@ -179,4 +196,8 @@ body,
     height: 15px;
     width: 100%;
     margin: 0;
+}
+
+#editorButtons {
+    display: inherit;
 }

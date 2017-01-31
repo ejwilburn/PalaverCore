@@ -30,7 +30,7 @@
     </script>
     <environment names="Development">
         <script src="~/lib/signalr/jquery.signalR.js"></script>
-        <script src="~/signalr/hubs"></script>
+        <script src="~/signalr/hubs" asp-append-version="true"></script>
         <script src="~/lib/summernote/dist/summernote.js"></script>
         <script src="~/lib/mustache.js/mustache.js"></script>
         <script src="~/lib/jquery.scrollTo/jquery.scrollTo.js"></script>
@@ -75,4 +75,12 @@
                     Connection lost, reconnecting...
                 </div>
             </div>
+        </div>
+        <div id="replyFocusButtons" class="replyButtons btn-group btn-group-xs hide">
+            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode)"><span class="glyphicon glyphicon-console" /></button>
+            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode)"><span class="glyphicon glyphicon-share-alt flip" /></button>
+        </div>
+        <div id="replyHoverButtons" class="replyButtons btn-group btn-group-xs hide">
+            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode)"><span class="glyphicon glyphicon-console" /></button>
+            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode)"><span class="glyphicon glyphicon-share-alt flip" /></button>
         </div>
