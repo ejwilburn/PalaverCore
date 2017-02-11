@@ -199,7 +199,7 @@ ClientBin/
 *.publishsettings
 node_modules/
 orleans.codegen.cs
-.chrometemp/
+.vscode/chrometemp
 
 # RIA/Silverlight projects
 Generated_Code/

@@ -5,15 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Palaver</title>
 
+    <!-- Material Design fonts -->
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700">
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/icon?family=Material+Icons">
+
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/lib/bootstrap-material-design/dist/css/bootstrap-material-design.css" />
+        <link rel="stylesheet" href="~/lib/bootstrap-material-design/dist/css/ripples.css" />
         <link rel="stylesheet" href="~/lib/summernote/dist/summernote.css" />
     </environment>
     <environment names="Staging,Production">
-        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
+        <link rel="stylesheet" href="//ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
-        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.2/summernote.css"
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/css/bootstrap-material-design.min.css"
+              asp-fallback-href="~/lib/bootstrap-material-design/dist/css/bootstrap-material-design.min.css"
+              asp-fallback-test-class="btn" asp-fallback-test-property="border-radius" asp-fallback-test-value="2px" />
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/css/ripples.min.css"
+              asp-fallback-href="~/lib/bootstrap-material-design/dist/css/ripples.min.css"
+              asp-fallback-test-class="withripple" asp-fallback-test-property="position" asp-fallback-test-value="relative" />
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/summernote/0.8.2/summernote.css"
             asp-fallback-href="~/lib/summernote/dist/summernote.css"
             asp-fallback-test-class="note-editor" asp-fallback-test-property="position" asp-fallback-test-value="relative" />
     </environment>
@@ -61,12 +73,6 @@
     </div>
 
     @RenderBody()
-    @*
-    @*
-    <footer>
-        <p>&copy; 2017 - Palaver</p>
-    </footer>
-    *@
 
     <script type="text/javascript">
         var _baseUrl = "@Url.Content("~/")";
@@ -74,16 +80,26 @@
     <environment names="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/lib/bootstrap-material-design/dist/js/material.js"></script>
+        <script src="~/lib/bootstrap-material-design/dist/js/ripples.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
-        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.1.1.min.js"
+        <script src="//ajax.aspnetcdn.com/ajax/jquery/jquery-3.1.1.min.js"
                 asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
                 asp-fallback-test="window.jQuery">
         </script>
-        <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/bootstrap.min.js"
+        <script src="//ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/bootstrap.min.js"
                 asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
+        </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/js/material.min.js"
+                asp-fallback-src="~/lib/bootstrap-material-design/dist/js/material.min.js"
+                asp-fallback-test="$.material">
+        </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/js/ripples.min.js"
+                asp-fallback-src="~/lib/bootstrap-material-design/dist/js/ripples.min.js"
+                asp-fallback-test="Ripples">
         </script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>

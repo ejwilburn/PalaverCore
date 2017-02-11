@@ -161,6 +161,7 @@ namespace Palaver
                     template: "{controller=Thread}/{action=Index}/{id?}");
             });
 
+            app.UseWebSockets();
             app.UseSignalR();
         }
     }

@@ -31,20 +31,12 @@
                 "/Views": "${workspaceRoot}/Views"
             }
         },
-        /*
-        {
-            "name": ".NET Core Attach",
-            "type": "coreclr",
-            "request": "attach",
-            "processId": "${command.pickProcess}"
-        },
-        */
         {
             "name": "Launch Chrome",
             "type": "chrome",
             "request": "launch",
             "sourceMaps": true,
-            "userDataDir": "${workspaceRoot}/.chrometemp",
+            "userDataDir": "${workspaceRoot}/.vscode/chrometemp",
             "runtimeArgs": [
                 "--high-dpi-support=1",
                 "--force-device-scale-factor=1"

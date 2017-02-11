@@ -28,7 +28,6 @@ using Microsoft.AspNetCore.SignalR.Hubs;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
 namespace Palaver

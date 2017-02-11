@@ -44,8 +44,6 @@
         "Microsoft.AspNetCore.Authentication.Google": "*",
         "Microsoft.AspNetCore.WebSockets.Server": "*",
         "Microsoft.AspNetCore.Owin": "*",
-        "Microsoft.AspNetCore.WebSockets": "*",
-        "Microsoft.AspNetCore.WebSockets.Protocol": "*",
         "Microsoft.AspNetCore.SignalR.Server": "0.2.0-*",
         "AutoMapper": "*",
         "AutoMapper.Extensions.Microsoft.DependencyInjection": "*",
