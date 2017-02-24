@@ -72,6 +72,7 @@ body,
     margin-right: -15px;
     margin-bottom: 20px;
     margin-left: -15px;
+    overflow-x: hidden;
 }
 
 .sidebar-header {
@@ -92,6 +93,8 @@ body,
     background-color: #428bca !important;
 }
 
+
+/*
 .nav-sidebar li.active a:after {
     content: "";
     position: absolute;
@@ -104,6 +107,7 @@ body,
     margin-left: 0px;
     right: -7px;
 }
+*/
 
 ul.nav-sidebar form {
     padding-top: 0px;
@@ -121,6 +125,10 @@ ul.nav-sidebar form {
     float: right;
 }
 
+img.rounded {
+    border-radius: 4px;
+}
+
 
 /*
  * Main content
@@ -131,14 +139,43 @@ ul.nav-sidebar form {
     background-color: #fff;
 }
 
+#thread {
+    overflow: auto;
+}
+
 #threadTitle {
     position: relative;
-    padding: 0;
+    padding: 0px 10px 5px 10px;
+    margin: 15px 0px 10px 0px;
     width: 100%;
+    height: 60px;
+    line-height: 50px;
+}
+
+#threadTitle * {
+    padding: 0px;
+    line-height: 50px;
+    display: inline-block;
+}
+
+#threadTitle h1 {
+    margin: 0px 20px 0px 20px;
+    left: 50px;
+}
+
+#threadReplyButton {
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
 
 /*
+#thread .all-comments-wrapper {
+    padding-right: 0 10px 0 10px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 @media (min-width: 768px) {
     .main {
         padding-right: 40px;
@@ -175,6 +212,29 @@ ul.nav-sidebar form {
 
 #thread .comment {
     position: relative;
+    padding-bottom: 1px;
+    padding: 3px;
+    margin-top: 2px;
+    margin-bottom: 10px;
+    /*
+    border: 1px;
+    border-radius: 1px;
+    border-style: solid; 
+    */
+}
+
+#thread .comment-body,
+#thread .byline {
+    display: block;
+}
+
+#thread .comment-body {
+    margin-left: 105px;
+}
+
+#thread .comment-wrapper {
+    margin: 0 0 0 10px;
+    padding: 0px;
 }
 
 #thread .unread {
@@ -198,8 +258,8 @@ ul.nav-sidebar form {
 
 /* Editor */
 
-#replyDiv .editor {
-    margin-left: 20px;
+#replyDiv {
+    padding: 10px;
     width: 100%;
 }
 
@@ -216,4 +276,8 @@ ul.nav-sidebar form {
 #thread .comment>#replyDiv {
     margin-left: 10px;
     margin-right: 10px;
+}
+
+#replyDiv .note-frame {
+    margin-bottom: 0px;
 }

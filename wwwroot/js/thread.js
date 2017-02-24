@@ -484,15 +484,14 @@ function writeReply(replyingTo, parentId) {
         .on('summernote.keyup', function(we, e) { replyKeyUp(we, e, parentId); })
         .on('summernote.image.upload', function(we, files) {
             imgurUpload(we, files);
-        })
-        .summernote('focus');
-    $('#summernote').summernote({
-        callbacks: {
-            onImageUpload: function(files) {
-                var fileUrl = imgurUpload(files);
-            }
-        }
-    });
+        }).summernote('focus');
+    // $('#summernote').summernote({
+    //     callbacks: {
+    //         onImageUpload: function(files) {
+    //             var fileUrl = imgurUpload(files);
+    //         }
+    //     }
+    // });
 }
 
 // Handle shift+enter to save and escape to cancel.

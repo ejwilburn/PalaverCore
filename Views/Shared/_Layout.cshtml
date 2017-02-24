@@ -67,7 +67,18 @@
                     </div>
                     </form>
                 </div>
+
                 @await Html.PartialAsync("_LoginPartial")
+
+                <ul class="nav navbar-nav navbar-right">
+                    <li id="theme-selector" class="dropdown">
+                        <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Theme
+                            <b class="caret"></b></a>   
+                        <ul class="dropdown-menu">
+                        </ul>
+                    </li>
+                </ul>
+
             </div>
         </div>
     </div>

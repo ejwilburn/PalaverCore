@@ -1,6 +1,6 @@
 <div class="panel panel-default comment{{#IsUnread}} unread{{/IsUnread}}"  tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}">
-    <div class="container-fluid">
-        <div class="byline well pull-left clearefix">
+    <div class="panel-body clearfix">
+        <div class="well byline pull-left">
             <div class="row-picture">
                 <img class="rounded" src="http://lorempixel.com/40/40/people" alt="icon">
             </div>
@@ -10,7 +10,7 @@
                 <small class="byline-time">[{{CreatedDisplay}}]</small>
             </h5>
         </div>
-        <div class="well comment-body">
+        <div class="container-fluid">
             {{{Text}}}
         </div>
     </div>

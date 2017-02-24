@@ -1,4 +1,5 @@
 <div id="thread" data-id="{{Id}}" class="col-sm-9 col-md-10 main container-fluid">
+    <!--toggle sidebar button-->
     <p class="visible-xs">
         <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas"><i class="glyphicon glyphicon-chevron-left"></i></button>
     </p>
@@ -8,11 +9,15 @@
     </div>
     {{^Comments}}
     <div id="threadReplyButton" class="thread-reply-btn btn-group btn-group-xs">
-        <button type="button" class="btn btn-raised btn-xs" data-toggle="tooltip" data-placement="top" data-original-title="Reply"
-            onclick="writeDirectReply(this.parentNode.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
+        <button type="button" class="btn btn-primary btn-xs" data-toggle="tooltip" data-placement="top" data-original-title="Reply"
+            onclick="writeDirectReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
     </div>
     {{/Comments}}
-    {{#Comments}}
-        {{>comment}}
-    {{/Comments}}
-</div><!-- thread -->
+    <div class="container-fluid all-comments-wrapper">
+        <div class="list-group{{^Comments}} hidden{{/Comments}}">
+        {{#Comments}}
+            {{>comment}}
+        {{/Comments}}
+        </div>
+    </div>
+</div><!--/thread-->
