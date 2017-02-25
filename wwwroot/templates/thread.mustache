@@ -8,11 +8,13 @@
     </div>
     {{^Comments}}
     <div id="threadReplyButton" class="thread-reply-btn btn-group btn-group-xs">
-        <button type="button" class="btn btn-raised btn-xs" data-toggle="tooltip" data-placement="top" data-original-title="Reply"
+        <button type="button" class="btn btn-raised btn-xs" data-toggle="tooltip" data-placement="top" title="" data-original-title="Reply"
             onclick="writeDirectReply(this.parentNode.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
     </div>
     {{/Comments}}
-    {{#Comments}}
-        {{>comment}}
-    {{/Comments}}
+    <ul class="media-list{{^Comments}} hidden{{/Comments}}">
+        {{#Comments}}
+            {{>comment}}
+        {{/Comments}}
+    </ul>
 </div><!-- thread -->

@@ -54,7 +54,7 @@ function initPage() {
         show: false
     });
 
-    setupAllCommentEvents();
+    //setupAllCommentEvents();
 
     // Load mustache templates for rendering new content.
     loadTemplates();
@@ -73,6 +73,7 @@ function initPage() {
     $.getScript('//wow.zamimg.com/widgets/power.js');
 }
 
+/*
 function setupAllCommentEvents() {
     setupCommentEvents($('#thread .comment'));
 }
@@ -119,6 +120,7 @@ function hideFocusButtons(element) {
     if (typeof element !== 'undefined' && $(element).is(':hover'))
         showHoverButtons(element);
 }
+*/
 
 function showDisconnected() {
     $('#reconnectingModal').modal('show');
@@ -226,11 +228,15 @@ function addOwnComment(comment) {
 
 function renderComment(comment, focus) {
     var renderedComment = $(Mustache.render(window.templates.comment, comment));
-    setupCommentEvents(renderedComment);
+    //setupCommentEvents(renderedComment);
+    var commentList;
     if (typeof comment.ParentCommentId === 'number')
-        renderedComment.insertAfter($('#thread .comment[data-id="' + comment.ParentCommentId + '"]').children(':last-child'));
+        commentList = $('#thread .comment[data-id="' + comment.ParentCommentId + '"]>ul.media-list');
     else
-        renderedComment.insertAfter($('#thread').children(':last-child'));
+        commentList = $('#thread>ul.media-list');
+
+    renderedComment.appendTo(commentList);
+    commentList.removeClass('hidden');
 
     if (focus)
         focusComment(renderedComment);
@@ -434,7 +440,7 @@ function loadThread(id, isBack) {
                 focusAndMarkReadCommentId(_commentId);
                 _commentId = null;
             }
-            setupAllCommentEvents();
+            //setupAllCommentEvents();
             selectThread(id);
             updateTitle();
             clearBusy();
@@ -475,8 +481,8 @@ function writeReply(replyingTo, parentId) {
     $('#replyDiv').remove();
 
     // Hide hover and focus buttons while editor is open.
-    hideHoverButtons();
-    hideFocusButtons();
+    //hideHoverButtons();
+    //hideFocusButtons();
 
     // Create a new reply div.
     replyingTo.append(Mustache.render(window.templates.editor, { parentId: parentId }));

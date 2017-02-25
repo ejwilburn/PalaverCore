@@ -1,20 +1,36 @@
-<div class="panel panel-default comment{{#IsUnread}} unread{{/IsUnread}}"  tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}">
-    <div class="container-fluid">
-        <div class="byline well pull-left clearefix">
-            <div class="row-picture">
-                <img class="rounded" src="http://lorempixel.com/40/40/people" alt="icon">
+<li class="media comment{{#IsUnread}} unread{{/IsUnread}}"  tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}">
+    <div class="media-left comment-header">
+        <div class="media-object panel">
+            <div class="panel-body">
+                <!-- <img class="rounded" src="http://lorempixel.com/40/40/people" alt="icon"> -->
+                <h5 class="comment-username">
+                    {{UserName}}
+                    <br>
+                    <small class="comment-time">[{{CreatedDisplay}}]</small>
+                </h5>
             </div>
-            <h5 class="byline-username">
-                {{UserName}}
-                <br>
-                <small class="byline-time">[{{CreatedDisplay}}]</small>
-            </h5>
         </div>
-        <div class="well comment-body">
-            {{{Text}}}
+        <div class="btn-group btn-group-xs btn-group-reply">
+            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode.parentNode.parentNode)"
+                data-toggle="tooltip" data-placement="top" title="" data-original-title="Reply">
+                <span class="glyphicon glyphicon-console" />
+            </button>
+            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode.parentNode.parentNode)"
+                 data-toggle="tooltip" data-placement="top" title="" data-original-title="Indented Reply">
+                 <span class="glyphicon glyphicon-share-alt flip" />
+            </button>
         </div>
     </div>
-    {{#Comments}}
-        {{>comment}}
-    {{/Comments}}
-</div> <!-- Comment {{Id}} -->
+    <div class="media-body comment-body">
+        <div class="panel">
+            <div class="panel-body">
+                {{{Text}}}
+            </div>
+        </div>
+    </div>
+    <ul class="media-list comment-list bs-callout bs-callout-info{{^Comments}} hidden{{/Comments}}">
+        {{#Comments}}
+                {{>comment}}
+        {{/Comments}}
+    </ul>
+</li> <!-- Comment {{Id}} -->
