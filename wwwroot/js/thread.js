@@ -26,6 +26,8 @@ var _pageTitle = 'Palaver';
 var HUB_ACTION_RETRY_DELAY = 5000; // in ms
 var NOTIFICATION_SNIPPET_SIZE = 100;
 var NOTIFICATION_DURATION = 5000; // In ms
+var threadEditor = null,
+    inlineEditor = null;
 var wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
 window.templates = {};
 
@@ -54,8 +56,6 @@ function initPage() {
         show: false
     });
 
-    //setupAllCommentEvents();
-
     // Load mustache templates for rendering new content.
     loadTemplates();
 
@@ -66,6 +66,8 @@ function initPage() {
     if (typeof _threadId === 'number')
         selectThread(_threadId);
 
+    initThreadEditor();
+
     // Update the page title.
     updateTitle();
 
@@ -73,54 +75,38 @@ function initPage() {
     $.getScript('//wow.zamimg.com/widgets/power.js');
 }
 
-/*
-function setupAllCommentEvents() {
-    setupCommentEvents($('#thread .comment'));
+function cleanUpEditors() {
+    cleanUpInlineEditor();
+    cleanUpThreadEditor();
 }
 
-function setupCommentEvents(elements) {
-    $(elements).on('mouseenter', function() { showHoverButtons(this); })
-        .on('mouseleave', function() { hideHoverButtons(this); })
-        .on('focus', function() { showFocusButtons(this); })
-        .on('blur', function() { hideFocusButtons(this); })
-        .filter('.unread').on('click', function() { markRead(this); });
-
+function cleanUpThreadEditor() {
+    if (Jodit && Jodit.editors && Jodit.editors.joditthreadEditor) {
+        Jodit.editors.joditthreadEditor.destroy();
+        inlineEditor = null;
+    }
 }
 
-function showHoverButtons(element) {
-    if (isEditorInUse())
-        return;
-
-    // Exit if the element is already focused, it'll have focus buttons.
-    if ($(element).is(':focus'))
-        return;
-
-    $('#replyHoverButtons').insertAfter($(element).children(':last-child')).removeClass('hide');
+function cleanUpInlineEditor() {
+    if (Jodit && Jodit.editors && Jodit.editors.joditinlineEditorArea) {
+        Jodit.editors.joditinlineEditorArea.destroy();
+        threadEditor = null;
+    }
+    $('#inlineReplyForm').remove();
 }
 
-function hideHoverButtons(element) {
-    $('#replyHoverButtons').insertAfter('#bodyRow').addClass('hide');
+function initThreadEditor() {
+    // Init the static thread editor.
+    threadEditor = new Jodit('#threadEditor', {
+        language: 'en'
+    });
+    Jodit.editors.joditthreadEditor.$editor.on('keydown', function(e) { replyKeyDown(e, null); });
 }
 
-function showFocusButtons(element) {
-    if (isEditorInUse())
-        return;
-
-    // Hide hover buttons if they're on this element.
-    if ($(element).children('#replyHoverButtons').length > 0)
-        $('#replyHoverButtons').addClass('hide').insertAfter('#bodyRow');
-
-    $('#replyFocusButtons').insertAfter($(element).children(':last-child')).removeClass('hide');
+function reinitEditors() {
+    cleanUpEditors();
+    initThreadEditor();
 }
-
-function hideFocusButtons(element) {
-    $('#replyFocusButtons').insertAfter('#bodyRow').addClass('hide');
-
-    // Show hover buttons if the element still has hover.
-    if (typeof element !== 'undefined' && $(element).is(':hover'))
-        showHoverButtons(element);
-}
-*/
 
 function showDisconnected() {
     $('#reconnectingModal').modal('show');
@@ -224,6 +210,15 @@ function addComment(comment) {
 function addOwnComment(comment) {
     comment.IsUnread = false;
     renderComment(comment, true);
+
+    clearBusy();
+
+    if (Jodit.editors.joditinlineEditorArea) {
+        Jodit.editors.joditinlineEditorArea.destroy();
+        $('#inlineReplyForm').remove();
+    } else {
+        Jodit.editors.joditthreadEditor.val('');
+    }
 }
 
 function renderComment(comment, focus) {
@@ -231,9 +226,9 @@ function renderComment(comment, focus) {
     //setupCommentEvents(renderedComment);
     var commentList;
     if (typeof comment.ParentCommentId === 'number')
-        commentList = $('#thread .comment[data-id="' + comment.ParentCommentId + '"]>ul.media-list');
+        commentList = $('#thread .comment[data-id="' + comment.ParentCommentId + '"]>.comments');
     else
-        commentList = $('#thread>ul.media-list');
+        commentList = $('#thread>.comments');
 
     renderedComment.appendTo(commentList);
     commentList.removeClass('hidden');
@@ -247,10 +242,10 @@ function renderComment(comment, focus) {
 
 // Move the new comment's thread to the top of the thread list.
 function popThread(threadId) {
-    var thread = $('#threads li[data-id="' + threadId + '"]');
+    var thread = $('#threads [data-id="' + threadId + '"]');
     thread.prependTo('#threads');
     // Update the thread's time.
-    $(thread).children('.threadTime').html('[' + getCurrentTimeString() + ']');
+    $(thread).children('.time').html(getCurrentTimeString());
 }
 
 function getCurrentTimeString() {
@@ -360,13 +355,15 @@ function updateThreadUnread(threadId) {
 
     // If the count is greater than 0, simply update the unread counter next to the thread.
     // Otherwise, clear the unread counter for the thread.
-    var thread = $('#threads[data-id="' + threadId + '"]');
-    var unreadBadge = thread.children('.badge');
+    var thread = $('#threads [data-id="' + threadId + '"]');
+    var unreadCounter = thread.find('.unreadcount');
     if (unreadCount > 0) {
-        unreadBadge.html(unreadCount.toString());
+        unreadCounter.html(unreadCount.toString());
+        unreadCounter.removeClass('hidden');
         thread.addClass('unread');
     } else {
-        unreadBadge.html('0');
+        unreadCounter.html('0');
+        unreadCounter.addClass('hidden');
         thread.removeClass('unread');
     }
 
@@ -377,21 +374,21 @@ function updateThreadUnread(threadId) {
 function incrementThreadUnread(threadId) {
     // Get the thread.
     var thread = $('#threads [data-id="' + threadId + '"]');
-    // Get the thread's unread count span.
-    var threadCounter = thead.children('.badge');
     // If the counter is empty, set it to (1)
-    var threadCounterHtml = threadCounter.html();
-    if (threadCounterHtml === null || threadCounterHtml.length === 0 || threadCounterHtml === '0')
-        threadCounter.html('1');
-    else {
+    var unreadCounter = thread.find('.unreadcount');
+    var threadCounterHtml = unreadLabel.html();
+    if (threadCounterHtml === null || threadCounterHtml.length === 0 || threadCounterHtml === '0') {
+        unreadCounter.html('1');
+    } else {
         // Convert the counter to an int and increment it.
         var count = parseInt(threadCounterHtml) + 1;
         // Update the page display.
-        threadCounter.html(count.toString());
+        unreadCounter.html(count.toString());
     }
 
     // Make sure that thread has the unread class.
     thread.addClass('unread');
+    unreadCounter.removeClass('hidden');
 
     // Update the page title with the unread count.
     updateTitle();
@@ -405,14 +402,12 @@ function loadOwnThread(thread) {
     history.pushState({ threadId: thread.Id }, document.title, _baseUrl + 'Thread/' + thread.Id);
     _allowBack = true;
 
-    // var element = $(Mustache.render(window.templates.thread, thread));
-    // $('#thread').html(element);
     $('#thread').html(Mustache.render(window.templates.thread, thread));
     var threadTitle = $('#threadTitle');
-    //setupReplyButton(threadTitle);
+    reinitEditors();
     threadTitle.focus();
+    $('body').scrollTop(0);
     selectThread(thread.Id);
-    writeReply(threadTitle, null);
 }
 
 function loadThread(id, isBack) {
@@ -443,6 +438,8 @@ function loadThread(id, isBack) {
             //setupAllCommentEvents();
             selectThread(id);
             updateTitle();
+            reinitEditors();
+            $('body').scrollTop(0);
             clearBusy();
         }
     ).fail(function(error) {
@@ -461,9 +458,9 @@ function selectThread(threadId) {
 
 function writeDirectReply(source) {
     var parentId = $(source).data('parentid');
-    if (typeof parentId !== 'number')
-        writeReply($('#thread'), null);
-    else
+    if (typeof parentId !== 'number') {
+        focusComment(Jodit.editors.joditthreadEditor.$editor);
+    } else
         writeReply($('#thread .comment[data-id="' + parentId + '"]'), parentId);
 }
 
@@ -474,40 +471,25 @@ function writeIndentedReply(source) {
 function writeReply(replyingTo, parentId) {
     // Close other reply divs.
     try {
-        $('#replyDivInner').summernote('destroy');
+        if (Jodit.editors.joditinlineEditorArea)
+            Jodit.editors.joditinlineEditorArea.destroy();
+        inlineEditor = null;
     } catch (ex) {
         // Do nothing.
     }
-    $('#replyDiv').remove();
-
-    // Hide hover and focus buttons while editor is open.
-    //hideHoverButtons();
-    //hideFocusButtons();
+    $('#inlineReplyForm').remove();
 
     // Create a new reply div.
     replyingTo.append(Mustache.render(window.templates.editor, { parentId: parentId }));
-    $('#replyDivInner').summernote().on('summernote.keydown', function(we, e) { replyKeyDown(we, e, parentId); })
-        .on('summernote.keyup', function(we, e) { replyKeyUp(we, e, parentId); })
-        .on('summernote.image.upload', function(we, files) {
-            imgurUpload(we, files);
-        }).summernote('focus');
-    // $('#summernote').summernote({
-    //     callbacks: {
-    //         onImageUpload: function(files) {
-    //             var fileUrl = imgurUpload(files);
-    //         }
-    //     }
-    // });
+    inlineEditor = new Jodit('#inlineEditorArea', {
+        language: 'en',
+        autofocus: true,
+    }).focus();
+    Jodit.editors.joditinlineEditorArea.$editor.on('keydown', function(e) { replyKeyDown(e, parentId); });
 }
 
-// Handle shift+enter to save and escape to cancel.
-var shiftDown = false;
-
-function replyKeyDown(we, e, commentId) {
-    if (e.keyCode == 16) {
-        shiftDown = true;
-        return true;
-    } else if (shiftDown && e.keyCode == 13) {
+function replyKeyDown(e, commentId) {
+    if (e.shiftKey && e.keyCode == 13) {
         sendReply(commentId);
         return false;
     } else if (e.keyCode == 27) {
@@ -517,22 +499,26 @@ function replyKeyDown(we, e, commentId) {
     return true;
 }
 
-function replyKeyUp(we, e, commentId) {
-    if (e.keyCode == 16) {
-        shiftDown = false;
-    }
-    return true;
-}
-
 function cancelReply() {
-    $('#replyDivInner').summernote('destroy');
-    $('#replyDiv').remove();
+    if (Jodit.editors.joditinlineEditorArea) {
+        Jodit.editors.joditinlineEditorArea.destroy();
+        inlineEditor.destroy();
+        $('#inlineReplyForm').remove();
+    } else {
+        Jodit.editors.joditthreadEditor.val('');
+        $('#thread .comment').last().focus();
+    }
 }
 
 function sendReply(parentCommentId) {
-    var text = $('#replyDivInner').summernote('code');
-    $('#replyDivInner').summernote('destroy');
-    $('#replyDiv').remove();
+    showBusy();
+
+    var text;
+    if (Jodit.editors.joditinlineEditorArea) {
+        text = Jodit.editors.joditinlineEditorArea.val();
+    } else {
+        text = Jodit.editors.joditthreadEditor.val();
+    }
 
     // Make sure all URLs in the reply have a target.  If not, set it to _blank.
     // We're doing this by using a fake DIV with jquery to find the links.
@@ -593,12 +579,11 @@ function newThread(title) {
 }
 
 function showBusy() {
-    // TODO: Add good busy behavior.
-    $(document).addClass('busy');
+    $(document.body).css({ 'cursor': 'wait' });
 }
 
 function clearBusy() {
-    $(document).removeClass('busy');
+    $(document.body).css({ 'cursor': 'default' });
 }
 
 function newThreadFailed(error, title) {
@@ -636,7 +621,7 @@ function imgurUpload(files) {
 }
 
 function isEditorInUse() {
-    if ($('input:focus').length > 0 || $('#replyDiv').length > 0)
+    if ($('input:focus').length > 0 || $('.jodit_editor:focus').length > 0 || $('#inlineReplyForm').length > 0)
         return true;
     return false;
 }
@@ -720,8 +705,8 @@ function focusAndMarkReadCommentId(commentId) {
 }
 
 function focusComment(comment) {
-    var thread = $('#thread');
-    thread.scrollTop(thread.scrollTop() + ($(comment).position().top - thread.offset().top));
+    var body = $('body');
+    body.scrollTop(body.scrollTop() + ($(comment).position().top - body.offset().top));
     $(comment).focus();
 }
 

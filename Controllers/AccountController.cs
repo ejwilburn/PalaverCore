@@ -135,7 +135,7 @@ namespace Palaver.Controllers
 
         //
         // POST: /Account/LogOff
-        [HttpPost]
+        [HttpGet]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogOff()
         {

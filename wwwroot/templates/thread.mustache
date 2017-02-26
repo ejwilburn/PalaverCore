@@ -1,20 +1,16 @@
-<div id="thread" data-id="{{Id}}" class="col-sm-9 col-md-10 main container-fluid">
-    <p class="visible-xs">
-        <button type="button" class="btn btn-primary btn-xs" data-toggle="offcanvas"><i class="glyphicon glyphicon-chevron-left"></i></button>
-    </p>
-    <div id="threadTitle" class="page-header clearfix" data-threadid="{{Id}}">
-        <img class="rounded pull-left" src="http://lorempixel.com/50/50/people" alt="icon">
-        <h1 class="thread-title">{{Title}}</h1>
-    </div>
-    {{^Comments}}
-    <div id="threadReplyButton" class="thread-reply-btn btn-group btn-group-xs">
-        <button type="button" class="btn btn-raised btn-xs" data-toggle="tooltip" data-placement="top" title="" data-original-title="Reply"
-            onclick="writeDirectReply(this.parentNode.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
-    </div>
-    {{/Comments}}
-    <ul class="media-list{{^Comments}} hidden{{/Comments}}">
+<div id="thread" class="pusher">
+    <div class="ui container fluid threaded comments" data-id="{{Id}}">
+        <div id="threadTitle" class="ui fixed dividing header"><h3>{{Title}}<div class="sub header">{{UserName}}&nbsp;-&nbsp;<div class="date">{{CreatedDisplay}}</div></div></h3></div>
         {{#Comments}}
             {{>comment}}
         {{/Comments}}
-    </ul>
-</div><!-- thread -->
+    </div>
+    <form id="threadEditorForm" class="ui reply form full width fluid">
+        <div class="field">
+            <textarea id="threadEditor"></textarea>
+        </div>
+        <div class="ui blue labeled submit icon button" onclick="sendReply(null, 'thread')">
+            <i class="icon edit"></i> Add Reply
+        </div>
+    </form>
+</div>

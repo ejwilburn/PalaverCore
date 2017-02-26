@@ -1,18 +1,18 @@
-<div class="col-sm-3 col-md-2 sidebar-offcanvas" id="sidebar" role="navigation">
-    <ul class="nav nav-sidebar">
-        <li class="sidebar-header"><h3>Threads</h3></li>
-        <form class="navbar-form" role="new" onsubmit="newThread(); return false;">
-        <div class="input-group">
-            <input id="newthread" type="text" class="form-control" placeholder="New Thread">
-            <div class="input-group-btn">
-                <button class="btn btn-default" type="button" onclick="newThread()"><i class="glyphicon glyphicon-plus"></i></button>
+<div id="threadList" class="ui left visible wide sidebar">
+    <div class="ui top attached segment">
+        <div class="item">
+            <div class="ui header"><h3>Threads</h3></div>
+            <div class="ui item">
+                <div class="ui icon input fluid full width">
+                    <input id="newthread" class="prompt" type="text" placeholder="New thread title...">
+                    <i class="add link icon" onclick="newThread()"></i>
+                </div>
             </div>
         </div>
-        </form>
-    </ul>
-    <ul id="threads" class="nav nav-sidebar">
-    {{#.}}
-        {{>threadListItem}}
-    {{/.}}
-    </ul>
+        <div id="threads" class="ui middle aligned divided selection list">
+            {{#.}}
+                {{>threadListItem}}
+            {{/.}}
+        </div>
+    </div>
 </div>

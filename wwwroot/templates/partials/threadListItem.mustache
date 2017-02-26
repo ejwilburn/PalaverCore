@@ -1,5 +1,11 @@
-<li {{#UnreadCount}}class="unread" {{/UnreadCount}}data-id="{{Id}}">
-    <a  href="/Thread/{{Id}}" onclick="loadThread({{Id}}); return false;">
-        <span class="thread-date">[{{UpdatedDisplay}}]</span> <span class="badge">{{UnreadCount}}</span>{{Title}}
-    </a>
-</li>
+<div class="item link{{#hasUnread}} unread{{/hasUnread}}" data-id="{{Id}}" onclick="loadThread({{Id}}); return false;">
+    <div class="right floated content">
+        <div class="ui mini purple label unreadcount{{^hasUnread}} hidden{{/hasUnread}}">{{UnreadCount}}</div>
+    </div>
+    <div class="content">
+        <div class="header truncate" data-inverted="" data-tooltip="{{Title}}" data-position="top left">
+            {{Title}}
+        </div>
+        <sub class="time">{{UpdatedDisplay}}</sub>
+    </div>
+</div>

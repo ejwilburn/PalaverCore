@@ -1,5 +1,11 @@
-<div id="replyDiv" class="editor">
-    <div id="replyDivInner" class="editor-inner"></div>
-    <a id="sendReplyLink" href="javascript:void(0)" onclick="sendReply({{#parentId}}{{parentId}}{{/parentId}})" class="btn btn-raised btn-primary btn-sm">Save</a>
-    <a id="sendReplyLink" href="javascript:void(0)" onclick="cancelReply()" class="btn btn-raised btn-sm">Cancel</a>
-</div>
+<form id="inlineReplyForm" class="ui reply form full width fluid editor">
+    <div class="field">
+        <textarea id="inlineEditorArea"></textarea>
+    </div>
+    <div class="ui blue labeled submit icon button" onclick="sendReply({{#parentId}}{{parentId}}{{/parentId}}, 'inline')">
+        <i class="icon edit"></i> Add Reply
+    </div>
+    <div class="ui red labeled cancel icon button" onclick="cancelReply('inline')">
+        <i class="icon edit"></i> Cancel
+    </div>
+</form>

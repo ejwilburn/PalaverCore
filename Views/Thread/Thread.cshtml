@@ -13,12 +13,12 @@
 @section Styles
 {
     <environment names="Development">
-        <link rel="stylesheet" href="~/lib/summernote/dist/summernote.css" />
+        <link rel="stylesheet" href="~/lib/jodit/jodit.min.css" />
     </environment>
     <environment names="Staging,Production">
-        <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.2/summernote.css"
-            asp-fallback-href="~/lib/summernote/dist/summernote.css"
-            asp-fallback-test-class="note-editor" asp-fallback-test-property="position" asp-fallback-test-value="relative" />
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jodit/2.5.62/jodit.min.css"
+              asp-fallback-href="~/lib/jodit/jodit.min.css"
+              asp-fallback-test-class="jodit_fullsize_box" asp-fallback-test-property="z-index" asp-fallback-test-value="100000" />
     </environment>
 }
 @section Scripts
@@ -31,7 +31,7 @@
     <environment names="Development">
         <script src="~/lib/signalr/jquery.signalR.js"></script>
         <script src="~/signalr/hubs" asp-append-version="true"></script>
-        <script src="~/lib/summernote/dist/summernote.js"></script>
+        <script src="~/lib/jodit/jodit.min.js"></script>
         <script src="~/lib/mustache.js/mustache.js"></script>
         <script src="~/js/thread.js" asp-append-version="true"></script>
     </environment>
@@ -41,9 +41,9 @@
             asp-fallback-test="$.signalR">
         </script>
         <script src="~/signalr/hubs"></script>
-        <script src="http://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.2/summernote.js"
-            asp-fallback-src="~/lib/summernote/dist/summernote.min.js"
-            asp-fallback-test="summernote">
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jodit/2.5.62/jodit.min.js"
+                asp-fallback-src="~/lib/jodit/jodit.min.js"
+                asp-fallback-test="window.Jodit">
         </script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"
             asp-fallback-src="~/lib/mustache.js/mustache.js"
@@ -60,23 +60,15 @@
     <script src="~/templates/editor.mustache" type="x-mustache-template" name="editor"></script>
 }
 
-        <div id="bodyRow" class="row row-offcanvas row-offcanvas-left body-content">
-            @Html.Raw(CustomHtmlHelper.RenderThreadListFromTemplate(Model))
+@Html.Raw(CustomHtmlHelper.RenderThreadListFromTemplate(Model))
 
-            @Html.Raw(CustomHtmlHelper.RenderThreadFromTemplate(thread))
-        </div><!--/row-->
-        <div id="reconnectingModal" class="modal bs-example-modal-sm" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
-            <div class="modal-dialog modal-sm" role="document">
-                <div class="modal-content">
-                    Connection lost, reconnecting...
-                </div>
-            </div>
-        </div>
-        <div id="replyFocusButtons" class="reply-btns btn-group btn-group-xs hide">
-            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
-            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-share-alt flip" /></button>
-        </div>
-        <div id="replyHoverButtons" class="reply-btns btn-group btn-group-xs hide">
-            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-console" /></button>
-            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode.parentNode)"><span class="glyphicon glyphicon-share-alt flip" /></button>
-        </div>
+@Html.Raw(CustomHtmlHelper.RenderThreadFromTemplate(thread))
+
+<div id="reconnectingModal" class="ui modal" role="dialog">
+    <div class="content">
+        Connection lost, reconnecting...
+    </div>
+    <div class="actions">
+        <div class="ui cancel button" onclick="location.reload()">Reload</div>
+    </div>
+</div>

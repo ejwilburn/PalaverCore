@@ -1,36 +1,18 @@
-<li class="media comment{{#IsUnread}} unread{{/IsUnread}}"  tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}">
-    <div class="media-left comment-header">
-        <div class="media-object panel">
-            <div class="panel-body">
-                <!-- <img class="rounded" src="http://lorempixel.com/40/40/people" alt="icon"> -->
-                <h5 class="comment-username">
-                    {{UserName}}
-                    <br>
-                    <small class="comment-time">[{{CreatedDisplay}}]</small>
-                </h5>
-            </div>
-        </div>
-        <div class="btn-group btn-group-xs btn-group-reply">
-            <button type="button" class="btn btn-default" onclick="writeDirectReply(this.parentNode.parentNode.parentNode)"
-                data-toggle="tooltip" data-placement="top" title="" data-original-title="Reply">
-                <span class="glyphicon glyphicon-console" />
-            </button>
-            <button type="button" class="btn btn-default" onclick="writeIndentedReply(this.parentNode.parentNode.parentNode)"
-                 data-toggle="tooltip" data-placement="top" title="" data-original-title="Indented Reply">
-                 <span class="glyphicon glyphicon-share-alt flip" />
-            </button>
+<div class="comment{{#IsUnread}} unread green{{/IsUnread}}" tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}">
+    <a class="avatar"><img class="rounded" src="http://lorempixel.com/40/40/people?{{Id}}"></a>
+    <div class="content">
+        <a class="author">{{UserName}}</a>
+        <div class="metadata"><span class="date">{{CreatedDisplay}}</span></div>
+        <div class="text">{{{Text}}}</div>
+        <div class="actions">
+            <a class="reply" onclick="writeDirectReply(this.parentNode.parentNode.parentNode)">Reply</a>
+            <a class="reply" onclick="writeIndentedReply(this.parentNode.parentNode.parentNode)">Nested Reply</a>
         </div>
     </div>
-    <div class="media-body comment-body">
-        <div class="panel">
-            <div class="panel-body">
-                {{{Text}}}
-            </div>
-        </div>
-    </div>
-    <ul class="media-list comment-list bs-callout bs-callout-info{{^Comments}} hidden{{/Comments}}">
+    <!-- <div class="comments{{^Comments}} hidden{{/Comments}}"> -->
+    <div class="comments">
         {{#Comments}}
-                {{>comment}}
+            {{>comment}}
         {{/Comments}}
-    </ul>
-</li> <!-- Comment {{Id}} -->
+    </div>
+</div> <!-- Comment {{Id}} -->
