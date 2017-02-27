@@ -27,7 +27,6 @@ using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 using Palaver.Models.CommentViewModels;
-using Microsoft.EntityFrameworkCore;
 
 namespace Palaver.Controllers
 {
@@ -37,14 +36,14 @@ namespace Palaver.Controllers
     public class CommentController : Controller
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly PalaverDbContext _context;
+        private readonly PalaverDbContext _dbContext;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly int _userId;
 
-        public CommentController(PalaverDbContext context, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
-            _context = context;
+            _dbContext = dbContext;
             _userManager = userManager;
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
@@ -54,7 +53,7 @@ namespace Palaver.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            Comment comment = await _context.GetCommentAsync(id, _userId);
+            Comment comment = await _dbContext.GetCommentAsync(id, _userId);
             if (comment == null)
             {
                 return NotFound();
@@ -69,7 +68,7 @@ namespace Palaver.Controllers
             {
                 return BadRequest();
             }
-            Comment newComment = await _context.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
+            Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
             return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, CreateResultViewModel>(newComment));
         }
 
@@ -77,15 +76,7 @@ namespace Palaver.Controllers
         [Route("MarkRead/{id}")]
         public async Task<IActionResult> MarkRead(int id)
         {
-            _context.Remove(new UnreadComment { UserId = _userId, CommentId = id });
-            try 
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                // This means the unreadcomment is already deleted, ignore it.
-            }
+            await _dbContext.MarkCommentReadByUser(id, _userId);
             return new NoContentResult();
         }
 

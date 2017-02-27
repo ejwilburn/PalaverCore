@@ -1,18 +1,13 @@
-<div class="comment{{#IsUnread}} unread green{{/IsUnread}}" tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}">
+<div tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}" {{#IsUnread}}class="comment unread" onclick="markRead(this)"{{/IsUnread}}{{^IsUnread}}class="comment"{{/IsUnread}}>
     <a class="avatar"><img class="rounded" src="http://lorempixel.com/40/40/people?{{Id}}"></a>
     <div class="content">
         <a class="author">{{UserName}}</a>
         <div class="metadata"><span class="date">{{CreatedDisplay}}</span></div>
         <div class="text">{{{Text}}}</div>
         <div class="actions">
-            <a class="reply" onclick="writeDirectReply(this.parentNode.parentNode.parentNode)">Reply</a>
-            <a class="reply" onclick="writeIndentedReply(this.parentNode.parentNode.parentNode)">Nested Reply</a>
+            <a class="reply" onclick="replyTo({{ParentCommentId}})">Reply</a>
+            <a class="reply" onclick="replyTo({{Id}})">Nested Reply</a>
         </div>
     </div>
-    <!-- <div class="comments{{^Comments}} hidden{{/Comments}}"> -->
-    <div class="comments">
-        {{#Comments}}
-            {{>comment}}
-        {{/Comments}}
-    </div>
+    <div class="minimal comments">{{#Comments}}{{>comment}}{{/Comments}}</div>
 </div> <!-- Comment {{Id}} -->

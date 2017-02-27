@@ -22,7 +22,23 @@ body {
     background-color: orange;
 }
 
+#thread .comments:empty {
+    display: none !important;
+}
+
+#thread .comments {
+    padding-top: 41px 0 34px 20px;
+}
+
 .truncate {
     white-space: nowrap;
     text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+
+/****** Comments *********/
+
+#thread .unread {
+    background-color: teal;
 }

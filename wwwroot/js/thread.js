@@ -26,8 +26,7 @@ var _pageTitle = 'Palaver';
 var HUB_ACTION_RETRY_DELAY = 5000; // in ms
 var NOTIFICATION_SNIPPET_SIZE = 100;
 var NOTIFICATION_DURATION = 5000; // In ms
-var threadEditor = null,
-    inlineEditor = null;
+var editor, editorForm;
 var wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
 window.templates = {};
 
@@ -66,7 +65,7 @@ function initPage() {
     if (typeof _threadId === 'number')
         selectThread(_threadId);
 
-    initThreadEditor();
+    initEditor();
 
     // Update the page title.
     updateTitle();
@@ -75,37 +74,23 @@ function initPage() {
     $.getScript('//wow.zamimg.com/widgets/power.js');
 }
 
-function cleanUpEditors() {
-    cleanUpInlineEditor();
-    cleanUpThreadEditor();
-}
-
-function cleanUpThreadEditor() {
-    if (Jodit && Jodit.editors && Jodit.editors.joditthreadEditor) {
-        Jodit.editors.joditthreadEditor.destroy();
-        inlineEditor = null;
-    }
-}
-
-function cleanUpInlineEditor() {
-    if (Jodit && Jodit.editors && Jodit.editors.joditinlineEditorArea) {
-        Jodit.editors.joditinlineEditorArea.destroy();
-        threadEditor = null;
-    }
-    $('#inlineReplyForm').remove();
-}
-
-function initThreadEditor() {
-    // Init the static thread editor.
-    threadEditor = new Jodit('#threadEditor', {
-        language: 'en'
+function initEditor() {
+    // Init the Jodit editor.
+    editorForm = $('#editorForm');
+    editorHome = $('#editorHome');
+    editor = new Jodit('#editor', {
+        language: 'en',
+        minHeight: _editorDefaultHeight
     });
-    Jodit.editors.joditthreadEditor.$editor.on('keydown', function(e) { replyKeyDown(e, null); });
+    editor.$editor.on('keydown', replyKeyDown);
+    return editor;
 }
 
-function reinitEditors() {
-    cleanUpEditors();
-    initThreadEditor();
+function resetEditor() {
+    editor.val('');
+    editorForm.data('parentid', null);
+    $(editor.$element).blur();
+    editorHome.append(editorForm);
 }
 
 function showDisconnected() {
@@ -210,15 +195,8 @@ function addComment(comment) {
 function addOwnComment(comment) {
     comment.IsUnread = false;
     renderComment(comment, true);
-
+    resetEditor();
     clearBusy();
-
-    if (Jodit.editors.joditinlineEditorArea) {
-        Jodit.editors.joditinlineEditorArea.destroy();
-        $('#inlineReplyForm').remove();
-    } else {
-        Jodit.editors.joditthreadEditor.val('');
-    }
 }
 
 function renderComment(comment, focus) {
@@ -404,7 +382,7 @@ function loadOwnThread(thread) {
 
     $('#thread').html(Mustache.render(window.templates.thread, thread));
     var threadTitle = $('#threadTitle');
-    reinitEditors();
+    resetEditor();
     threadTitle.focus();
     $('body').scrollTop(0);
     selectThread(thread.Id);
@@ -438,7 +416,7 @@ function loadThread(id, isBack) {
             //setupAllCommentEvents();
             selectThread(id);
             updateTitle();
-            reinitEditors();
+            resetEditor();
             $('body').scrollTop(0);
             clearBusy();
         }
@@ -456,41 +434,26 @@ function selectThread(threadId) {
     $('#threads [data-id="' + threadId + '"]').addClass('active');
 }
 
-function writeDirectReply(source) {
-    var parentId = $(source).data('parentid');
+function replyTo(parentId) {
     if (typeof parentId !== 'number') {
-        focusComment(Jodit.editors.joditthreadEditor.$editor);
-    } else
-        writeReply($('#thread .comment[data-id="' + parentId + '"]'), parentId);
-}
-
-function writeIndentedReply(source) {
-    writeReply($(source), $(source).data('id'));
-}
-
-function writeReply(replyingTo, parentId) {
-    // Close other reply divs.
-    try {
-        if (Jodit.editors.joditinlineEditorArea)
-            Jodit.editors.joditinlineEditorArea.destroy();
-        inlineEditor = null;
-    } catch (ex) {
-        // Do nothing.
+        // They're replying to the thread or a direct reply to a top level comment.
+        focusComment(editorForm);
+        editor.$editor.focus();
+        return;
     }
-    $('#inlineReplyForm').remove();
+    var replyingTo = $('.comment [data-id="' + parentId + '"]');
 
-    // Create a new reply div.
-    replyingTo.append(Mustache.render(window.templates.editor, { parentId: parentId }));
-    inlineEditor = new Jodit('#inlineEditorArea', {
-        language: 'en',
-        autofocus: true,
-    }).focus();
-    Jodit.editors.joditinlineEditorArea.$editor.on('keydown', function(e) { replyKeyDown(e, parentId); });
+    // Move the editor to the comment being replied to.
+    editor.val('');
+    editorForm.data('parentid', parentId);
+    replyingTo.children('.comments').append(editorForm);
+    focusComment(editorForm);
+    editor.$editor.focus();
 }
 
-function replyKeyDown(e, commentId) {
+function replyKeyDown(e) {
     if (e.shiftKey && e.keyCode == 13) {
-        sendReply(commentId);
+        sendReply();
         return false;
     } else if (e.keyCode == 27) {
         cancelReply();
@@ -500,25 +463,14 @@ function replyKeyDown(e, commentId) {
 }
 
 function cancelReply() {
-    if (Jodit.editors.joditinlineEditorArea) {
-        Jodit.editors.joditinlineEditorArea.destroy();
-        inlineEditor.destroy();
-        $('#inlineReplyForm').remove();
-    } else {
-        Jodit.editors.joditthreadEditor.val('');
-        $('#thread .comment').last().focus();
-    }
+    resetEditor();
 }
 
-function sendReply(parentCommentId) {
+function sendReply() {
     showBusy();
 
-    var text;
-    if (Jodit.editors.joditinlineEditorArea) {
-        text = Jodit.editors.joditinlineEditorArea.val();
-    } else {
-        text = Jodit.editors.joditthreadEditor.val();
-    }
+    var text = editor.val();
+    var parentCommentId = editorForm.data('parentid');
 
     // Make sure all URLs in the reply have a target.  If not, set it to _blank.
     // We're doing this by using a fake DIV with jquery to find the links.
@@ -621,7 +573,7 @@ function imgurUpload(files) {
 }
 
 function isEditorInUse() {
-    if ($('input:focus').length > 0 || $('.jodit_editor:focus').length > 0 || $('#inlineReplyForm').length > 0)
+    if ($('input:focus').length > 0 || $('.jodit_editor:focus').length > 0)
         return true;
     return false;
 }

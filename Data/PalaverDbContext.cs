@@ -28,6 +28,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using EntityFrameworkCore.Triggers;
 using Palaver.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Palaver.Data
 {
@@ -212,6 +213,16 @@ namespace Palaver.Data
 
             await SaveChangesAsync();
             return newComment;
+        }
+
+        public async Task MarkCommentReadByUser(int commentId, int userId)
+        {
+            UnreadComment uc = await UnreadComments.FindAsync(userId, commentId);
+            if (uc != null)
+            {
+                UnreadComments.Remove(uc);
+                await SaveChangesAsync();
+            }
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
