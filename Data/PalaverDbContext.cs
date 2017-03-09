@@ -28,7 +28,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using EntityFrameworkCore.Triggers;
 using Palaver.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Palaver.Data
 {
@@ -46,11 +45,11 @@ namespace Palaver.Data
         {
         }
 
-		public async Task<List<Palaver.Models.Thread>> GetThreadsListAsync(int userId)
-		{
+        public async Task<List<Palaver.Models.Thread>> GetThreadsListAsync(int userId)
+        {
             List<Palaver.Models.Thread> threads = await Threads.OrderByDescending(t => t.Updated).ToListAsync();
 
-			// Get unread counts for each thread for the current user.
+            // Get unread counts for each thread for the current user.
             var countTotals = await UnreadComments.Where(uc => uc.UserId == userId)
                 .Join(Comments, uc => uc.CommentId, c => c.Id, (uc, c) => new { UnreadComment = uc, Comment = c })
                 .GroupBy(ucAndc => ucAndc.Comment.ThreadId)
@@ -74,24 +73,12 @@ namespace Palaver.Data
                 fav.Thread.IsFavorite = true;
             }
 
-			return threads;
-		}
+            return threads;
+        }
 
-		public async Task<Palaver.Models.Thread> GetThreadAsync(int threadId, int userId)
-		{
+        public async Task<Palaver.Models.Thread> GetThreadAsync(int threadId, int userId)
+        {
             Palaver.Models.Thread thread;
-			//List<Comment> threadComments = Comments.Include("User").Include("Comments").Where(x => x.SubjectId == subjectId).OrderBy(x=> x.CreatedTime).ToList();
-            // Palaver.Models.Thread thread = await Threads.Where(t => t.Id == threadId)
-            //     .Include(t => t.User)
-            //     .Include(t => t.Comments)
-            //         .ThenInclude(c => c.User)
-            //     .Include(t => t.Comments)
-            //         .ThenInclude(c => c.Comments)
-            //     .Include(t => t.Comments)
-            //         .ThenInclude(c => c.UnreadComments.Where(uc => uc.UserId == userId))
-            //     .Include(t => t.Comments)
-            //         .ThenInclude(c => c.FavoriteComments.Where(fc => fc.UserId == userId))
-            //     .SingleAsync();
 
             // Includes can't be ordered, so to ge the comments back in order of creation date the comments are loaded directly
             // and include the Thread, rather than the other way around.
@@ -141,11 +128,11 @@ namespace Palaver.Data
             thread.IsFavorite = thread.FavoriteThreads.Exists(ft => ft.UserId == userId);
             thread.IsSubscribed = thread.Subscriptions.Exists(s => s.UserId == userId);
 
-			return thread;
-		}
+            return thread;
+        }
 
-		public async Task<Palaver.Models.Comment> GetCommentAsync(int id, int userId)
-		{
+        public async Task<Palaver.Models.Comment> GetCommentAsync(int id, int userId)
+        {
             Comment comment = await Comments.Where(c => c.Id == id)
                 .Include(c => c.Thread)
                     .ThenInclude(t => t.Comments)
@@ -177,8 +164,8 @@ namespace Palaver.Data
                 }
             }
 
-			return comment;
-		}
+            return comment;
+        }
 
         public async Task<Palaver.Models.Thread> CreateThreadAsync(string title, int userId)
         {
@@ -257,23 +244,6 @@ namespace Palaver.Data
             builder.Entity<User>(u => {
                 u.Property(props => props.Email).IsRequired(true);
             });
-
-            /*
-            builder.Entity<User>(u => {
-                u.Property(props => props.Email).IsRequired(true);
-                u.Property(props => props.CreatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-            });
-
-            builder.Entity<Thread>( t => {
-                t.Property(props => props.CreatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-                t.Property(props => props.LastUpdatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-            });
-
-            builder.Entity<Comment>( c => {
-                c.Property(props => props.CreatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-                c.Property(props => props.LastUpdatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-            });
-            */
 
             // Setup one to many relationship for Comment->Comment
             builder.Entity<Comment>()
