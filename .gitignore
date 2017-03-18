@@ -18,9 +18,6 @@
 # Skip paket downloaded packages.
 paket-files
 
-# Skip README for now, it's a scaffold default.
-README.md
-
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
@@ -34,11 +31,12 @@ bld/
 [Oo]bj/
 
 # JS libraries managed by bower.
-wwwroot/lib/
-!wwwroot/lib/semantic/
-
-# Local history tracking.
-.history/
+wwwroot/lib/jodit
+wwwroot/lib/jquery
+wwwroot/lib/jquery-validation
+wwwroot/lib/jquery-validation-unobtrusive
+wwwroot/lib/mustache.js
+wwwroot/lib/signalr
 
 # Visual Studio 2015 cache/options directory
 .vs/
