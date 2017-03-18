@@ -1,6 +1,7 @@
 <div id="thread" class="pusher">
+    {{#Id}}
     <div class="ui container fluid minimal threaded comments" data-id="{{Id}}">
-        <div id="threadTitle" class="ui fixed dividing header"><h3>{{Title}}<div class="sub header">{{UserName}}&nbsp;-&nbsp;<div class="date">{{CreatedDisplay}}</div></div></h3></div>
+        <div id="threadTitle" class="ui fixed dividing header"><h3>{{Title}}<div class="sub header">{{UserName}}&nbsp;-&nbsp;<span class="date">{{CreatedDisplay}}</span></div></h3></div>
         {{#Comments}}
             {{>comment}}
         {{/Comments}}
@@ -14,9 +15,10 @@
             <div class="ui blue labeled submit icon button" onclick="sendReply()">
                 <i class="icon edit"></i> Add Reply
             </div>
-            <div class="ui red labeled cancel icon button" onclick="cancelReply()">
+            <div class="ui hidden red labeled cancel icon button" onclick="cancelReply()">
                 <i class="icon edit"></i> Cancel
             </div>
         </form>
     </div>
+    {{/Id}}
 </div>

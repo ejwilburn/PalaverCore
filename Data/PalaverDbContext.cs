@@ -47,7 +47,7 @@ namespace Palaver.Data
 
         public async Task<List<Palaver.Models.Thread>> GetThreadsListAsync(int userId)
         {
-            List<Palaver.Models.Thread> threads = await Threads.OrderByDescending(t => t.Updated).ToListAsync();
+            List<Palaver.Models.Thread> threads = await Threads.OrderByDescending(t => t.Updated).Include(t => t.User).ToListAsync();
 
             // Get unread counts for each thread for the current user.
             var countTotals = await UnreadComments.Where(uc => uc.UserId == userId)

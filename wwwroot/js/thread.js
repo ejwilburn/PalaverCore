@@ -35,7 +35,6 @@ $(document).ready(function() {
 });
 
 function initPage() {
-    //
     window.onpopstate = function(event) {
         if (typeof event.state.threadId !== 'number')
             return;
@@ -45,6 +44,9 @@ function initPage() {
         }
         loadThread(event.state.threadId, false);
     };
+
+    if (typeof _threadId !== 'number')
+        return;
 
     // Register our primary key event handler for the page.
     $(document).keydown(pageKeyDown);
@@ -87,10 +89,14 @@ function initEditor() {
 }
 
 function resetEditor() {
-    editor.val('');
-    editorForm.data('parentid', null);
-    $(editor.$element).blur();
-    editorHome.append(editorForm);
+    if (editor) {
+        editor.val('');
+        editorForm.data('parentid', null);
+        $(editor.$element).blur();
+        editorHome.append(editorForm);
+    } else {
+        initEditor();
+    }
 }
 
 function showDisconnected() {
@@ -408,15 +414,17 @@ function loadThread(id, isBack) {
     $.get(
         _baseUrl + 'api/RenderThread/' + _threadId,
         function(data) {
+            if (editor) {
+                editor.destroy();
+            }
             $('#thread').replaceWith(data);
             if (typeof _commentId === 'number') {
                 focusAndMarkReadCommentId(_commentId);
                 _commentId = null;
             }
-            //setupAllCommentEvents();
             selectThread(id);
             updateTitle();
-            resetEditor();
+            initEditor();
             $('body').scrollTop(0);
             clearBusy();
         }
@@ -441,7 +449,7 @@ function replyTo(parentId) {
         editor.$editor.focus();
         return;
     }
-    var replyingTo = $('.comment [data-id="' + parentId + '"]');
+    var replyingTo = $('.comment[data-id="' + parentId + '"]');
 
     // Move the editor to the comment being replied to.
     editor.val('');
