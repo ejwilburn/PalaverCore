@@ -26,8 +26,16 @@ body {
     display: none !important;
 }
 
-#thread .comments {
-    padding-top: 41px 0 34px 20px;
+#thread .comment .comments {
+    padding: 5px 0 5px 10px;
+    margin: 0;
+    border: 0;
+    border-image-width: 0;
+    box-shadow: none;
+}
+
+#thread .comment {
+    padding: 10px 10px 0 10px;
 }
 
 .truncate {
@@ -35,6 +43,20 @@ body {
     text-overflow: ellipsis;
     overflow: hidden;
 }
+
+#thread .comment {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 0.25em;
+    box-shadow: 0px 1px 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+
+/*
+.ui.comments .comment .comments .comment {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: none;
+}
+*/
 
 
 /****** Comments *********/

@@ -35,6 +35,7 @@ bld/
 
 # JS libraries managed by bower.
 wwwroot/lib/
+!wwwroot/lib/semantic/
 
 # Local history tracking.
 .history/
