@@ -34,6 +34,8 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public bool IsUnread { get; set; }
         [Required]
+        public int UserId { get; set; }
+        [Required]
         public string UserName { get; set; }
         [Required]
         public string CreatedDisplay { get; set; }

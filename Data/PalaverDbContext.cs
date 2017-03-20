@@ -170,7 +170,8 @@ namespace Palaver.Data
         public async Task<Palaver.Models.Thread> CreateThreadAsync(string title, int userId)
         {
             List<User> allUsers = await Users.ToListAsync();
-            Palaver.Models.Thread newThread = Palaver.Models.Thread.CreateThread(title, userId, this);
+            User currUser = Users.Find(userId);
+            Palaver.Models.Thread newThread = Palaver.Models.Thread.CreateThread(title, currUser, this);
 
             // Subscribe everyone to all threads by default.
             foreach (User user in allUsers)

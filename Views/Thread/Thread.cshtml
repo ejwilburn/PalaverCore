@@ -23,11 +23,6 @@
 }
 @section Scripts
 {
-    <script type="text/javascript">
-        var _threadId = @(threadId != null ? threadId.ToString() : "null");
-        var _commentId = @(commentId != null ? commentId.ToString() : "null");
-        var _userId = @ViewData["userId"];
-    </script>
     <environment names="Development">
         <script src="~/lib/signalr/jquery.signalR.js"></script>
         <script src="~/signalr/hubs" asp-append-version="true"></script>
@@ -58,6 +53,13 @@
     <script src="~/templates/commentNotification.mustache" type="x-mustache-template" name="commentNotification"></script>
     <script src="~/templates/threadNotification.mustache" type="x-mustache-template" name="threadNotification"></script>
     <script src="~/templates/editor.mustache" type="x-mustache-template" name="editor"></script>
+    <script type="text/javascript">
+Sugar.extend();
+
+var thread = new Thread(@(threadId != null ? threadId.ToString() : "null"),
+    @(commentId != null ? commentId.ToString() : "null"),
+    @ViewData["userId"]);
+    </script>
 }
 
 @Html.Raw(CustomHtmlHelper.RenderThreadListFromTemplate(Model))

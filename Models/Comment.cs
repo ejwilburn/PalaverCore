@@ -64,7 +64,9 @@ namespace Palaver.Models
         {
             Comment newComment = new Comment {
                 Text = text,
+                ThreadId = thread.Id,
                 Thread = thread,
+                UserId = user.Id,
                 User = user,
                 ParentCommentId = parentId,
                 IsUnread = true

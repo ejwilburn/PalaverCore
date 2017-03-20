@@ -72,11 +72,12 @@ namespace Palaver.Models
             this.UnreadCount = 0;
         }
 
-        public static Thread CreateThread(string newTitle, int userId, PalaverDbContext db)
+        public static Thread CreateThread(string newTitle, User user, PalaverDbContext db)
         {
             Thread newThread = new Thread {
                 Title = newTitle,
-                UserId = userId,
+                UserId = user.Id,
+                User = user,
                 IsSticky = false,
                 IsSubscribed = true,
                 UnreadCount = 0

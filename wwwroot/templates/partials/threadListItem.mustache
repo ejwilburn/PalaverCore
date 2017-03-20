@@ -1,4 +1,4 @@
-<div class="item link{{#hasUnread}} unread{{/hasUnread}}" data-id="{{Id}}" onclick="loadThread({{Id}}); return false;">
+<div class="item link{{#hasUnread}} unread{{/hasUnread}}" data-id="{{Id}}" onclick="thread.loadThread({{Id}}); return false;">
     <div class="right floated content">
         <div class="ui mini purple label unreadcount{{^hasUnread}} hidden{{/hasUnread}}">{{UnreadCount}}</div>
     </div>

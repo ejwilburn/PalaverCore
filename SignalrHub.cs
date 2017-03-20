@@ -93,8 +93,7 @@ namespace Palaver
         {
             Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
             Palaver.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, Palaver.Models.ThreadViewModels.CreateResultViewModel>(newThread);
-            Clients.Caller.addOwnThread(resultView);
-            Clients.Others.addThread(resultView);
+            Clients.All.addThread(resultView);
         }
 
         /// <summary>
@@ -108,8 +107,7 @@ namespace Palaver
             User curUser = await GetUserAsync();
             Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
             Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
-            Clients.Caller.addOwnComment(resultView);
-            Clients.Others.addComment(resultView);
+            Clients.All.addComment(resultView);
         }
 
         public async Task MarkRead(int id)
