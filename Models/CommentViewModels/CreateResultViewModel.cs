@@ -38,6 +38,8 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public string UserName { get; set; }
         [Required]
+        public string EmailHash { get; set; }
+        [Required]
         public string CreatedDisplay { get; set; }
     }
 }

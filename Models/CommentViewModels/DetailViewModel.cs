@@ -34,6 +34,8 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public string UserName { get; set; }
         [Required]
+        public string EmailHash { get; set; }
+        [Required]
         public bool IsUnread { get; set; }
         [Required]
         public bool IsFavorite { get; set; }

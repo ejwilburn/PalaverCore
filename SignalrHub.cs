@@ -91,6 +91,11 @@ namespace Palaver
         /// <param name="threadTitle">Text of the thread subject.</param>
         public async Task NewThread(string threadTitle)
         {
+            if (String.IsNullOrWhiteSpace(threadTitle))
+            {
+                throw new Exception("The thread title cannot be empty.");
+            }
+
             Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
             Palaver.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, Palaver.Models.ThreadViewModels.CreateResultViewModel>(newThread);
             Clients.All.addThread(resultView);
@@ -104,6 +109,11 @@ namespace Palaver
         /// <param name="replyText">Text of the reply.</param>
         public async Task NewComment(string commentText, int threadId, int? parentId)
         {
+            if (String.IsNullOrWhiteSpace(commentText))
+            {
+                throw new Exception("The comment text cannot be empty.");
+            }
+            
             User curUser = await GetUserAsync();
             Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
             Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);

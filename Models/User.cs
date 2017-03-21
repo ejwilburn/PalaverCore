@@ -22,6 +22,9 @@ using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using EntityFrameworkCore.Triggers;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Palaver.Models
 {
@@ -35,9 +38,26 @@ namespace Palaver.Models
         public List<Subscription> Subscriptions { get; set; }
         public List<UnreadComment> UnreadComments { get; set; }
 
+        [NotMapped]
+        public string EmailHash {
+            get {
+                if (!String.IsNullOrWhiteSpace(Email))
+                    return MD5Hash(Email.Trim().ToLower());
+                else
+                    return "";
+            }
+        }
+
         static User()
         {
             Triggers<User>.Inserting += entry => entry.Entity.Created = DateTime.UtcNow;
+        }
+
+        private static string MD5Hash(string input)
+        {
+            var md5 = MD5.Create();
+            var result = md5.ComputeHash(Encoding.ASCII.GetBytes(input));
+            return BitConverter.ToString(result).Replace("-","").ToLower();
         }
     }
 }

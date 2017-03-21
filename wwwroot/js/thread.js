@@ -187,7 +187,7 @@ class Thread {
     }
 
     addThread(thread) {
-        let isAuthor = thread.UserId === this.UserId;
+        let isAuthor = thread.UserId === this.userId;
 
         if (isAuthor)
             thread.UnreadCount = 0;
@@ -203,7 +203,7 @@ class Thread {
     }
 
     addComment(comment) {
-        let isAuthor = comment.UserId === this.UserId;
+        let isAuthor = comment.UserId === this.userId;
         let commentList = null;
 
         if (isAuthor)
@@ -390,12 +390,14 @@ class Thread {
         history.pushState({ threadId: thread.Id }, document.title, `${BASE_URL}Thread/${thread.Id}`);
         this.allowBack = true;
 
-        $('#thread').html(Mustache.render(this.templates.thread, thread));
-        let threadTitle = $('#threadTitle');
-        this.resetEditor();
-        threadTitle.focus();
-        $('body').scrollTop(0);
+        if (this.editor) {
+            this.editor.destroy();
+        }
+        $('#thread').replaceWith(Mustache.render(this.templates.thread, thread));
+        this.initEditor();
         this.selectThread(thread.Id);
+        $('body').scrollTop(0);
+        this.editor.$editor.focus();
     }
 
     loadThread(threadId, commentId = null, isBack = false) {
@@ -526,18 +528,16 @@ class Thread {
         }, HUB_ACTION_RETRY_DELAY);
     }
 
-    newThread(title) {
-        if (!Object.isString(title)) {
-            title = $('#newthread').val();
-            $('#newthread').val('');
-        }
+    newThread() {
+        let title = $('#newthread').val();
 
         if (!Object.isString(title) || title.isBlank()) {
             alert('Unable to determine thread title.');
         }
 
-        showBusy();
+        this.showBusy();
         this.srConnection.server.newThread(title).done(() => {
+            $('#newthread').val('');
             this.clearBusy();
         }).fail((error) => {
             this.newThreadFailed(error, title);
@@ -627,6 +627,16 @@ class Thread {
                 return false;
             } else if (e.keyCode == 37 || e.keyCode == 38 || e.keyCode == 80) { // left, up, 'p'
                 this.focusPrev();
+                return false;
+            }
+        } else if ($('#newthread:focus').length > 0) {
+            // If enter is pressed in the new thread box, add a thread.
+            // If escape is pressed, clear the input and deselect it.
+            if (e.keyCode == 13) {
+                this.newThread();
+                return false;
+            } else if (e.keyCode == 27) {
+                $('#newthread').val('').blur();
                 return false;
             }
         }
