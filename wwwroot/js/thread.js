@@ -39,6 +39,11 @@ class Thread {
         this.editorForm = null;
         this.srConnection = null;
         this.templates = {};
+        this.editingParentId = null;
+        this.editing = null;
+        this.editingCommentId = null;
+        this.editingOrigText = null;
+        // this.UPLOAD_DIR = `${BASE_URL}uploads/${thread.userId}`;
 
         $(document).ready(() => this.initPage());
     }
@@ -56,8 +61,7 @@ class Thread {
             this.loadThread(this.threadId, this.commentId, true);
         };
 
-        if (!Object.isNumber(this.threadId))
-            return;
+        $('#newthreadicon').on('click', () => { this.newThread(); });
 
         // Register the primary key event handler for the page.
         $(document).keydown((e) => { return this.pageKeyDown(e); });
@@ -71,20 +75,22 @@ class Thread {
         // Load mustache templates for rendering new content.
         this.loadTemplates();
 
-        // Setup signalr connection.
         this.startSignalr();
+        this.updateTitle();
+
+        // Load wowhead script after the page is loaded to stop it from blocking.
+        $.getScript('//wow.zamimg.com/widgets/power.js');
+
+        if (!Object.isNumber(this.threadId))
+            return;
 
         // Select the current thread if one is loaded.
         this.selectThread(this.threadId);
         if (Object.isNumber(this.commentId))
             this.focusCommentId(this.commentId);
 
-        // Update the page title.
-        this.updateTitle();
         this.initEditor();
-
-        // Load wowhead script after the page is loaded to stop it from blocking.
-        $.getScript('//wow.zamimg.com/widgets/power.js');
+        this.enableEditing();
     }
 
     initEditor() {
@@ -93,25 +99,120 @@ class Thread {
         this.editorHome = $('#editorHome');
         this.editor = new Jodit('#editor', {
             language: 'en',
-            minHeight: EDITOR_DEFAULT_HEIGHT
+            minHeight: EDITOR_DEFAULT_HEIGHT,
+            enableDragAndDropFileToEditor: true,
+            uploader: {
+                url: BASE_URL + 'api/FileHandler/AutoUpload',
+                format: 'json',
+                pathVariableName: 'path',
+                filesVariableName: 'files',
+                prepareData: function(data) {
+                    return data;
+                },
+                isSuccess: function(resp) {
+                    return resp.success;
+                },
+                getMsg: function(resp) {
+                    return resp.message;
+                },
+                process: function(resp) {
+                    return {
+                        files: resp[this.options.uploader.filesVariableName] || [],
+                        path: resp.path,
+                        baseurl: BASE_URL,
+                        error: !resp.success,
+                        msg: resp.message
+                    };
+                },
+                error: function(e) {
+                    this.events.fire('errorPopap', [(e.getMessage !== undefined ? e.getMessage() : `Upload error ${e.status}: ${e.statusText}`), 'error', 4000]);
+                },
+                defaultHandlerSuccess: function(data, resp) {
+                    var i, field = this.options.uploader.filesVariableName;
+                    if (data[field] && data[field].length) {
+                        for (i = 0; i < data[field].length; i += 1) {
+                            this.selection.insertImage(data.baseurl + data[field][i]);
+                        }
+                    }
+                },
+                defaultHandlerError: function(resp) {
+                    this.events.fire('errorPopap', [this.options.uploader.getMsg(resp)]);
+                }
+            },
+            filebrowser: {
+                // global setting for all operations
+                ajax: {
+                    dataType: 'json',
+                    process: function(resp) {
+                        return {
+                            files: resp.files || [],
+                            path: resp.path,
+                            baseurl: resp.baseurl,
+                            error: !resp.success,
+                            msg: resp.message
+                        };
+                    }
+                },
+                uploader: {
+                    url: BASE_URL + 'api/FileHandler/Upload'
+                },
+                // folder creation operation
+                create: {
+                    url: BASE_URL + 'api/FileHandler/CreateDir',
+                },
+                // operation of moving the folder / file
+                move: {
+                    url: BASE_URL + 'api/FileHandler/Move',
+                },
+                // the operation to delete the folder / file
+                remove: {
+                    url: BASE_URL + 'api/FileHandler/Delete',
+                },
+                // viewing a folder and return the list of files in it
+                items: {
+                    url: BASE_URL + 'api/FileHandler/ListFiles',
+                },
+                // viewing a folder and return a list of sub-folders in it
+                folder: {
+                    url: BASE_URL + 'api/FileHandler/ListDirs',
+                }
+            }
         });
         this.editor.$editor.on('keydown', (e) => { return this.replyKeyDown(e); });
         return this.editor;
     }
 
     cancelReply() {
+        let wasEditing = null,
+            origText = null;
+        if (this.editing) {
+            wasEditing = this.editing;
+            origText = this.editingOrigText;
+        }
+
         this.resetEditor();
+
+        if (wasEditing) {
+            wasEditing.html(origText);
+        }
     }
 
     resetEditor() {
         if (this.editor) {
             this.editor.val('');
-            this.editorForm.data('parentid', null);
+            this.editing = null;
+            this.editingParentId = null;
+            this.editingCommentId = null;
+            this.editingOrigText = null;
             $(this.editor.$element).blur();
             this.editorHome.append(this.editorForm);
         } else {
             this.initEditor();
         }
+    }
+
+    enableEditing() {
+        $(`#thread .comment[data-authorid="${this.userId}"] .edit`).removeClass('hidden');
     }
 
     showDisconnected() {
@@ -126,6 +227,7 @@ class Thread {
         this.srConnection = $.connection.signalrHub;
         this.srConnection.client.addThread = (thread) => { this.addThread(thread); };
         this.srConnection.client.addComment = (comment) => { this.addComment(comment); };
+        this.srConnection.client.updateComment = (comment) => { this.updateComment(comment); };
 
         $.connection.hub.error(function(error) {
             if (console) {
@@ -221,6 +323,7 @@ class Thread {
         this.popThread(comment.ThreadId);
 
         if (isAuthor) {
+            renderedComment.children('.edit').removeClass('hidden');
             this.resetEditor();
             this.focusComment(renderedComment);
             this.clearBusy();
@@ -228,6 +331,18 @@ class Thread {
             this.updateTitle();
             this.notifyNewComment(comment);
         }
+    }
+
+    updateComment(comment) {
+        let isAuthor = comment.UserId === this.userId;
+
+        if (isAuthor) {
+            this.resetEditor();
+            this.focusCommentId(comment.Id);
+            this.clearBusy();
+        }
+
+        $(`#thread .comment[data-id="${comment.Id}"] .text`).html(comment.Text);
     }
 
     // Move the new comment's thread to the top of the thread list.
@@ -433,6 +548,7 @@ class Thread {
                 this.selectThread(threadId);
                 this.updateTitle();
                 this.initEditor();
+                this.enableEditing();
                 $('body').scrollTop(0);
                 this.clearBusy();
             }
@@ -461,9 +577,21 @@ class Thread {
 
         // Move the editor to the comment being replied to.
         this.editor.val('');
-        this.editorForm.data('parentid', parentId);
+        this.editingParentId = parentId;
         replyingTo.children('.comments').append(this.editorForm);
         this.focusComment(this.editorForm);
+        this.editor.$editor.focus();
+    }
+
+    editComment(id) {
+        // Move the editor to the comment being edited.
+        this.editing = $(`.comment[data-id="${id}"] .text`);
+        this.editingCommentId = id;
+        this.editingOrigText = this.editing.html();
+        this.editor.val(this.editingOrigText);
+        this.editing.html('');
+        this.editing.append(this.editorForm);
+        this.focusCommentId(id);
         this.editor.$editor.focus();
     }
 
@@ -485,7 +613,7 @@ class Thread {
             return;
         }
 
-        let parentCommentId = this.editorForm.data('parentid');
+        let parentCommentId = this.editingParentId;
 
         this.showBusy();
 
@@ -498,26 +626,31 @@ class Thread {
                 $(this).attr('target', '_blank');
         });
 
-        this.newComment({
-            "Text": tempDiv.innerHTML,
-            "ThreadId": this.threadId,
-            "ParentCommentId": (!Object.isNumber(parentCommentId) ? null : parentCommentId)
-        });
+        if (!this.editing) {
+            this.newComment({
+                "Text": tempDiv.innerHTML,
+                "ThreadId": this.threadId,
+                "ParentCommentId": (!Object.isNumber(parentCommentId) ? null : parentCommentId)
+            });
+        } else {
+            this.saveUpdatedComment({
+                "Id": this.editingCommentId,
+                "Text": tempDiv.innerHTML
+            });
+        }
     }
 
     newComment(comment) {
         this.showBusy();
         if (!Object.isNumber(comment.ParentCommentId))
             comment.ParentCommentId = null;
-        this.srConnection.server.newComment(comment.Text, comment.ThreadId, comment.ParentCommentId).done(() => {
-            this.clearBusy();
-        }).fail((error) => {
+        this.srConnection.server.newComment(comment.Text, comment.ThreadId, comment.ParentCommentId).fail((error) => {
             this.newCommentFailed(error, comment);
             this.clearBusy();
         });
     }
 
-    newCommentFailed(error, title) {
+    newCommentFailed(error, comment) {
         if (console) {
             console.error(error);
             console.info(`Retrying in ${HUB_ACTION_RETRY_DELAY / 1000} seconds...`);
@@ -525,6 +658,25 @@ class Thread {
 
         setTimeout(() => {
             this.newComment(comment);
+        }, HUB_ACTION_RETRY_DELAY);
+    }
+
+    saveUpdatedComment(comment) {
+        this.showBusy();
+        this.srConnection.server.editComment(comment.Id, comment.Text).fail((error) => {
+            this.saveUpdatedCommentError(error, comment);
+            this.clearBusy();
+        });
+    }
+
+    saveUpdatedCommentError(error, comment) {
+        if (console) {
+            console.error(error);
+            console.info(`Retrying in ${HUB_ACTION_RETRY_DELAY / 1000} seconds...`);
+        }
+
+        setTimeout(() => {
+            this.saveUpdatedComment(comment);
         }, HUB_ACTION_RETRY_DELAY);
     }
 

@@ -22,7 +22,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading.Tasks;
 using EntityFrameworkCore.Triggers;
+using Microsoft.EntityFrameworkCore;
 using Palaver.Data;
 
 namespace Palaver.Models
@@ -60,7 +63,7 @@ namespace Palaver.Models
             Triggers<Comment>.Updating += entry => entry.Entity.Thread.Updated = DateTime.UtcNow;
         }
 
-        public static Comment CreateComment(string text, Thread thread, int? parentId, User user, PalaverDbContext db)
+        public static async Task<Comment> CreateComment(string text, Thread thread, int? parentId, User user, PalaverDbContext db)
         {
             Comment newComment = new Comment {
                 Text = text,
@@ -71,6 +74,26 @@ namespace Palaver.Models
                 ParentCommentId = parentId,
                 IsUnread = true
             };
+
+            if (thread.Comments == null)
+                thread.Comments = new List<Comment>();
+            thread.Comments.Add(newComment);
+
+            if (parentId != null)
+            {
+                newComment.Parent = await db.Comments.Where(c => c.Id == parentId)
+                    .Include(c => c.Comments)
+                    .Include(c => c.Thread)
+                    .Include(c => c.User)
+                    .Include(c => c.UnreadComments)
+                    .SingleOrDefaultAsync();
+                if (newComment.Parent != null)
+                {
+                    if (newComment.Parent.Comments == null)
+                        newComment.Parent.Comments = new List<Comment>();
+                    newComment.Parent.Comments.Add(newComment);
+                }
+            }
 
             return newComment;
         }

@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Npgsql;
 using EntityFrameworkCore.Triggers;
 using Palaver.Models;
 
@@ -187,16 +188,19 @@ namespace Palaver.Data
         public async Task<Comment> CreateCommentAsync(string text, int threadId, int? parentId, User user)
         {
             Palaver.Models.Thread thread = await Threads.Where(t => t.Id == threadId).Include(t => t.Subscriptions).SingleAsync();
-            Comment newComment = Comment.CreateComment(text, thread, parentId, user, this);
+            Comment newComment = await Comment.CreateComment(text, thread, parentId, user, this);
             Comments.Add(newComment);
 
-            // Add unread comments for subscribed users.
+            // Add unread comments for subscribed users other than the current user.
             foreach (Subscription sub in thread.Subscriptions)
             {
-                UnreadComments.Add(new UnreadComment {
-                    UserId = sub.UserId,
-                    Comment = newComment
-                });
+                if (sub.UserId != user.Id)
+                {
+                    UnreadComments.Add(new UnreadComment {
+                        UserId = sub.UserId,
+                        Comment = newComment
+                    });
+                }
             }
 
             await SaveChangesAsync();
@@ -211,6 +215,13 @@ namespace Palaver.Data
                 UnreadComments.Remove(uc);
                 await SaveChangesAsync();
             }
+        }
+
+        public async Task<List<Comment>> Search(string searchText) {
+            return await Comments.FromSql("SELECT * FROM search_comments(@searchText)", new NpgsqlParameter("@searchText", searchText))
+                .Include(c => c.User)
+                .Include(c => c.Thread)
+                .ToListAsync();
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -244,6 +255,8 @@ namespace Palaver.Data
 
             builder.Entity<User>(u => {
                 u.Property(props => props.Email).IsRequired(true);
+                u.HasIndex(props => props.UserName).IsUnique(false);
+                u.HasIndex(props => props.Email).IsUnique(false);
             });
 
             // Setup one to many relationship for Comment->Comment

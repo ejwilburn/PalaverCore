@@ -1,10 +1,11 @@
-<div tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}" {{#IsUnread}}class="comment unread" onclick="thread.markRead(this)"{{/IsUnread}}{{^IsUnread}}class="comment"{{/IsUnread}}>
+<div tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}" data-authorid="{{UserId}}" {{#IsUnread}}class="comment unread" onclick="thread.markRead(this)"{{/IsUnread}}{{^IsUnread}}class="comment"{{/IsUnread}}>
     <a class="avatar"><img class="rounded" src="https://seccdn.libravatar.org/avatar/{{EmailHash}}?s=40&d=retro"></a>
     <div class="content">
         <a class="author">{{UserName}}</a>
         <div class="metadata"><span class="date">{{CreatedDisplay}}</span></div>
         <div class="text">{{{Text}}}</div>
         <div class="actions">
+            <a class="edit hidden" onclick="thread.editComment({{Id}})">Edit</a>
             <a class="reply" onclick="thread.replyTo({{ParentCommentId}})">Reply</a>
             <a class="reply" onclick="thread.replyTo({{Id}})">Nested Reply</a>
         </div>

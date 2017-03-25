@@ -47,6 +47,12 @@ namespace Palaver.Models
             Triggers<TimeStamper>.Updating += entry => entry.Entity.Updated = DateTime.UtcNow;
         }
 
+        public TimeStamper()
+        {
+            Created = DateTime.UtcNow;
+            Updated = DateTime.UtcNow;
+        }
+
         private string DisplayFormatDateTime(DateTime time)
         {
             if (time < DateTime.Now.AddDays(-1))

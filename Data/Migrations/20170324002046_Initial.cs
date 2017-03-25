@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Metadata;
 
-namespace Palaver.Data.Migrations
+namespace PalaverCore.Data.Migrations
 {
     public partial class Initial : Migration
     {
@@ -372,6 +372,11 @@ namespace Palaver.Data.Migrations
                 column: "CommentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_User_Email",
+                table: "User",
+                column: "Email");
+
+            migrationBuilder.CreateIndex(
                 name: "EmailIndex",
                 table: "User",
                 column: "NormalizedEmail");
@@ -381,6 +386,18 @@ namespace Palaver.Data.Migrations
                 table: "User",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_User_UserName",
+                table: "User",
+                column: "UserName");
+
+            migrationBuilder.Sql("CREATE INDEX \"IX_Comment_Text_FullTextSearch\" ON \"Comment\" USING gist(to_tsvector('english', \"Text\"));");
+            migrationBuilder.Sql(@"CREATE FUNCTION search_comments(p_find text)
+                RETURNS SETOF ""Comment"" AS $func$
+                    SELECT * FROM ""Comment"" WHERE to_tsvector('english', ""Text"") @@ to_tsquery('english', p_find)
+                	ORDER BY ts_rank_cd(to_tsvector('english', ""Text""), to_tsquery('english', p_find)) DESC, ""Created"" DESC;
+                $func$ LANGUAGE sql;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

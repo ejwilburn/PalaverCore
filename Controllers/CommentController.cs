@@ -27,6 +27,7 @@ using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 using Palaver.Models.CommentViewModels;
+using System.Collections.Generic;
 
 namespace Palaver.Controllers
 {
@@ -59,6 +60,23 @@ namespace Palaver.Controllers
                 return NotFound();
             }
             return new ObjectResult(_mapper.Map<Comment, DetailViewModel>(comment));
+        }
+
+        [HttpGet("Search/{searchText}")]
+        public async Task<SearchResultsViewModel> Search(string searchText)
+        {
+            SearchResultsViewModel results = new SearchResultsViewModel();
+            List<Comment> comments = await _dbContext.Search(searchText);
+            if (comments != null && comments.Count > 0) 
+            {
+                results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments);
+                results.success = true;
+            }
+            else
+            {
+                results.success = false;
+            }
+            return results;
         }
 
         [HttpPost]

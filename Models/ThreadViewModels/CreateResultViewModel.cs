@@ -33,6 +33,8 @@ namespace Palaver.Models.ThreadViewModels
         [Required]
         public string UserName { get; set; }
         [Required]
+        public string CreatedDisplay { get; set; }
+        [Required]
         public string UpdatedDisplay { get; set; }
     }
 }

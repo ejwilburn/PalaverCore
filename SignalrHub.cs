@@ -28,7 +28,9 @@ using Microsoft.AspNetCore.SignalR.Hubs;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
+using Palaver.Models.CommentViewModels;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Palaver
 {
@@ -120,6 +122,40 @@ namespace Palaver
             Clients.All.addComment(resultView);
         }
 
+        /// <summary>
+        /// Edit an existing comment.  The editor must be the creator of the comment or an exception is thrown.
+        /// Subscribers will get an updated comment but the unread flag will not be changed.
+        /// </summary>
+        /// <param name="parentId">Id of the parent comment.</param>
+        /// <param name="replyText">Text of the reply.</param>
+        public async Task EditComment(int commentId, string commentText)
+        {
+            if (String.IsNullOrWhiteSpace(commentText))
+            {
+                throw new Exception("The comment text cannot be empty.");
+            }
+
+            Comment existingComment = await _dbContext.Comments.Where(c => c.Id == commentId)
+                .Include(c => c.Thread)
+                .Include(c => c.User)
+                .SingleOrDefaultAsync();
+            if (existingComment == null)
+            {
+                throw new Exception($"Unable to find comment id {commentId}.");
+            }
+
+            if (existingComment.UserId != GetUserId())
+            {
+                throw new Exception("Ony the comment creator may edit a comment.");
+            }
+
+            existingComment.Text = commentText;
+            await _dbContext.SaveChangesAsync();
+
+            EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);
+            Clients.All.updateComment(resultView);
+        }
+
         public async Task MarkRead(int id)
         {
             _dbContext.Remove(new UnreadComment { UserId = GetUserId(), CommentId = id });
@@ -131,6 +167,12 @@ namespace Palaver
             {
                 // This means the unreadcomment is already deleted, ignore it.
             }
+        }
+
+        public async Task<List<SearchResultViewModel>> Search(string searchText)
+        {
+            List<Comment> found = await _dbContext.Search(searchText);
+            return _mapper.Map<List<Comment>, List<SearchResultViewModel>>(found);
         }
 
         private int GetUserId()

@@ -23,26 +23,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Palaver.Models.CommentViewModels
 {
-    public class DetailViewModel
+    public class SearchResultsViewModel
     {
         [Required]
-        public int Id { get; set; }
+        public List<SearchResultViewModel> results;
         [Required]
-        public string Text { get; set; }
-        [Required]
-        public int? ParentCommentId { get; set; }
-        [Required]
-        public int UserId { get; set; }
-        [Required]
-        public string UserName { get; set; }
-        [Required]
-        public string EmailHash { get; set; }
-        [Required]
-        public bool IsUnread { get; set; }
-        [Required]
-        public bool IsFavorite { get; set; }
-        [Required]
-        public string CreatedDisplay { get; set; }
-        public IEnumerable<DetailViewModel> Comments { get; set; }
+        public bool success = true;
     }
 }
