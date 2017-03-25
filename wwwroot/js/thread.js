@@ -142,6 +142,10 @@ class Thread {
             filebrowser: {
                 // global setting for all operations
                 ajax: {
+                    async: true,
+                    cache: true,
+                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+                    method: 'POST',
                     dataType: 'json',
                     process: function(resp) {
                         return {
@@ -714,28 +718,6 @@ class Thread {
         setTimeout(() => {
             this.newThread(title);
         }, HUB_ACTION_RETRY_DELAY);
-    }
-
-    imgurUpload(files) {
-        $.ajax({
-            url: 'https://api.imgur.com/3/image',
-            type: 'POST',
-            headers: {
-                Authorization: 'Client-ID fb944f4922deb66',
-                Accept: 'application/json'
-            },
-            data: {
-                type: 'base64',
-                image: files
-            },
-            success: function(result) {
-                let image = $('<img>').attr('src', 'https://imgur.com/gallery/' + result.data.id);
-                $('#summernote').summernote("insertNode", image[0]);
-            },
-            error: function(xhr, ajaxOptions, thrownError) {
-                alert(`Error uploading image to imgur.  Status: ${xhr.status} Thrown error: ${thrownError} Response: ${xhr.responseText}`);
-            }
-        });
     }
 
     isEditorInUse() {
