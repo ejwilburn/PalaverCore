@@ -94,9 +94,13 @@ class Thread {
     }
 
     initEditor() {
-        // Init the Jodit editor.
         this.editorForm = $('#editorForm');
         this.editorHome = $('#editorHome');
+        this.editor = tinymce.init({
+            selector: '#editor',
+            skin: 'charcoal',
+            statusbar: false
+        });
         this.editor = new Jodit('#editor', {
             language: 'en',
             minHeight: EDITOR_DEFAULT_HEIGHT,

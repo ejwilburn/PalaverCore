@@ -31,13 +31,11 @@ bld/
 [Oo]bj/
 
 # JS libraries managed by bower.
-wwwroot/lib/jodit
 wwwroot/lib/jquery
-wwwroot/lib/jquery-validation
-wwwroot/lib/jquery-validation-unobtrusive
 wwwroot/lib/mustache.js
 wwwroot/lib/signalr
 wwwroot/lib/sugar
+wwwroot/lib/tinymce
 
 #Ignore user uploads but not the upload folder and the README.md within.
 wwwroot/uploads/*/
