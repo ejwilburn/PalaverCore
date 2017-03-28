@@ -7,7 +7,10 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <a class="item" asp-area="" asp-controller="Manage" asp-action="Index" title="Manage">Hello @UserManager.GetUserName(User)!</a>
-    <a class="item" asp-area="" asp-controller="Account" asp-action="LogOff" title="LogOff">Log off</a>
+    <form asp-area="" asp-controller="Account" asp-action="LogOff" method="post" id="logoutForm" class="item">
+        <button type="submit" class="ui button">Log off</button>
+    </form>
+    <!--<a class="item" asp-area="" asp-controller="Account" asp-action="LogOff" title="LogOff">Log off</a>-->
 }
 else
 {

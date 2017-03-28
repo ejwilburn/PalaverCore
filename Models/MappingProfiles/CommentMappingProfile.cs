@@ -17,7 +17,7 @@ namespace Palaver.Models.MappingProfiles
             CreateMap<Comment, EditResultViewModel>();
             CreateMap<Comment, SearchResultViewModel>()
                 .ForMember(d => d.Title, opt => opt.MapFrom(s => $"[{s.CreatedDisplay}] {s.User.UserName} - {s.Thread.Title}"))
-                .ForMember(d => d.Url, opt => opt.MapFrom(s => $"Thread/{s.ThreadId}/{s.Id}"));
+                .ForMember(d => d.Url, opt => opt.MapFrom(s => $"/Thread/{s.ThreadId}/{s.Id}"));
         }
     }
 }

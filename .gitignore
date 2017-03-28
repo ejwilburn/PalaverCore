@@ -11,6 +11,13 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+# Cert files
+*.pfx
+*.csr
+*.cer
+*.crt
+*.key
+
 # Environment-specific files.
 *.Development.json
 *.Production.json

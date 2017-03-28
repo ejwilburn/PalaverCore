@@ -26,7 +26,134 @@ const PAGE_TITLE = 'Palaver';
 const HUB_ACTION_RETRY_DELAY = 5000; // in ms
 const NOTIFICATION_SNIPPET_SIZE = 100; // in characters
 const NOTIFICATION_DURATION = 5000; // In ms
-const EDITOR_DEFAULT_HEIGHT = 100; // in pixels
+
+// Editor Defaults
+const EDITOR_IMAGE_DEFAULT_WIDTH = 500;
+const JODIT_CONFIG = {
+    editorCssClass: 'jodit_normal',
+    enableDragAndDropFileToEditor: true,
+    imageDefaultWidth: EDITOR_IMAGE_DEFAULT_WIDTH,
+    language: 'en',
+    spellcheck: false,
+    toolbarButtonSize: 'small',
+    triggerChangeEvent: false,
+    removeButtons: [
+        'hr',
+        'table',
+        'source',
+        'font',
+        'justify',
+        'fullsize',
+        'about'
+    ],
+    image: {
+        editMargins: false,
+        editStyle: false,
+        editClass: false,
+        editId: false,
+        editAlign: false
+    },
+    link: {
+        processVideoLink: true,
+        processPastedLink: true,
+        openLinkDialogAfterPost: false,
+        removeLinkAfterFormat: false
+    },
+    // buttons: Jodit.defaultOptions.buttons.concat([{
+    //     name: 'code',
+    //     icon: 'source',
+    //     command: 'formatBlock',
+    //     tags: ['pre'],
+    //     tooltip: 'Code',
+    //     template: function(key, value) {
+    //         return '<pre class="code">' + value + '</pre>';
+    //     }
+    // }]),
+    uploader: {
+        url: BASE_URL + 'api/FileHandler/AutoUpload',
+        format: 'json',
+        pathVariableName: 'path',
+        filesVariableName: 'files',
+        prepareData: function(data) {
+            return data;
+        },
+        isSuccess: function(resp) {
+            return resp.success;
+        },
+        getMsg: function(resp) {
+            return resp.message;
+        },
+        process: function(resp) {
+            return {
+                files: resp[this.options.uploader.filesVariableName] || [],
+                path: resp.path,
+                baseurl: resp.baseurl,
+                error: !resp.success,
+                msg: resp.message
+            };
+        },
+        error: function(e) {
+            this.events.fire('errorPopap', [(e.getMessage !== undefined ? e.getMessage() : `Upload error ${e.status}: ${e.statusText}`), 'error', 4000]);
+        },
+        defaultHandlerSuccess: function(data, resp) {
+            var i, field = this.options.uploader.filesVariableName;
+            if (data[field] && data[field].length) {
+                for (i = 0; i < data[field].length; i += 1) {
+                    this.selection.insertImage(data.baseurl + data[field][i]);
+                }
+            }
+        },
+        defaultHandlerError: function(resp) {
+            this.events.fire('errorPopap', [this.options.uploader.getMsg(resp)]);
+        }
+    },
+    filebrowser: {
+        deleteFolder: false,
+        moveFolder: false,
+        moveFile: false,
+        // global setting for all operations
+        ajax: {
+            async: true,
+            cache: true,
+            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+            method: 'POST',
+            dataType: 'json',
+            process: function(resp) {
+                return {
+                    files: resp.files || [],
+                    path: resp.path,
+                    baseurl: resp.baseurl,
+                    error: !resp.success,
+                    msg: resp.message
+                };
+            }
+        },
+        uploader: {
+            url: BASE_URL + 'api/FileHandler/Upload'
+        },
+        // folder creation operation
+        create: {
+            url: BASE_URL + 'api/FileHandler/CreateDir',
+        },
+        // operation of moving the folder / file
+        move: {
+            url: BASE_URL + 'api/FileHandler/Move',
+        },
+        // the operation to delete the folder / file
+        remove: {
+            url: BASE_URL + 'api/FileHandler/Delete',
+        },
+        // viewing a folder and return the list of files in it
+        items: {
+            url: BASE_URL + 'api/FileHandler/ListFiles',
+        },
+        // viewing a folder and return a list of sub-folders in it
+        folder: {
+            url: BASE_URL + 'api/FileHandler/ListDirs',
+        }
+    }
+};
+
 const wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
 
 class Thread {
@@ -90,98 +217,16 @@ class Thread {
             this.focusCommentId(this.commentId);
 
         this.initEditor();
-        this.enableEditing();
+        this.fixEditing();
     }
 
     initEditor() {
         // Init the Jodit editor.
         this.editorForm = $('#editorForm');
         this.editorHome = $('#editorHome');
-        this.editor = new Jodit('#editor', {
-            language: 'en',
-            minHeight: EDITOR_DEFAULT_HEIGHT,
-            enableDragAndDropFileToEditor: true,
-            uploader: {
-                url: BASE_URL + 'api/FileHandler/AutoUpload',
-                format: 'json',
-                pathVariableName: 'path',
-                filesVariableName: 'files',
-                prepareData: function(data) {
-                    return data;
-                },
-                isSuccess: function(resp) {
-                    return resp.success;
-                },
-                getMsg: function(resp) {
-                    return resp.message;
-                },
-                process: function(resp) {
-                    return {
-                        files: resp[this.options.uploader.filesVariableName] || [],
-                        path: resp.path,
-                        baseurl: BASE_URL,
-                        error: !resp.success,
-                        msg: resp.message
-                    };
-                },
-                error: function(e) {
-                    this.events.fire('errorPopap', [(e.getMessage !== undefined ? e.getMessage() : `Upload error ${e.status}: ${e.statusText}`), 'error', 4000]);
-                },
-                defaultHandlerSuccess: function(data, resp) {
-                    var i, field = this.options.uploader.filesVariableName;
-                    if (data[field] && data[field].length) {
-                        for (i = 0; i < data[field].length; i += 1) {
-                            this.selection.insertImage(data.baseurl + data[field][i]);
-                        }
-                    }
-                },
-                defaultHandlerError: function(resp) {
-                    this.events.fire('errorPopap', [this.options.uploader.getMsg(resp)]);
-                }
-            },
-            filebrowser: {
-                // global setting for all operations
-                ajax: {
-                    async: true,
-                    cache: true,
-                    contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-                    method: 'POST',
-                    dataType: 'json',
-                    process: function(resp) {
-                        return {
-                            files: resp.files || [],
-                            path: resp.path,
-                            baseurl: resp.baseurl,
-                            error: !resp.success,
-                            msg: resp.message
-                        };
-                    }
-                },
-                uploader: {
-                    url: BASE_URL + 'api/FileHandler/Upload'
-                },
-                // folder creation operation
-                create: {
-                    url: BASE_URL + 'api/FileHandler/CreateDir',
-                },
-                // operation of moving the folder / file
-                move: {
-                    url: BASE_URL + 'api/FileHandler/Move',
-                },
-                // the operation to delete the folder / file
-                remove: {
-                    url: BASE_URL + 'api/FileHandler/Delete',
-                },
-                // viewing a folder and return the list of files in it
-                items: {
-                    url: BASE_URL + 'api/FileHandler/ListFiles',
-                },
-                // viewing a folder and return a list of sub-folders in it
-                folder: {
-                    url: BASE_URL + 'api/FileHandler/ListDirs',
-                }
-            }
-        });
+        this.editor = new Jodit('#editor', JODIT_CONFIG);
+        // this.editor.loadModules();
+        // this.editor.build();
         this.editor.$editor.on('keydown', (e) => { return this.replyKeyDown(e); });
         return this.editor;
     }
@@ -215,8 +260,8 @@ class Thread {
         }
     }
 
-    enableEditing() {
-        $(`#thread .comment[data-authorid="${this.userId}"] .edit`).removeClass('hidden');
+    fixEditing() {
+        $(`#thread .comment:not([data-authorid="${this.userId}"]) .edit`).remove();
     }
 
     showDisconnected() {
@@ -346,7 +391,7 @@ class Thread {
             this.clearBusy();
         }
 
-        $(`#thread .comment[data-id="${comment.Id}"] .text`).html(comment.Text);
+        $(`#thread .comment[data-id="${comment.Id}"]>.content>.text`).html(comment.Text);
     }
 
     // Move the new comment's thread to the top of the thread list.
@@ -552,7 +597,7 @@ class Thread {
                 this.selectThread(threadId);
                 this.updateTitle();
                 this.initEditor();
-                this.enableEditing();
+                this.fixEditing();
                 $('body').scrollTop(0);
                 this.clearBusy();
             }
@@ -589,7 +634,7 @@ class Thread {
 
     editComment(id) {
         // Move the editor to the comment being edited.
-        this.editing = $(`.comment[data-id="${id}"] .text`);
+        this.editing = $(`.comment[data-id="${id}"]>.content>.text`);
         this.editingCommentId = id;
         this.editingOrigText = this.editing.html();
         this.editor.val(this.editingOrigText);
@@ -604,7 +649,7 @@ class Thread {
             this.sendReply();
             return false;
         } else if (e.keyCode == 27) {
-            this.resetEditor();
+            this.cancelReply();
             return false;
         }
         return true;

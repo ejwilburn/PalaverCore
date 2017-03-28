@@ -41,10 +41,11 @@ namespace Palaver.Controllers
     {
         private const string UPLOADS_DIR = "uploads";
         private const string AUTO_UPLOAD_DIR = "auto";
+        private const string SHARED_UPLOAD_DIR = "shared";
         private string FULL_UPLOADS_BASE;
         private string FULL_UPLOADS_USER_BASE;
         private string RELATIVE_UPLOADS_USER_BASE;
-
+        private List<string> ALLOWED_EXTENSIONS = new List<string>{ ".jpg", ".jpeg", ".gif", ".png", ".svg" };
         private readonly IHostingEnvironment _environment;
 
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -63,11 +64,11 @@ namespace Palaver.Controllers
             this._httpContextAccessor = httpContextAccessor;
             this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
 
-            FULL_UPLOADS_BASE = Path.Combine(_environment.WebRootPath, UPLOADS_DIR);
+            FULL_UPLOADS_BASE = Path.Combine(_environment.WebRootPath, UPLOADS_DIR) + Path.DirectorySeparatorChar;
             if (!Directory.Exists(FULL_UPLOADS_BASE))
                 Directory.CreateDirectory(FULL_UPLOADS_BASE);
             
-            FULL_UPLOADS_USER_BASE = Path.Combine(FULL_UPLOADS_BASE, _userId.ToString());
+            FULL_UPLOADS_USER_BASE = Path.Combine(FULL_UPLOADS_BASE, _userId.ToString()) + Path.DirectorySeparatorChar;
             if (!Directory.Exists(FULL_UPLOADS_USER_BASE))
                 Directory.CreateDirectory(FULL_UPLOADS_USER_BASE);
 
@@ -78,12 +79,11 @@ namespace Palaver.Controllers
         [HttpPost]
         public async Task<IActionResult> AutoUpload(IFormCollection formData)
         {
-            List<string> savedFiles = new List<string>();
-            string relativeAutoUploadPath = RELATIVE_UPLOADS_USER_BASE + "/" + AUTO_UPLOAD_DIR;
-
+            string relativeAutoUploadPath = RELATIVE_UPLOADS_USER_BASE + AUTO_UPLOAD_DIR + "/";
             try
             {
                 string fullAutoUploadPath = Path.Combine(FULL_UPLOADS_USER_BASE, AUTO_UPLOAD_DIR);
+                List<string> savedFiles = new List<string>();
 
                 if (!Directory.Exists(fullAutoUploadPath))
                     Directory.CreateDirectory(fullAutoUploadPath);
@@ -93,6 +93,16 @@ namespace Palaver.Controllers
                     if (file.Length > 0)
                     {
                         string extension = Path.GetExtension(file.FileName), savePath = null, randomFileName = null;
+                        if (!IsAlloweExtension(extension))
+                        {
+                            HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                            return new JsonResult(new { message = "Invalid file type, allowed extensions: " + String.Join(", ", ALLOWED_EXTENSIONS),
+                                success = false,
+                                path = AUTO_UPLOAD_DIR,
+                                baseurl = relativeAutoUploadPath,
+                                files = (string[])null
+                            });
+                        }
                         
                         do 
                         {
@@ -104,13 +114,13 @@ namespace Palaver.Controllers
                         {
                             await file.CopyToAsync(fileStream);
                         }
-                        savedFiles.Add($"{relativeAutoUploadPath}/{randomFileName}");
+                        savedFiles.Add(randomFileName);
                     }
                 }
-                return new JsonResult(new { message = "Upload successful.",
+                return new JsonResult(new { message = "",
                     success = true,
-                    path = relativeAutoUploadPath,
-                    baseurl = RELATIVE_UPLOADS_USER_BASE,
+                    path = AUTO_UPLOAD_DIR,
+                    baseurl = relativeAutoUploadPath,
                     files = savedFiles 
                 });
             }
@@ -119,9 +129,9 @@ namespace Palaver.Controllers
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return new JsonResult(new { message = ex.Message,
                     success = false,
-                    path = relativeAutoUploadPath,
+                    path = AUTO_UPLOAD_DIR,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = savedFiles
+                    files = (string[])null
                 });
             }
         }
@@ -130,31 +140,22 @@ namespace Palaver.Controllers
         [HttpPost]
         public async Task<IActionResult> Upload(IFormCollection formData)
         {
-            List<string> savedFiles = new List<string>();
-            string fixedPath = CleanPath(formData["path"]);
+            string path = formData["path"];
 
             try
             {
+                string fixedPath = CleanPath(path);
                 string absUploadDir = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath);
+                List<string> savedFiles = new List<string>();
 
-                if (fixedPath.Contains("..") || fixedPath.Contains(":"))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in path.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = savedFiles
-                    });
-                }
                 if (!Directory.Exists(absUploadDir))
                 {
                     HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                    return new JsonResult(new { message = $"Directory not found: {fixedPath}",
+                    return new JsonResult(new { message = $"Directory not found: {path}",
                         success = false,
-                        path = fixedPath,
+                        path = path,
                         baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = new List<string>()
+                        files = (string[])null
                     });
                 }
 
@@ -162,26 +163,28 @@ namespace Palaver.Controllers
                 {
                     if (file.Length > 0)
                     {
-                        string absFilePath = Path.Combine(absUploadDir, file.FileName);
-
-                        if (file.FileName.Contains("..") || file.FileName.Contains(":"))
+                        string extension = Path.GetExtension(file.FileName);
+                        if (!IsAlloweExtension(extension))
                         {
                             HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                            return new JsonResult(new { message = "Illegal characters in file name.",
+                            return new JsonResult(new { message = "Invalid file type, allowed extensions: " + String.Join(", ", ALLOWED_EXTENSIONS),
                                 success = false,
-                                path = fixedPath,
+                                path = path,
                                 baseurl = RELATIVE_UPLOADS_USER_BASE,
-                                files = savedFiles
+                                files = (string[])null
                             });
                         }
-                        if (System.IO.File.Exists(file.FileName))
+                        
+                        string relativeFilePath = CleanPath(Path.Combine(fixedPath, file.FileName));
+                        string absFilePath = Path.Combine(FULL_UPLOADS_USER_BASE, relativeFilePath);
+                        if (System.IO.File.Exists(absFilePath))
                         {
                             HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                            return new JsonResult(new { message = $"File {file.FileName} already exists, please delete it first.",
+                            return new JsonResult(new { message = $"File {relativeFilePath} already exists, cannot overwrite.",
                                 success = false,
-                                path = fixedPath,
+                                path = path,
                                 baseurl = RELATIVE_UPLOADS_USER_BASE,
-                                files = savedFiles
+                                files = (string[])null
                             });
                         }
                         
@@ -189,10 +192,10 @@ namespace Palaver.Controllers
                         {
                             await file.CopyToAsync(fileStream);
                         }
-                        savedFiles.Add($"{fixedPath}/{file.FileName}");
+                        savedFiles.Add(relativeFilePath);
                     }
                 }
-                return new JsonResult(new { message = "Upload successful.",
+                return new JsonResult(new { message = "",
                     success = true,
                     path = fixedPath,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
@@ -204,9 +207,9 @@ namespace Palaver.Controllers
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return new JsonResult(new { message = ex.Message,
                     success = false,
-                    path = fixedPath,
+                    path = path,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = savedFiles
+                    files = (string[])null
                 });
             }
         }
@@ -215,11 +218,10 @@ namespace Palaver.Controllers
         [HttpPost]
         public IActionResult CreateDir(string name, string path = "")
         {
-            List<string> files = new List<string>();
-            string absNewDir, fixedPath = CleanPath(path);
-
             try
             {
+                string fixedPath = CleanPath(path);
+
                 if (string.IsNullOrEmpty(name))
                 {
                     HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -227,32 +229,12 @@ namespace Palaver.Controllers
                         success = false,
                         path = fixedPath,
                         baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
-                if (name.Contains("..") || name.Contains(":"))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in file name.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
-                if (fixedPath.Contains("..") || fixedPath.Contains(":"))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in path.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
+                        files = (string[])null
                     });
                 }
 
-                absNewDir = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath, name);
-
+                string relativeNewDir = CleanPath(Path.Combine(fixedPath, name));
+                string absNewDir = Path.Combine(FULL_UPLOADS_USER_BASE, relativeNewDir);
                 if (Directory.Exists(absNewDir))
                 {
                     HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -260,17 +242,17 @@ namespace Palaver.Controllers
                         success = false,
                         path = fixedPath,
                         baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
+                        files = (string[])null
                     });
                 }
                 
                 Directory.CreateDirectory(absNewDir);
 
-                return new JsonResult(new { message = "Success.",
+                return new JsonResult(new { message = "",
                     success = true,
                     path = fixedPath,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = new List<string>{ (string.IsNullOrEmpty(fixedPath) ? "" : fixedPath + "/") + name }
+                    files = new List<string>{ relativeNewDir }
                 });
             }
             catch (Exception ex)
@@ -278,157 +260,135 @@ namespace Palaver.Controllers
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return new JsonResult(new { message = ex.Message,
                     success = false,
-                    path = fixedPath,
+                    path = path,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = files
+                    files = (string[])null
                 });
             }
         }
                     
-        [Authorize]
-        [HttpPost]
-        public IActionResult Move(string file, string path)
-        {
-            List<string> files = new List<string>();
-            string fixedPath = CleanPath(path);
+        // [Authorize]
+        // [HttpPost]
+        // public IActionResult Move(string file, string path)
+        // {
+        //     try
+        //     {
+        //         string fixedPath = CleanPath(path);
 
-            try
-            {
-                if (string.IsNullOrEmpty(file))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "The name of the file/directory to be moved cannot be empty.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
-                if (file.Contains("..") || file.Contains(":"))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in file name.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
-                if (fixedPath.Contains("..") || fixedPath.Contains(":"))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in path.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
+        //         if (string.IsNullOrEmpty(file))
+        //         {
+        //             HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        //             return new JsonResult(new { message = "The name of the file/directory to be moved cannot be empty.",
+        //                 success = false,
+        //                 path = path,
+        //                 baseurl = RELATIVE_UPLOADS_USER_BASE,
+        //                 files = (string[])null
+        //             });
+        //         }
+        //         if (file.Contains("..") || file.Contains(":"))
+        //         {
+        //             HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        //             return new JsonResult(new { message = "Illegal characters in file name.",
+        //                 success = false,
+        //                 path = path,
+        //                 baseurl = RELATIVE_UPLOADS_USER_BASE,
+        //                 files = (string[])null
+        //             });
+        //         }
+        //         if (fixedPath.Contains("..") || fixedPath.Contains(":"))
+        //         {
+        //             HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        //             return new JsonResult(new { message = "Illegal characters in path.",
+        //                 success = false,
+        //                 path = path,
+        //                 baseurl = RELATIVE_UPLOADS_USER_BASE,
+        //                 files = (string[])null
+        //             });
+        //         }
 
-                string absFilePath = Path.Combine(FULL_UPLOADS_USER_BASE, file);
-                string absDestination = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath);
-                string fileName = Path.GetFileName(absFilePath);
-                string absNewLocation = Path.Combine(absDestination, fileName);
+        //         string absFilePath = Path.Combine(FULL_UPLOADS_USER_BASE, file);
+        //         string absDestination = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath);
+        //         string fileName = Path.GetFileName(absFilePath);
+        //         string absNewLocation = Path.Combine(absDestination, fileName);
 
-                if (!Directory.Exists(absDestination))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                    return new JsonResult(new { message = $"Directory not found: {fixedPath}",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
+        //         if (!Directory.Exists(absDestination))
+        //         {
+        //             HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+        //             return new JsonResult(new { message = $"Directory not found: {fixedPath}",
+        //                 success = false,
+        //                 path = path,
+        //                 baseurl = RELATIVE_UPLOADS_USER_BASE,
+        //                 files = (string[])null
+        //             });
+        //         }
                 
-                if (Directory.Exists(absNewLocation) || System.IO.File.Exists(absNewLocation))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Move aborted, target file/directory already exists.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
+        //         if (Directory.Exists(absNewLocation) || System.IO.File.Exists(absNewLocation))
+        //         {
+        //             HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        //             return new JsonResult(new { message = "Move aborted, target file/directory already exists.",
+        //                 success = false,
+        //                 path = path,
+        //                 baseurl = RELATIVE_UPLOADS_USER_BASE,
+        //                 files = (string[])null
+        //             });
+        //         }
 
-                if (System.IO.File.Exists(absFilePath))
-                    System.IO.File.Move(absFilePath, absNewLocation);
-                else if (Directory.Exists(absFilePath))
-                    Directory.Move(absFilePath, absNewLocation);
-                else
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
-                    return new JsonResult(new { message = $"File or directory not found: {file}",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
+        //         if (System.IO.File.Exists(absFilePath))
+        //             System.IO.File.Move(absFilePath, absNewLocation);
+        //         else if (Directory.Exists(absFilePath))
+        //             Directory.Move(absFilePath, absNewLocation);
+        //         else
+        //         {
+        //             HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
+        //             return new JsonResult(new { message = $"File or directory not found: {file}",
+        //                 success = false,
+        //                 path = path,
+        //                 baseurl = RELATIVE_UPLOADS_USER_BASE,
+        //                 files = (string[])null
+        //             });
+        //         }
                 
-                return new JsonResult(new { message = "Success.",
-                    success = true,
-                    path = fixedPath,
-                    baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = new List<string>{ fixedPath + "/" + fileName }
-                });
-            }
-            catch (Exception ex)
-            {
-                HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                return new JsonResult(new { message = ex.Message,
-                    success = false,
-                    path = fixedPath,
-                    baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = files
-                });
-            }
-        }
+        //         return new JsonResult(new { message = "",
+        //             success = true,
+        //             path = fixedPath,
+        //             baseurl = RELATIVE_UPLOADS_USER_BASE,
+        //             files = new List<string>{ fixedPath + "/" + fileName }
+        //         });
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        //         return new JsonResult(new { message = ex.Message,
+        //             success = false,
+        //             path = path,
+        //             baseurl = RELATIVE_UPLOADS_USER_BASE,
+        //             files = (string[])null
+        //         });
+        //     }
+        // }
 
         [Authorize]
         [HttpPost]
         public IActionResult Delete(string target = "", string path = "")
         {
-            List<string> files = new List<string>();
-            string absPath, fixedPath = CleanPath(path);
-            bool haveTarget = !string.IsNullOrWhiteSpace(target), havePath = !string.IsNullOrWhiteSpace(fixedPath);
-
             try
             {
+                bool haveTarget = !string.IsNullOrWhiteSpace(target), havePath = !string.IsNullOrWhiteSpace(path);
                 if (!haveTarget && !havePath)
                 {
                     HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                     return new JsonResult(new { message = "Target path and filename cannot both be empty.",
                         success = false,
-                        path = fixedPath,
+                        path = path,
                         baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
-                if (haveTarget && (target.Contains("..") || target.Contains(":")))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in file name.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
-                if (havePath && (fixedPath.Contains("..") || fixedPath.Contains(":")))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in path.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
+                        files = (string[])null
                     });
                 }
 
-                absPath = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath, target);
+                string fixedPath = CleanPath(Path.Combine(path, target));
 
+
+                string absPath = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath, target);
                 if ((haveTarget && !System.IO.File.Exists(absPath)) || (havePath && !Directory.Exists(absPath)))
                 {
                     HttpContext.Response.StatusCode = (int)HttpStatusCode.NotFound;
@@ -436,7 +396,7 @@ namespace Palaver.Controllers
                         success = false,
                         path = fixedPath,
                         baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
+                        files = (string[])null
                     });
                 }
 
@@ -449,11 +409,11 @@ namespace Palaver.Controllers
                     Directory.Delete(absPath);
                 }
 
-                return new JsonResult(new { message = "Success.",
+                return new JsonResult(new { message = "",
                     success = true,
                     path = fixedPath,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = files
+                    files = (string[])null
                 });
             }
             catch (Exception ex)
@@ -461,9 +421,9 @@ namespace Palaver.Controllers
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return new JsonResult(new { message = ex.Message,
                     success = false,
-                    path = fixedPath,
+                    path = path,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = files
+                    files = (string[])null
                 });
             }
         }
@@ -472,29 +432,18 @@ namespace Palaver.Controllers
         [HttpPost]
         public IActionResult ListFiles(string path = "")
         {
-            List<string> files = new List<string>();
-            string absPath, fixedPath = CleanPath(path);
-
             try
             {
-                if (fixedPath.Contains("..") || fixedPath.Contains(":"))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in path.",
-                        success = false,
-                        path = fixedPath,
-                        baseurl = RELATIVE_UPLOADS_USER_BASE,
-                        files = files
-                    });
-                }
-                absPath = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath);
+                string fixedPath = CleanPath(path);
+                List<string> files = new List<string>();
 
+                string absPath = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath);
                 foreach (string file in Directory.GetFiles(absPath))
                 {
                     files.Add(Path.GetFileName(file));
                 }
 
-                return new JsonResult(new { message = "Success.",
+                return new JsonResult(new { message = "",
                     success = true,
                     path = fixedPath,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
@@ -506,9 +455,9 @@ namespace Palaver.Controllers
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return new JsonResult(new { message = ex.Message,
                     success = false,
-                    path = fixedPath,
+                    path = path,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = files
+                    files = (string[])null
                 });
             }
         }
@@ -517,28 +466,22 @@ namespace Palaver.Controllers
         [HttpPost]
         public IActionResult ListDirs(string path = "")
         {
-            List<string> dirs = new List<string>();
-            string absPath, fixedPath = CleanPath(path);
-
             try
             {
-                if (fixedPath.Contains("..") || fixedPath.Contains(":"))
-                {
-                    HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    return new JsonResult(new { message = "Illegal characters in path.",
-                        success = false,
-                        path = path,
-                        files = dirs
-                    });
-                }
-                absPath = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath);
+                string fixedPath = CleanPath(path);
+                List<string> dirs = new List<string>();
 
+                // If this is a subdir, include ".." so the filemanager can go back up directories.
+                if (fixedPath.Length > 0)
+                    dirs.Add("..");
+
+                string absPath = Path.Combine(FULL_UPLOADS_USER_BASE, fixedPath);
                 foreach (string dir in Directory.GetDirectories(absPath))
                 {
                     dirs.Add(Path.GetFileName(dir));
                 }
 
-                return new JsonResult(new { message = "Success.",
+                return new JsonResult(new { message = "",
                     success = true,
                     path = fixedPath,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
@@ -550,9 +493,9 @@ namespace Palaver.Controllers
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
                 return new JsonResult(new { message = ex.Message,
                     success = false,
-                    path = fixedPath,
+                    path = path,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = dirs
+                    files = (string[])null
                 });
             }
         }
@@ -561,10 +504,22 @@ namespace Palaver.Controllers
         {
             if (string.IsNullOrWhiteSpace(path))
                 return "";
-            else if (path[0] == '/')
-                return path.Substring(1);
-            else
-                return path.Trim();
+
+            // Combine the path with the uploads user base and then ensure the resulting path
+            // starts with the uploads user base path when resolved with Path.GetFullPath()
+            string fullPath = Path.GetFullPath(Path.Combine(FULL_UPLOADS_USER_BASE, path));
+            if (!fullPath.StartsWith(FULL_UPLOADS_USER_BASE))
+                throw new Exception("Invalid path supplied.");
+            
+            return fullPath.Substring(FULL_UPLOADS_USER_BASE.Length);
+        }
+
+        private bool IsAlloweExtension(string extension)
+        {
+            if (string.IsNullOrWhiteSpace(extension))
+                return false;
+
+            return ALLOWED_EXTENSIONS.Contains(extension.ToLower());
         }
     }
 }

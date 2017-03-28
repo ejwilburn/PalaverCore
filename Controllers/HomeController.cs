@@ -19,6 +19,7 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -37,7 +38,7 @@ namespace Palaver.Controllers
         private readonly PalaverDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        private readonly int _userId;
+        //private readonly int _userId;
 
         public HomeController(IHostingEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
             IHttpContextAccessor httpContextAccessor)
@@ -47,9 +48,10 @@ namespace Palaver.Controllers
             this._userManager = userManager;
             this._mapper = mapper;
             this._httpContextAccessor = httpContextAccessor;
-            this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
+            //this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
         }
 
+        [Authorize]
         public IActionResult Index()
         {
             return View();

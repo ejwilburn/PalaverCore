@@ -17,7 +17,7 @@ namespace Palaver
             var host = new WebHostBuilder()
                 .UseConfiguration(config)
                 .UseKestrel(options => {
-                    options.UseHttps("testCert.pfx", "testPassword");
+                    options.UseHttps("Palaver.pfx", null);
                 })
                 .UseUrls("http://*:5000/", "https://*:5001")
                 .UseContentRoot(Directory.GetCurrentDirectory())

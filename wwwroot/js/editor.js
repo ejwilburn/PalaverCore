@@ -19,16 +19,5 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // jshint esversion:6
-$(document).ready(function() {
-    $('.ui.search')
-        .search({
-            apiSettings: {
-                url: BASE_URL + 'api/comment/search/{query}'
-            },
-            fields: {
-                description: 'text'
-            },
-            minCharacters: 3,
-            maxResults: 20
-        });
-});
+
+// TODO: Move editor related code here from thread.js

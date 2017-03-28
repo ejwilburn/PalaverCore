@@ -2,6 +2,7 @@
 
 1) run **npm install**
 2) run **bower install**
+3) Put a cert named Palaver.pfx in project root with no password.
 
 ## Semantic UI Tasks
 
