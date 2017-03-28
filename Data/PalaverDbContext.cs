@@ -187,7 +187,15 @@ namespace Palaver.Data
 
         public async Task<Comment> CreateCommentAsync(string text, int threadId, int? parentId, User user)
         {
-            Palaver.Models.Thread thread = await Threads.Where(t => t.Id == threadId).Include(t => t.Subscriptions).SingleAsync();
+            // If the comment has a parent, make sure the comment's thread id is the same as the parent's.
+            int useThreadId = threadId;
+            if (parentId != null)
+            {
+                Comment parent = await Comments.Where(c => c.Id == parentId).SingleOrDefaultAsync();
+                if (parent != null)
+                    useThreadId = parent.ThreadId;
+            }
+            Palaver.Models.Thread thread = await Threads.Where(t => t.Id == useThreadId).Include(t => t.Subscriptions).SingleAsync();
             Comment newComment = await Comment.CreateComment(text, thread, parentId, user, this);
             Comments.Add(newComment);
 

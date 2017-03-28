@@ -355,19 +355,24 @@ class Thread {
 
     addComment(comment) {
         let isAuthor = comment.UserId === this.userId;
-        let commentList = null;
+        let commentList = null,
+            renderedComment = null;
 
         if (isAuthor)
             comment.IsUnread = false;
-
-        let renderedComment = $(Mustache.render(this.templates.comment, comment));
-        if (Object.isNumber(comment.ParentCommentId))
-            commentList = $(`#thread .comment[data-id="${comment.ParentCommentId}"]>.comments`);
         else
-            commentList = $('#thread>.comments');
+            this.incrementThreadUnread(comment.ThreadId);
 
-        renderedComment.appendTo(commentList);
-        commentList.removeClass('hidden');
+        if (comment.ThreadId === this.threadId) {
+            renderedComment = $(Mustache.render(this.templates.comment, comment));
+            if (Object.isNumber(comment.ParentCommentId))
+                commentList = $(`#thread .comment[data-id="${comment.ParentCommentId}"]>.comments`);
+            else
+                commentList = $('#thread>.comments');
+
+            renderedComment.appendTo(commentList);
+            commentList.removeClass('hidden');
+        }
 
         this.popThread(comment.ThreadId);
 
@@ -528,7 +533,7 @@ class Thread {
         let thread = $(`#threads [data-id="${threadId}"]`);
         // If the counter is empty, set it to (1)
         let unreadCounter = thread.find('.unreadcount');
-        let threadCounterHtml = unreadLabel.html();
+        let threadCounterHtml = unreadCounter.html();
         if (threadCounterHtml === null || threadCounterHtml.length === 0 || threadCounterHtml === '0') {
             unreadCounter.html('1');
         } else {

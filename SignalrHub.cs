@@ -158,15 +158,9 @@ namespace Palaver
 
         public async Task MarkRead(int id)
         {
-            _dbContext.Remove(new UnreadComment { UserId = GetUserId(), CommentId = id });
-            try 
-            {
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                // This means the unreadcomment is already deleted, ignore it.
-            }
+            UnreadComment uc = await _dbContext.UnreadComments.FindAsync(GetUserId(), id);
+            _dbContext.UnreadComments.Remove( uc );
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<List<SearchResultViewModel>> Search(string searchText)
