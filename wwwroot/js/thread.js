@@ -31,12 +31,12 @@ const NOTIFICATION_DURATION = 5000; // In ms
 const EDITOR_IMAGE_DEFAULT_WIDTH = 500;
 const JODIT_CONFIG = {
     editorCssClass: 'jodit_normal',
+    triggerChangeEvent: false,
     enableDragAndDropFileToEditor: true,
     imageDefaultWidth: EDITOR_IMAGE_DEFAULT_WIDTH,
     language: 'en',
     spellcheck: false,
     toolbarButtonSize: 'small',
-    triggerChangeEvent: false,
     removeButtons: [
         'hr',
         'table',
@@ -44,6 +44,8 @@ const JODIT_CONFIG = {
         'font',
         'justify',
         'fullsize',
+        'undo',
+        'redo',
         'about'
     ],
     image: {
@@ -51,24 +53,15 @@ const JODIT_CONFIG = {
         editStyle: false,
         editClass: false,
         editId: false,
-        editAlign: false
+        editAlign: false,
+        editLink: true
     },
     link: {
         processVideoLink: true,
         processPastedLink: true,
-        openLinkDialogAfterPost: false,
+        openLinkDialogAfterPost: true,
         removeLinkAfterFormat: false
     },
-    // buttons: Jodit.defaultOptions.buttons.concat([{
-    //     name: 'code',
-    //     icon: 'source',
-    //     command: 'formatBlock',
-    //     tags: ['pre'],
-    //     tooltip: 'Code',
-    //     template: function(key, value) {
-    //         return '<pre class="code">' + value + '</pre>';
-    //     }
-    // }]),
     uploader: {
         url: BASE_URL + 'api/FileHandler/AutoUpload',
         format: 'json',
@@ -91,7 +84,10 @@ const JODIT_CONFIG = {
                 error: !resp.success,
                 msg: resp.message
             };
-        },
+        }
+    }
+};
+/*,
         error: function(e) {
             this.events.fire('errorPopap', [(e.getMessage !== undefined ? e.getMessage() : `Upload error ${e.status}: ${e.statusText}`), 'error', 4000]);
         },
@@ -152,7 +148,7 @@ const JODIT_CONFIG = {
             url: BASE_URL + 'api/FileHandler/ListDirs',
         }
     }
-};
+    */
 
 const wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
 
@@ -170,7 +166,6 @@ class Thread {
         this.editing = null;
         this.editingCommentId = null;
         this.editingOrigText = null;
-        // this.UPLOAD_DIR = `${BASE_URL}uploads/${thread.userId}`;
 
         $(document).ready(() => this.initPage());
     }
@@ -216,47 +211,43 @@ class Thread {
         if (Object.isNumber(this.commentId))
             this.focusCommentId(this.commentId);
 
-        this.initEditor();
         this.fixEditing();
     }
 
-    initEditor() {
-        // Init the Jodit editor.
+    openEditor(openAt, initialValue) {
+        $(openAt).append(Mustache.render(this.templates.editor));
         this.editorForm = $('#editorForm');
-        this.editorHome = $('#editorHome');
         this.editor = new Jodit('#editor', JODIT_CONFIG);
-        // this.editor.loadModules();
-        // this.editor.build();
         this.editor.$editor.on('keydown', (e) => { return this.replyKeyDown(e); });
+        if (initialValue) {
+            this.editor.val(initialValue);
+        }
+        this.editor.$editor.focus();
         return this.editor;
     }
 
     cancelReply() {
-        let wasEditing = null,
-            origText = null;
-        if (this.editing) {
-            wasEditing = this.editing;
+        let wasEditing = this.editing,
             origText = this.editingOrigText;
-        }
 
-        this.resetEditor();
+        this.closeEditor();
 
         if (wasEditing) {
             wasEditing.html(origText);
         }
     }
 
-    resetEditor() {
+    closeEditor() {
         if (this.editor) {
-            this.editor.val('');
+            $(this.editor.$element).blur();
+            this.editor.destroy();
+            this.editor = null;
             this.editing = null;
             this.editingParentId = null;
             this.editingCommentId = null;
             this.editingOrigText = null;
-            $(this.editor.$element).blur();
-            this.editorHome.append(this.editorForm);
-        } else {
-            this.initEditor();
+            $(this.editorForm).remove();
+            this.editorForm = null;
         }
     }
 
@@ -378,7 +369,7 @@ class Thread {
 
         if (isAuthor) {
             renderedComment.children('.edit').removeClass('hidden');
-            this.resetEditor();
+            this.closeEditor();
             this.focusComment(renderedComment);
             this.clearBusy();
         } else {
@@ -391,7 +382,7 @@ class Thread {
         let isAuthor = comment.UserId === this.userId;
 
         if (isAuthor) {
-            this.resetEditor();
+            this.closeEditor();
             this.focusCommentId(comment.Id);
             this.clearBusy();
         }
@@ -559,14 +550,11 @@ class Thread {
         history.pushState({ threadId: thread.Id }, document.title, `${BASE_URL}Thread/${thread.Id}`);
         this.allowBack = true;
 
-        if (this.editor) {
-            this.editor.destroy();
-        }
+        this.closeEditor();
         $('#thread').replaceWith(Mustache.render(this.templates.thread, thread));
-        this.initEditor();
         this.selectThread(thread.Id);
         $('body').scrollTop(0);
-        this.editor.$editor.focus();
+        this.openEditor('#thread .comments');
     }
 
     loadThread(threadId, commentId = null, isBack = false) {
@@ -591,9 +579,7 @@ class Thread {
         $.get(
             `${BASE_URL}api/RenderThread/${threadId}`,
             (data) => {
-                if (this.editor) {
-                    this.editor.destroy();
-                }
+                this.closeEditor();
                 $('#thread').replaceWith(data);
                 if (haveCommentId) {
                     this.focusAndMarkReadCommentId(commentId);
@@ -601,7 +587,6 @@ class Thread {
                 }
                 this.selectThread(threadId);
                 this.updateTitle();
-                this.initEditor();
                 this.fixEditing();
                 $('body').scrollTop(0);
                 this.clearBusy();
@@ -623,30 +608,20 @@ class Thread {
     replyTo(parentId) {
         if (!Object.isNumber(parentId)) {
             // They're replying to the thread or a direct reply to a top level comment.
-            this.focusComment(this.editorForm);
-            this.editor.$editor.focus();
+            this.openEditor($('#thread>.comments'));
             return;
         }
-        let replyingTo = $(`.comment[data-id="${parentId}"]`);
-
-        // Move the editor to the comment being replied to.
-        this.editor.val('');
         this.editingParentId = parentId;
-        replyingTo.children('.comments').append(this.editorForm);
-        this.focusComment(this.editorForm);
-        this.editor.$editor.focus();
+        this.openEditor($(`.comment[data-id="${parentId}"]>.comments`));
     }
 
     editComment(id) {
-        // Move the editor to the comment being edited.
         this.editing = $(`.comment[data-id="${id}"]>.content>.text`);
         this.editingCommentId = id;
         this.editingOrigText = this.editing.html();
-        this.editor.val(this.editingOrigText);
         this.editing.html('');
-        this.editing.append(this.editorForm);
         this.focusCommentId(id);
-        this.editor.$editor.focus();
+        this.openEditor(this.editing, this.editingOrigText);
     }
 
     replyKeyDown(e) {
@@ -798,8 +773,6 @@ class Thread {
                 let replyToId = null;
                 if (e.shiftKey === false) {
                     replyToId = comment.data('parentid');
-                    if (replyToId.length === 0)
-                        replyToId = this.threadId;
                 } else {
                     replyToId = comment.data('id');
                 }

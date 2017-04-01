@@ -67,7 +67,7 @@ namespace Palaver.Controllers
             FULL_UPLOADS_BASE = Path.Combine(_environment.WebRootPath, UPLOADS_DIR) + Path.DirectorySeparatorChar;
             if (!Directory.Exists(FULL_UPLOADS_BASE))
                 Directory.CreateDirectory(FULL_UPLOADS_BASE);
-            
+
             FULL_UPLOADS_USER_BASE = Path.Combine(FULL_UPLOADS_BASE, _userId.ToString()) + Path.DirectorySeparatorChar;
             if (!Directory.Exists(FULL_UPLOADS_USER_BASE))
                 Directory.CreateDirectory(FULL_UPLOADS_USER_BASE);
@@ -103,8 +103,8 @@ namespace Palaver.Controllers
                                 files = (string[])null
                             });
                         }
-                        
-                        do 
+
+                        do
                         {
                             randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + extension;
                             savePath = Path.Combine(fullAutoUploadPath, randomFileName);
@@ -121,7 +121,7 @@ namespace Palaver.Controllers
                     success = true,
                     path = AUTO_UPLOAD_DIR,
                     baseurl = relativeAutoUploadPath,
-                    files = savedFiles 
+                    files = savedFiles
                 });
             }
             catch (Exception ex)
@@ -174,7 +174,7 @@ namespace Palaver.Controllers
                                 files = (string[])null
                             });
                         }
-                        
+
                         string relativeFilePath = CleanPath(Path.Combine(fixedPath, file.FileName));
                         string absFilePath = Path.Combine(FULL_UPLOADS_USER_BASE, relativeFilePath);
                         if (System.IO.File.Exists(absFilePath))
@@ -187,7 +187,7 @@ namespace Palaver.Controllers
                                 files = (string[])null
                             });
                         }
-                        
+
                         using (var fileStream = new FileStream(absFilePath, FileMode.Create))
                         {
                             await file.CopyToAsync(fileStream);
@@ -199,7 +199,7 @@ namespace Palaver.Controllers
                     success = true,
                     path = fixedPath,
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = savedFiles 
+                    files = savedFiles
                 });
             }
             catch (Exception ex)
@@ -213,7 +213,7 @@ namespace Palaver.Controllers
                 });
             }
         }
-                    
+
         [Authorize]
         [HttpPost]
         public IActionResult CreateDir(string name, string path = "")
@@ -245,7 +245,7 @@ namespace Palaver.Controllers
                         files = (string[])null
                     });
                 }
-                
+
                 Directory.CreateDirectory(absNewDir);
 
                 return new JsonResult(new { message = "",
@@ -266,7 +266,7 @@ namespace Palaver.Controllers
                 });
             }
         }
-                    
+
         // [Authorize]
         // [HttpPost]
         // public IActionResult Move(string file, string path)
@@ -321,7 +321,7 @@ namespace Palaver.Controllers
         //                 files = (string[])null
         //             });
         //         }
-                
+
         //         if (Directory.Exists(absNewLocation) || System.IO.File.Exists(absNewLocation))
         //         {
         //             HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -347,7 +347,7 @@ namespace Palaver.Controllers
         //                 files = (string[])null
         //             });
         //         }
-                
+
         //         return new JsonResult(new { message = "",
         //             success = true,
         //             path = fixedPath,
@@ -427,7 +427,7 @@ namespace Palaver.Controllers
                 });
             }
         }
-                    
+
         [Authorize]
         [HttpPost]
         public IActionResult ListFiles(string path = "")
@@ -461,7 +461,7 @@ namespace Palaver.Controllers
                 });
             }
         }
-                    
+
         [Authorize]
         [HttpPost]
         public IActionResult ListDirs(string path = "")
@@ -487,7 +487,7 @@ namespace Palaver.Controllers
                     baseurl = RELATIVE_UPLOADS_USER_BASE,
                     files = dirs
                 });
-            }   
+            }
             catch (Exception ex)
             {
                 HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -510,7 +510,7 @@ namespace Palaver.Controllers
             string fullPath = Path.GetFullPath(Path.Combine(FULL_UPLOADS_USER_BASE, path));
             if (!fullPath.StartsWith(FULL_UPLOADS_USER_BASE))
                 throw new Exception("Invalid path supplied.");
-            
+
             return fullPath.Substring(FULL_UPLOADS_USER_BASE.Length);
         }
 

@@ -45,6 +45,7 @@ wwwroot/lib/jquery-validation-unobtrusive
 wwwroot/lib/mustache.js
 wwwroot/lib/signalr
 wwwroot/lib/sugar
+wwwroot/lib/semantic
 
 #Ignore user uploads but not the upload folder and the README.md within.
 wwwroot/uploads/*/

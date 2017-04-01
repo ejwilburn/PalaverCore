@@ -8,6 +8,7 @@
     "jquery-validation-unobtrusive": null,
     "mustache.js": "mustache#~2.3.0",
     "signalr": "~2.2.1",
-    "sugar": "^2.0.4"
+    "sugar": "^2.0.4",
+    "jodit": "^2.5.62"
   }
 }

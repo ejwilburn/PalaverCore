@@ -7,6 +7,17 @@
 @{
     ViewData["Title"] = "Log in";
 }
+@section Styles
+{
+    <environment names="Development">
+        <link rel="stylesheet" href="~/css/login.css" />
+    </environment>
+    <environment names="Staging,Production">
+        <link rel="stylesheet" href="~/css/login.min.css"
+              asp-fallback-href="~/css/login.css"
+              asp-fallback-test-class="masthead" asp-fallback-test-property="margin-top" asp-fallback-test-value="15px" />
+    </environment>
+}
 
 <div id="mainContent" class="ui two column middle aligned very relaxed stackable grid container">
     <div class="column">

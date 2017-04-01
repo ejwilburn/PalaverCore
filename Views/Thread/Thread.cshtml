@@ -13,10 +13,12 @@
 @section Styles
 {
     <environment names="Development">
-        <link rel="stylesheet" href="~/lib/jodit/build/jodit.min.css" />
+        <link rel="stylesheet" href="~/lib/jodit/jodit.min.css" />
     </environment>
     <environment names="Staging,Production">
-        <link rel="stylesheet" href="~/lib/jodit/build/jodit.min.css" />
+        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/jodit/2.5.62/jodit.min.css"
+              asp-fallback-href="~/lib/jodit/jodit.min.css"
+              asp-fallback-test-class="jodit_fullsize_box" asp-fallback-test-property="z-index" asp-fallback-test-value="100000" />
     </environment>
 }
 @section Scripts
@@ -24,7 +26,7 @@
     <environment names="Development">
         <script src="~/lib/signalr/jquery.signalR.js"></script>
         <script src="~/signalr/hubs" asp-append-version="true"></script>
-        <script src="~/lib/jodit/build/jodit.min.js"></script>
+        <script src="~/lib/jodit/jodit.min.js"></script>
         <script src="~/lib/mustache.js/mustache.js"></script>
         <script src="~/js/thread.js" asp-append-version="true"></script>
     </environment>
@@ -34,10 +36,13 @@
             asp-fallback-test="$.signalR">
         </script>
         <script src="~/signalr/hubs"></script>
-        <script src="~/lib/jodit/build/jodit.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"
             asp-fallback-src="~/lib/mustache.js/mustache.js"
             asp-fallback-test="Mustache">
+        </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jodit/2.5.62/jodit.min.js"
+            asp-fallback-src="~/lib/jodit/jodit.min.js"
+            asp-fallback-test="Jodit">
         </script>
         <script src="~/js/thread.min.js" asp-append-version="true"></script>
     </environment>
