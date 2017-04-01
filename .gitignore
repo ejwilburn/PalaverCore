@@ -38,14 +38,20 @@ bld/
 [Oo]bj/
 
 # JS libraries managed by bower.
-wwwroot/lib/jodit
 wwwroot/lib/jquery
-wwwroot/lib/jquery-validation
-wwwroot/lib/jquery-validation-unobtrusive
 wwwroot/lib/mustache.js
 wwwroot/lib/signalr
 wwwroot/lib/sugar
 wwwroot/lib/semantic
+wwwroot/lib/jodit
+wwwroot/lib/jquery-validation
+wwwroot/lib/jquery-validation-unobtrusive
+wwwroot/lib/textboxio/services
+wwwroot/lib/textboxio/README.*
+wwwroot/lib/textboxio/version.txt
+wwwroot/lib/textboxio/thirdparty-licenses.html
+wwwroot/lib/textboxio/changelog.html
+wwwroot/lib/textboxio/theme/README.html
 
 #Ignore user uploads but not the upload folder and the README.md within.
 wwwroot/uploads/*/
