@@ -29,6 +29,7 @@ const NOTIFICATION_DURATION = 5000; // In ms
 
 // Editor Defaults
 const EDITOR_IMAGE_DEFAULT_WIDTH = 500;
+/*
 const JODIT_CONFIG = {
     editorCssClass: 'jodit_normal',
     triggerChangeEvent: false,
@@ -87,6 +88,7 @@ const JODIT_CONFIG = {
         }
     }
 };
+*/
 /*,
         error: function(e) {
             this.events.fire('errorPopap', [(e.getMessage !== undefined ? e.getMessage() : `Upload error ${e.status}: ${e.statusText}`), 'error', 4000]);
@@ -151,6 +153,18 @@ const JODIT_CONFIG = {
     */
 
 const wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
+const TEXTBOXIO_CONFIG = {
+    paste: {
+        style: 'clean'
+    },
+    images: {
+        upload: {
+            url: BASE_URL + 'api/FileManager/AutoUpload',
+            //            basePath: `${BASE_URL}uploads/${this.userId}/`,
+            credentials: true
+        }
+    }
+};
 
 class Thread {
     constructor(threadId, commentId, userId) {
@@ -217,12 +231,8 @@ class Thread {
     openEditor(openAt, initialValue) {
         $(openAt).append(Mustache.render(this.templates.editor));
         this.editorForm = $('#editorForm');
-        this.editor = new Jodit('#editor', JODIT_CONFIG);
-        this.editor.$editor.on('keydown', (e) => { return this.replyKeyDown(e); });
-        if (initialValue) {
-            this.editor.val(initialValue);
-        }
-        this.editor.$editor.focus();
+        this.editor = textboxio.replace('#editor', TEXTBOXIO_CONFIG);
+        $(this.editor.element()).on('keydown', (e) => { return this.replyKeyDown(e); });
         return this.editor;
     }
 
@@ -239,8 +249,8 @@ class Thread {
 
     closeEditor() {
         if (this.editor) {
-            $(this.editor.$element).blur();
-            this.editor.destroy();
+            $(this.editor.element()).blur();
+            this.editor.restore();
             this.editor = null;
             this.editing = null;
             this.editingParentId = null;
@@ -618,9 +628,12 @@ class Thread {
     editComment(id) {
         this.editing = $(`.comment[data-id="${id}"]>.content>.text`);
         this.editingCommentId = id;
+        this.editingSelector = `.comment[data-id="${id}"] .text`;
+        this.editing = $(this.editingSelector);
         this.editingOrigText = this.editing.html();
-        this.editing.html('');
+        this.editor = textboxio.replace(this.editingSelector, TEXTBOXIO_CONFIG);
         this.focusCommentId(id);
+        this.editor.focus();
         this.openEditor(this.editing, this.editingOrigText);
     }
 
@@ -636,7 +649,7 @@ class Thread {
     }
 
     sendReply() {
-        let text = this.editor.val();
+        let text = this.editor.content.get();
         if (text.isBlank()) {
             alert("Replies cannot be empty.");
             return;
@@ -646,27 +659,29 @@ class Thread {
 
         this.showBusy();
 
-        // Make sure all URLs in the reply have a target.  If not, set it to _blank.
-        // We're doing this by using a fake DIV with jquery to find the links.
-        let tempDiv = document.createElement('DIV');
-        tempDiv.innerHTML = text;
-        let links = $(tempDiv).children('a').each(function(index) {
-            if (!$(this).attr('target'))
-                $(this).attr('target', '_blank');
-        });
+        this.editor.content.uploadImages(() => {
+            // Make sure all URLs in the reply have a target.  If not, set it to _blank.
+            // We're doing this by using a fake DIV with jquery to find the links.
+            let tempDiv = document.createElement('DIV');
+            tempDiv.innerHTML = this.editor.content.get();
+            let links = $(tempDiv).children('a').each(function(index) {
+                if (!$(this).attr('target'))
+                    $(this).attr('target', '_blank');
+            });
 
-        if (!this.editing) {
-            this.newComment({
-                "Text": tempDiv.innerHTML,
-                "ThreadId": this.threadId,
-                "ParentCommentId": (!Object.isNumber(parentCommentId) ? null : parentCommentId)
-            });
-        } else {
-            this.saveUpdatedComment({
-                "Id": this.editingCommentId,
-                "Text": tempDiv.innerHTML
-            });
-        }
+            if (!this.editing) {
+                this.newComment({
+                    "Text": tempDiv.innerHTML,
+                    "ThreadId": this.threadId,
+                    "ParentCommentId": (!Object.isNumber(parentCommentId) ? null : parentCommentId)
+                });
+            } else {
+                this.saveUpdatedComment({
+                    "Id": this.editingCommentId,
+                    "Text": tempDiv.innerHTML
+                });
+            }
+        });
     }
 
     newComment(comment) {

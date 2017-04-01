@@ -79,7 +79,9 @@ namespace Palaver.Controllers
         [HttpPost]
         public async Task<IActionResult> AutoUpload(IFormCollection formData)
         {
-            string relativeAutoUploadPath = RELATIVE_UPLOADS_USER_BASE + AUTO_UPLOAD_DIR + "/";
+            string relativeAutoUploadPath = RELATIVE_UPLOADS_USER_BASE + "/" + AUTO_UPLOAD_DIR,
+                savePath = null, randomFileName = null;
+
             try
             {
                 string fullAutoUploadPath = Path.Combine(FULL_UPLOADS_USER_BASE, AUTO_UPLOAD_DIR);
@@ -88,51 +90,37 @@ namespace Palaver.Controllers
                 if (!Directory.Exists(fullAutoUploadPath))
                     Directory.CreateDirectory(fullAutoUploadPath);
 
-                foreach (var file in formData.Files)
+                if (formData.Files.Count > 0 && formData.Files[0].Length > 0)
                 {
-                    if (file.Length > 0)
+                    var file = formData.Files[0];
+                    string extension = Path.GetExtension(file.FileName).ToLower();
+                    if (!ALLOWED_EXTENSIONS.Contains(extension))
                     {
-                        string extension = Path.GetExtension(file.FileName), savePath = null, randomFileName = null;
-                        if (!IsAlloweExtension(extension))
-                        {
-                            HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                            return new JsonResult(new { message = "Invalid file type, allowed extensions: " + String.Join(", ", ALLOWED_EXTENSIONS),
-                                success = false,
-                                path = AUTO_UPLOAD_DIR,
-                                baseurl = relativeAutoUploadPath,
-                                files = (string[])null
-                            });
-                        }
+                        HttpContext.Response.StatusCode = 500;
+                        return new JsonResult(new { message = $"File type not allowed: {extension}",
+                            success = false
+                        });
+                    }
+                    
+                    // Generate random file names until one is found that doesn't exist in the target dir.
+                    do 
+                    {
+                        randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + extension;
+                        savePath = Path.Combine(fullAutoUploadPath, randomFileName);
+                    } while (System.IO.File.Exists(savePath));
 
-                        do
-                        {
-                            randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + extension;
-                            savePath = Path.Combine(fullAutoUploadPath, randomFileName);
-                        } while (System.IO.File.Exists(savePath));
-
-                        using (var fileStream = new FileStream(savePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(fileStream);
-                        }
-                        savedFiles.Add(randomFileName);
+                    using (var fileStream = new FileStream(savePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(fileStream);
                     }
                 }
-                return new JsonResult(new { message = "",
-                    success = true,
-                    path = AUTO_UPLOAD_DIR,
-                    baseurl = relativeAutoUploadPath,
-                    files = savedFiles
-                });
+
+                return new JsonResult(new { location = $"{relativeAutoUploadPath}/{randomFileName}" });
             }
             catch (Exception ex)
             {
-                HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-                return new JsonResult(new { message = ex.Message,
-                    success = false,
-                    path = AUTO_UPLOAD_DIR,
-                    baseurl = RELATIVE_UPLOADS_USER_BASE,
-                    files = (string[])null
-                });
+                HttpContext.Response.StatusCode = 500;
+                return new JsonResult(new { message = ex.Message, success = false });
             }
         }
 
