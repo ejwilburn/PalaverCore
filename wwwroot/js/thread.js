@@ -80,8 +80,6 @@ class Thread {
         this.startSignalr();
         this.updateTitle();
 
-        CKEDITOR.on('key', (e) => { return this.replyKeyPressed(e); });
-
         if (!Object.isNumber(this.threadId))
             return;
 
@@ -114,6 +112,9 @@ class Thread {
         $(openAt).append(Mustache.render(this.templates.editor));
         this.editorForm = $('#editorForm');
         this.editor = CKEDITOR.replace('editor');
+        this.editor.on('key', (e) => { return this.replyKeyPressed(e); });
+        if (initialValue)
+            this.editor.setData(initialValue);
         return this.editor;
     }
 
@@ -540,7 +541,7 @@ class Thread {
         // Make sure all URLs in the reply have a target.  If not, set it to _blank.
         // We're doing this by using a fake DIV with jquery to find the links.
         let tempDiv = document.createElement('DIV');
-        tempDiv.innerHTML = this.editor.getData();
+        tempDiv.innerHTML = text;
         let links = $(tempDiv).children('a').each(function(index) {
             if (!$(this).attr('target'))
                 $(this).attr('target', '_blank');

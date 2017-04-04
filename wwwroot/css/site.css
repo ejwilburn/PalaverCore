@@ -34,7 +34,7 @@ body {
 }
 
 #thread .comment:focus {
-    background-color: orange;
+    background-color: #E5FFEB;
 }
 
 #thread .comments:empty {
@@ -77,5 +77,5 @@ body {
 /****** Comments *********/
 
 #thread .unread {
-    background-color: teal;
+    background-color: #AFDCEC;
 }

@@ -24,35 +24,44 @@ CKEDITOR.editorConfig = function(config) {
 	*/
 
     config.toolbar = [
-        { name: 'insert', items: ['Link', 'Unlink', 'Image', 'Embed', 'CodeSnippet'] },
+        { name: 'insert', items: ['Link', 'Unlink', 'Image', 'Youtube', 'CodeSnippet'] },
         { name: 'styles', items: ['FontSize', 'TextColor'] },
         { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', '-', 'RemoveFormat'] },
         { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'] },
-        { name: 'paste', items: ['Paste', 'PasteText'] },
+        { name: 'paste', items: ['PasteText'] },
         { name: 'about', items: ['a11yhelp'] }
     ];
     config.skin = 'moono-dark';
     config.disableNativeSpellChecker = false;
     config.startupFocus = true;
     config.toolbarCanCollapse = true;
+    config.extraPlugins = 'codesnippet,image,image2,link,prism,youtube';
+    config.removePlugins = 'about';
     //config.extraPlugins = 'autogrow,find,image,autolink,codesnippet,embedbase,embed';
     //config.removePlugins = 'tab,elementspath,bidi';
-    config.autoGrow_onStartup = false;
+    config.autoGrow_onStartup = true;
     config.autoGrow_minHeight = 100;
+    config.height = 100;
+    config.youtube_privacy = true;
+    config.youtube_autoplay = false;
+    config.youtube_controls = true;
+    config.youtube_disabled_fields = ['chkAutoplay'];
     config.resize_enabled = false;
     config.enableTabKeyTools = false;
     config.defaultLanguage = 'en';
-    config.height = 100;
     config.codeSnippet_theme = 'onedark';
     config.enterMode = CKEDITOR.ENTER_BR;
     config.keystrokes = [
         [CKEDITOR.SHIFT + 13, null],
     ];
-    config.uploadUrl = BASE_URL + 'api/FileHandler/AutoUpload';
+    if (typeof BASE_URL !== 'undefined')
+        config.uploadUrl = BASE_URL + 'api/FileHandler/AutoUpload';
+    else
+        config.uploadUrl = '/api/FileHandler/AutoUpload';
     // The default plugins included in the basic setup define some buttons that
     // are not needed in a basic editor. They are removed here.
     config.removeButtons = 'Cut,Copy,Paste,Undo,Redo,Anchor,Subscript,Superscript';
 
-    // Dialog windows are also simplified.
-    //config.removeDialogTabs = 'link:advanced';
+    // Simplify the dialog windows.
+    config.removeDialogTabs = 'image:advanced;link:advanced';
 };
