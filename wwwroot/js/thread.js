@@ -26,145 +26,11 @@ const PAGE_TITLE = 'Palaver';
 const HUB_ACTION_RETRY_DELAY = 5000; // in ms
 const NOTIFICATION_SNIPPET_SIZE = 100; // in characters
 const NOTIFICATION_DURATION = 5000; // In ms
-
-// Editor Defaults
-const EDITOR_IMAGE_DEFAULT_WIDTH = 500;
-/*
-const JODIT_CONFIG = {
-    editorCssClass: 'jodit_normal',
-    triggerChangeEvent: false,
-    enableDragAndDropFileToEditor: true,
-    imageDefaultWidth: EDITOR_IMAGE_DEFAULT_WIDTH,
-    language: 'en',
-    spellcheck: false,
-    toolbarButtonSize: 'small',
-    removeButtons: [
-        'hr',
-        'table',
-        'source',
-        'font',
-        'justify',
-        'fullsize',
-        'undo',
-        'redo',
-        'about'
-    ],
-    image: {
-        editMargins: false,
-        editStyle: false,
-        editClass: false,
-        editId: false,
-        editAlign: false,
-        editLink: true
-    },
-    link: {
-        processVideoLink: true,
-        processPastedLink: true,
-        openLinkDialogAfterPost: true,
-        removeLinkAfterFormat: false
-    },
-    uploader: {
-        url: BASE_URL + 'api/FileHandler/AutoUpload',
-        format: 'json',
-        pathVariableName: 'path',
-        filesVariableName: 'files',
-        prepareData: function(data) {
-            return data;
-        },
-        isSuccess: function(resp) {
-            return resp.success;
-        },
-        getMsg: function(resp) {
-            return resp.message;
-        },
-        process: function(resp) {
-            return {
-                files: resp[this.options.uploader.filesVariableName] || [],
-                path: resp.path,
-                baseurl: resp.baseurl,
-                error: !resp.success,
-                msg: resp.message
-            };
-        }
-    }
-};
-*/
-/*,
-        error: function(e) {
-            this.events.fire('errorPopap', [(e.getMessage !== undefined ? e.getMessage() : `Upload error ${e.status}: ${e.statusText}`), 'error', 4000]);
-        },
-        defaultHandlerSuccess: function(data, resp) {
-            var i, field = this.options.uploader.filesVariableName;
-            if (data[field] && data[field].length) {
-                for (i = 0; i < data[field].length; i += 1) {
-                    this.selection.insertImage(data.baseurl + data[field][i]);
-                }
-            }
-        },
-        defaultHandlerError: function(resp) {
-            this.events.fire('errorPopap', [this.options.uploader.getMsg(resp)]);
-        }
-    },
-    filebrowser: {
-        deleteFolder: false,
-        moveFolder: false,
-        moveFile: false,
-        // global setting for all operations
-        ajax: {
-            async: true,
-            cache: true,
-            contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-            method: 'POST',
-            dataType: 'json',
-            process: function(resp) {
-                return {
-                    files: resp.files || [],
-                    path: resp.path,
-                    baseurl: resp.baseurl,
-                    error: !resp.success,
-                    msg: resp.message
-                };
-            }
-        },
-        uploader: {
-            url: BASE_URL + 'api/FileHandler/Upload'
-        },
-        // folder creation operation
-        create: {
-            url: BASE_URL + 'api/FileHandler/CreateDir',
-        },
-        // operation of moving the folder / file
-        move: {
-            url: BASE_URL + 'api/FileHandler/Move',
-        },
-        // the operation to delete the folder / file
-        remove: {
-            url: BASE_URL + 'api/FileHandler/Delete',
-        },
-        // viewing a folder and return the list of files in it
-        items: {
-            url: BASE_URL + 'api/FileHandler/ListFiles',
-        },
-        // viewing a folder and return a list of sub-folders in it
-        folder: {
-            url: BASE_URL + 'api/FileHandler/ListDirs',
-        }
-    }
-    */
+const ASYNC_SCRIPTS = [
+    { url: '//wow.zamimg.com/widgets/power.js', callback: null } // wowhead
+]
 
 const wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
-const TEXTBOXIO_CONFIG = {
-    paste: {
-        style: 'clean'
-    },
-    images: {
-        upload: {
-            url: BASE_URL + 'api/FileManager/AutoUpload',
-            //            basePath: `${BASE_URL}uploads/${this.userId}/`,
-            credentials: true
-        }
-    }
-};
 
 class Thread {
     constructor(threadId, commentId, userId) {
@@ -214,8 +80,7 @@ class Thread {
         this.startSignalr();
         this.updateTitle();
 
-        // Load wowhead script after the page is loaded to stop it from blocking.
-        $.getScript('//wow.zamimg.com/widgets/power.js');
+        CKEDITOR.on('key', (e) => { return this.replyKeyPressed(e); });
 
         if (!Object.isNumber(this.threadId))
             return;
@@ -226,13 +91,29 @@ class Thread {
             this.focusCommentId(this.commentId);
 
         this.fixEditing();
+
+        this.loadScriptsAsync();
+    }
+
+    // For all scripts in ASYNC_SCRIPTS load them via AJAX then execute their callbacks.
+    // This is done for faster page loading for non-critical scripts.
+    loadScriptsAsync() {
+        for (var script of ASYNC_SCRIPTS) {
+            this.loadScriptAsync(script.url, script.callback);
+        }
+    }
+
+    loadScriptAsync(url, callback) {
+        if (callback)
+            $.getScript(url, (data, textStatus, jqxhr) => { return callback(data, textStatus, jqxhr); });
+        else
+            $.getScript(url);
     }
 
     openEditor(openAt, initialValue) {
         $(openAt).append(Mustache.render(this.templates.editor));
         this.editorForm = $('#editorForm');
-        this.editor = textboxio.replace('#editor', TEXTBOXIO_CONFIG);
-        $(this.editor.element()).on('keydown', (e) => { return this.replyKeyDown(e); });
+        this.editor = CKEDITOR.replace('editor');
         return this.editor;
     }
 
@@ -249,8 +130,8 @@ class Thread {
 
     closeEditor() {
         if (this.editor) {
-            $(this.editor.element()).blur();
-            this.editor.restore();
+            this.editor.focusManager.blur(true);
+            this.editor.destroy();
             this.editor = null;
             this.editing = null;
             this.editingParentId = null;
@@ -262,7 +143,7 @@ class Thread {
     }
 
     fixEditing() {
-        $(`#thread .comment:not([data-authorid="${this.userId}"]) .edit`).remove();
+        $(`#thread .comment:not([data-authorid="${this.userId}"])>.content>.actions>.edit`).remove();
     }
 
     showDisconnected() {
@@ -626,22 +507,19 @@ class Thread {
     }
 
     editComment(id) {
-        this.editing = $(`.comment[data-id="${id}"]>.content>.text`);
         this.editingCommentId = id;
-        this.editingSelector = `.comment[data-id="${id}"] .text`;
-        this.editing = $(this.editingSelector);
+        this.editing = $(`.comment[data-id="${id}"]>.content>.text`);
         this.editingOrigText = this.editing.html();
-        this.editor = textboxio.replace(this.editingSelector, TEXTBOXIO_CONFIG);
-        this.focusCommentId(id);
-        this.editor.focus();
+        this.editing.html('');
         this.openEditor(this.editing, this.editingOrigText);
     }
 
-    replyKeyDown(e) {
-        if (e.shiftKey && e.keyCode == 13) {
+    replyKeyPressed(e) {
+        // Save if shift+enter is pressed.
+        if (e.data.keyCode == 2228237) {
             this.sendReply();
             return false;
-        } else if (e.keyCode == 27) {
+        } else if (e.data.keyCode == 27) {
             this.cancelReply();
             return false;
         }
@@ -649,7 +527,7 @@ class Thread {
     }
 
     sendReply() {
-        let text = this.editor.content.get();
+        let text = this.editor.getData();
         if (text.isBlank()) {
             alert("Replies cannot be empty.");
             return;
@@ -659,29 +537,27 @@ class Thread {
 
         this.showBusy();
 
-        this.editor.content.uploadImages(() => {
-            // Make sure all URLs in the reply have a target.  If not, set it to _blank.
-            // We're doing this by using a fake DIV with jquery to find the links.
-            let tempDiv = document.createElement('DIV');
-            tempDiv.innerHTML = this.editor.content.get();
-            let links = $(tempDiv).children('a').each(function(index) {
-                if (!$(this).attr('target'))
-                    $(this).attr('target', '_blank');
-            });
-
-            if (!this.editing) {
-                this.newComment({
-                    "Text": tempDiv.innerHTML,
-                    "ThreadId": this.threadId,
-                    "ParentCommentId": (!Object.isNumber(parentCommentId) ? null : parentCommentId)
-                });
-            } else {
-                this.saveUpdatedComment({
-                    "Id": this.editingCommentId,
-                    "Text": tempDiv.innerHTML
-                });
-            }
+        // Make sure all URLs in the reply have a target.  If not, set it to _blank.
+        // We're doing this by using a fake DIV with jquery to find the links.
+        let tempDiv = document.createElement('DIV');
+        tempDiv.innerHTML = this.editor.getData();
+        let links = $(tempDiv).children('a').each(function(index) {
+            if (!$(this).attr('target'))
+                $(this).attr('target', '_blank');
         });
+
+        if (!this.editing) {
+            this.newComment({
+                "Text": tempDiv.innerHTML,
+                "ThreadId": this.threadId,
+                "ParentCommentId": (!Object.isNumber(parentCommentId) ? null : parentCommentId)
+            });
+        } else {
+            this.saveUpdatedComment({
+                "Id": this.editingCommentId,
+                "Text": tempDiv.innerHTML
+            });
+        }
     }
 
     newComment(comment) {

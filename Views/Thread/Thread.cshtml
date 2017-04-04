@@ -23,7 +23,7 @@
         <script src="~/lib/signalr/jquery.signalR.js"></script>
         <script src="~/signalr/hubs" asp-append-version="true"></script>
         <script src="~/lib/mustache.js/mustache.js"></script>
-        <script src="~/lib/textboxio/textboxio/textboxio.js"></script>
+        <script src="~/js/ckeditor/ckeditor.js"></script>
         <script src="~/js/thread.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
@@ -36,19 +36,17 @@
             asp-fallback-src="~/lib/mustache.js/mustache.js"
             asp-fallback-test="Mustache">
         </script>
-        <script src="~/lib/textboxio/textboxio/textboxio.js"
-                asp-fallback-src="~/lib/textboxio/textboxio/textboxio.js"
-                asp-fallback-test="textboxio">
-        </script>
+        <script src="~/js/ckeditor/ckeditor.js"></script>
         <script src="~/js/thread.min.js" asp-append-version="true"></script>
     </environment>
     <!-- Mustache templates to be loaded via AJAX later for formatting new threads & comments -->
     <script src="~/templates/partials/comment.mustache" type="x-mustache-template" name="comment"></script>
     <script src="~/templates/partials/threadListItem.mustache" type="x-mustache-template" name="threadListItem"></script>
+    <script src="~/templates/partials/editor.mustache" type="x-mustache-template" name="editor"></script>
+    <script src="~/templates/threadList.mustache" type="x-mustache-template" name="threadList"></script>
     <script src="~/templates/thread.mustache" type="x-mustache-template" name="thread"></script>
     <script src="~/templates/commentNotification.mustache" type="x-mustache-template" name="commentNotification"></script>
     <script src="~/templates/threadNotification.mustache" type="x-mustache-template" name="threadNotification"></script>
-    <script src="~/templates/editor.mustache" type="x-mustache-template" name="editor"></script>
     <script type="text/javascript">
 Sugar.extend();
 

@@ -79,7 +79,7 @@ namespace Palaver.Controllers
         [HttpPost]
         public async Task<IActionResult> AutoUpload(IFormCollection formData)
         {
-            string relativeAutoUploadPath = RELATIVE_UPLOADS_USER_BASE + "/" + AUTO_UPLOAD_DIR,
+            string relativeAutoUploadPath = RELATIVE_UPLOADS_USER_BASE + AUTO_UPLOAD_DIR,
                 savePath = null, randomFileName = null;
 
             try
@@ -97,13 +97,11 @@ namespace Palaver.Controllers
                     if (!ALLOWED_EXTENSIONS.Contains(extension))
                     {
                         HttpContext.Response.StatusCode = 500;
-                        return new JsonResult(new { message = $"File type not allowed: {extension}",
-                            success = false
-                        });
+                        return new JsonResult(new { uploaded = 0, error = new { message = $"File type not allowed: {extension}" } });
                     }
-                    
+
                     // Generate random file names until one is found that doesn't exist in the target dir.
-                    do 
+                    do
                     {
                         randomFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName()) + extension;
                         savePath = Path.Combine(fullAutoUploadPath, randomFileName);
@@ -115,12 +113,12 @@ namespace Palaver.Controllers
                     }
                 }
 
-                return new JsonResult(new { location = $"{relativeAutoUploadPath}/{randomFileName}" });
+                return new JsonResult(new { uploaded = 1, filename = randomFileName, url = $"{relativeAutoUploadPath}/{randomFileName}" });
             }
             catch (Exception ex)
             {
                 HttpContext.Response.StatusCode = 500;
-                return new JsonResult(new { message = ex.Message, success = false });
+                return new JsonResult(new { uploaded = 0, error = new { message = ex.Message } });
             }
         }
 

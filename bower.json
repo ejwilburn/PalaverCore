@@ -7,6 +7,6 @@
     "mustache.js": "mustache#~2.3.0",
     "signalr": "~2.2.1",
     "sugar": "^2.0.4",
-    "jquery-validation-unobtrusive": "^3.2.6"
+    "jquery-validation-unobtrusive": "~3.2.6"
   }
 }
