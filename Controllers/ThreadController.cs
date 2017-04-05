@@ -24,6 +24,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Helpers;
@@ -33,22 +34,24 @@ using Palaver.Models.ThreadViewModels;
 namespace Palaver.Controllers
 {
     [Authorize]
-    [RequireHttps]
     public class ThreadController : Controller
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly PalaverDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
+        private readonly ILogger _logger;
         private readonly int _userId;
 
-        public ThreadController(PalaverDbContext context, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public ThreadController(PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
+            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
         {
-            _context = context;
-            _userManager = userManager;
-            _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
-            _userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
+            this._context = context;
+            this._userManager = userManager;
+            this._mapper = mapper;
+            this._httpContextAccessor = httpContextAccessor;
+            this._logger = loggerFactory.CreateLogger<ThreadController>();
+            this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
         }
 
         // Adding this just for the default route until I figure out how to do it right.

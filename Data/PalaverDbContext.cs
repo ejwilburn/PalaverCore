@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Npgsql;
 using EntityFrameworkCore.Triggers;
 using Palaver.Models;
 
@@ -45,11 +46,11 @@ namespace Palaver.Data
         {
         }
 
-		public async Task<List<Palaver.Models.Thread>> GetThreadsListAsync(int userId)
-		{
-            List<Palaver.Models.Thread> threads = await Threads.OrderByDescending(t => t.Updated).ToListAsync();
+        public async Task<List<Palaver.Models.Thread>> GetThreadsListAsync(int userId)
+        {
+            List<Palaver.Models.Thread> threads = await Threads.OrderByDescending(t => t.Updated).Include(t => t.User).ToListAsync();
 
-			// Get unread counts for each thread for the current user.
+            // Get unread counts for each thread for the current user.
             var countTotals = await UnreadComments.Where(uc => uc.UserId == userId)
                 .Join(Comments, uc => uc.CommentId, c => c.Id, (uc, c) => new { UnreadComment = uc, Comment = c })
                 .GroupBy(ucAndc => ucAndc.Comment.ThreadId)
@@ -73,24 +74,12 @@ namespace Palaver.Data
                 fav.Thread.IsFavorite = true;
             }
 
-			return threads;
-		}
+            return threads;
+        }
 
-		public async Task<Palaver.Models.Thread> GetThreadAsync(int threadId, int userId)
-		{
+        public async Task<Palaver.Models.Thread> GetThreadAsync(int threadId, int userId)
+        {
             Palaver.Models.Thread thread;
-			//List<Comment> threadComments = Comments.Include("User").Include("Comments").Where(x => x.SubjectId == subjectId).OrderBy(x=> x.CreatedTime).ToList();
-            // Palaver.Models.Thread thread = await Threads.Where(t => t.Id == threadId)
-            //     .Include(t => t.User)
-            //     .Include(t => t.Comments)
-            //         .ThenInclude(c => c.User)
-            //     .Include(t => t.Comments)
-            //         .ThenInclude(c => c.Comments)
-            //     .Include(t => t.Comments)
-            //         .ThenInclude(c => c.UnreadComments.Where(uc => uc.UserId == userId))
-            //     .Include(t => t.Comments)
-            //         .ThenInclude(c => c.FavoriteComments.Where(fc => fc.UserId == userId))
-            //     .SingleAsync();
 
             // Includes can't be ordered, so to ge the comments back in order of creation date the comments are loaded directly
             // and include the Thread, rather than the other way around.
@@ -140,11 +129,11 @@ namespace Palaver.Data
             thread.IsFavorite = thread.FavoriteThreads.Exists(ft => ft.UserId == userId);
             thread.IsSubscribed = thread.Subscriptions.Exists(s => s.UserId == userId);
 
-			return thread;
-		}
+            return thread;
+        }
 
-		public async Task<Palaver.Models.Comment> GetCommentAsync(int id, int userId)
-		{
+        public async Task<Palaver.Models.Comment> GetCommentAsync(int id, int userId)
+        {
             Comment comment = await Comments.Where(c => c.Id == id)
                 .Include(c => c.Thread)
                     .ThenInclude(t => t.Comments)
@@ -176,13 +165,14 @@ namespace Palaver.Data
                 }
             }
 
-			return comment;
-		}
+            return comment;
+        }
 
         public async Task<Palaver.Models.Thread> CreateThreadAsync(string title, int userId)
         {
             List<User> allUsers = await Users.ToListAsync();
-            Palaver.Models.Thread newThread = Palaver.Models.Thread.CreateThread(title, userId, this);
+            User currUser = Users.Find(userId);
+            Palaver.Models.Thread newThread = Palaver.Models.Thread.CreateThread(title, currUser, this);
 
             // Subscribe everyone to all threads by default.
             foreach (User user in allUsers)
@@ -197,21 +187,49 @@ namespace Palaver.Data
 
         public async Task<Comment> CreateCommentAsync(string text, int threadId, int? parentId, User user)
         {
-            Palaver.Models.Thread thread = await Threads.Where(t => t.Id == threadId).Include(t => t.Subscriptions).SingleAsync();
-            Comment newComment = Comment.CreateComment(text, thread, parentId, user, this);
+            // If the comment has a parent, make sure the comment's thread id is the same as the parent's.
+            int useThreadId = threadId;
+            if (parentId != null)
+            {
+                Comment parent = await Comments.Where(c => c.Id == parentId).SingleOrDefaultAsync();
+                if (parent != null)
+                    useThreadId = parent.ThreadId;
+            }
+            Palaver.Models.Thread thread = await Threads.Where(t => t.Id == useThreadId).Include(t => t.Subscriptions).SingleAsync();
+            Comment newComment = await Comment.CreateComment(text, thread, parentId, user, this);
             Comments.Add(newComment);
 
-            // Add unread comments for subscribed users.
+            // Add unread comments for subscribed users other than the current user.
             foreach (Subscription sub in thread.Subscriptions)
             {
-                UnreadComments.Add(new UnreadComment {
-                    UserId = sub.UserId,
-                    Comment = newComment
-                });
+                if (sub.UserId != user.Id)
+                {
+                    UnreadComments.Add(new UnreadComment {
+                        UserId = sub.UserId,
+                        Comment = newComment
+                    });
+                }
             }
 
             await SaveChangesAsync();
             return newComment;
+        }
+
+        public async Task MarkCommentReadByUser(int commentId, int userId)
+        {
+            UnreadComment uc = await UnreadComments.FindAsync(userId, commentId);
+            if (uc != null)
+            {
+                UnreadComments.Remove(uc);
+                await SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<Comment>> Search(string searchText) {
+            return await Comments.FromSql("SELECT * FROM search_comments(@searchText)", new NpgsqlParameter("@searchText", searchText))
+                .Include(c => c.User)
+                .Include(c => c.Thread)
+                .ToListAsync();
         }
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -245,24 +263,9 @@ namespace Palaver.Data
 
             builder.Entity<User>(u => {
                 u.Property(props => props.Email).IsRequired(true);
+                u.HasIndex(props => props.UserName).IsUnique(false);
+                u.HasIndex(props => props.Email).IsUnique(false);
             });
-
-            /*
-            builder.Entity<User>(u => {
-                u.Property(props => props.Email).IsRequired(true);
-                u.Property(props => props.CreatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-            });
-
-            builder.Entity<Thread>( t => {
-                t.Property(props => props.CreatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-                t.Property(props => props.LastUpdatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-            });
-
-            builder.Entity<Comment>( c => {
-                c.Property(props => props.CreatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-                c.Property(props => props.LastUpdatedTime).ForNpgsqlHasDefaultValueSql("timezone('UTC', now())");
-            });
-            */
 
             // Setup one to many relationship for Comment->Comment
             builder.Entity<Comment>()

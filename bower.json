@@ -2,12 +2,11 @@
   "name": "palaver",
   "private": true,
   "dependencies": {
-    "bootstrap": null,
+    "semantic": "~2.2.9",
     "jquery": null,
-    "jquery-validation": null,
-    "jquery-validation-unobtrusive": null,
-    "tether": null,
     "mustache.js": "mustache#~2.3.0",
-    "signalr": "~2.2.1"
+    "signalr": "~2.2.1",
+    "sugar": "^2.0.4",
+    "jquery-validation-unobtrusive": "~3.2.6"
   }
 }

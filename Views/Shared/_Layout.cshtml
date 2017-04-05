@@ -2,32 +2,17 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Palaver</title>
 
-    <!-- Material Design fonts -->
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Roboto:300,400,500,700">
-    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/icon?family=Material+Icons">
-
     <environment names="Development">
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
-        <link rel="stylesheet" href="~/lib/bootstrap-material-design/dist/css/bootstrap-material-design.css" />
-        <link rel="stylesheet" href="~/lib/bootstrap-material-design/dist/css/ripples.css" />
-        <link rel="stylesheet" href="~/lib/summernote/dist/summernote.css" />
+        <link rel="stylesheet" href="~/lib/semantic/dist/semantic.css" />
     </environment>
     <environment names="Staging,Production">
-        <link rel="stylesheet" href="//ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/css/bootstrap.min.css"
-              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
-              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/css/bootstrap-material-design.min.css"
-              asp-fallback-href="~/lib/bootstrap-material-design/dist/css/bootstrap-material-design.min.css"
-              asp-fallback-test-class="btn" asp-fallback-test-property="border-radius" asp-fallback-test-value="2px" />
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/css/ripples.min.css"
-              asp-fallback-href="~/lib/bootstrap-material-design/dist/css/ripples.min.css"
-              asp-fallback-test-class="withripple" asp-fallback-test-property="position" asp-fallback-test-value="relative" />
-        <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/summernote/0.8.2/summernote.css"
-            asp-fallback-href="~/lib/summernote/dist/summernote.css"
-            asp-fallback-test-class="note-editor" asp-fallback-test-property="position" asp-fallback-test-value="relative" />
+        <link rel="stylesheet" href="//oss.maxcdn.com/semantic-ui/2.2.10/semantic.min.css"
+              asp-fallback-href="~/lib/semantic/dist/semantic.min.css"
+              asp-fallback-test-class="ui button" asp-fallback-test-property="cursor" asp-fallback-test-value="pointer" />
     </environment>
 
     @RenderSection("styles", required: false)
@@ -35,87 +20,54 @@
     <environment names="Development">
         <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     </environment>
-    <environment names="Staging,Production">
+    <environment names="Staging,Production">;
         <link rel="stylesheet" href="~/css/site.min.css" />
     </environment>
 </head>
-<body class="container-fluid">
-    <div class="navbar navbar-inverse navbar-fixed-top">
-        <div class="container">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">Palaver</a>
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
-                </ul>
-                <div class="col-sm-3 col-md-3">
-                    <form class="navbar-form" role="search">
-                    <div class="input-group">
-                        <input id="search" type="text" class="form-control" placeholder="Search" name="q">
-                        <div class="input-group-btn">
-                            <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-search"></i></button>
-                        </div>
-                    </div>
-                    </form>
+<body>
+    <div id="topMenu" class="ui fixed inverted main menu">
+        <a class="header item" href="~/">Palaver</a>
+        <div class="right menu">
+            <div class="ui category search item">
+                <div class="ui icon input">
+                    <input class="prompt" type="text" placeholder="Search threads...">
+                    <i class="search link icon"></i>
                 </div>
-
-                @await Html.PartialAsync("_LoginPartial")
-
-                <ul class="nav navbar-nav navbar-right">
-                    <li id="theme-selector" class="dropdown">
-                        <a href="#" data-target="#" class="dropdown-toggle" data-toggle="dropdown">Theme
-                            <b class="caret"></b></a>   
-                        <ul class="dropdown-menu">
-                        </ul>
-                    </li>
-                </ul>
-
+                <div class="results"></div>
             </div>
+            @await Html.PartialAsync("_LoginPartial")
         </div>
     </div>
 
     @RenderBody()
 
     <script type="text/javascript">
-        var _baseUrl = "@Url.Content("~/")";
+        // jshint esversion:6
+        const BASE_URL = "@Url.Content("~/")";
     </script>
     <environment names="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
-        <script src="~/lib/bootstrap-material-design/dist/js/material.js"></script>
-        <script src="~/lib/bootstrap-material-design/dist/js/ripples.js"></script>
-        <script src="~/js/site.js" asp-append-version="true"></script>
+        <script src="~/lib/semantic/dist/semantic.js"></script>
+        <script src="~/lib/sugar/dist/sugar.js"></script>
+        <script src="~/js/site.js"></script>
     </environment>
     <environment names="Staging,Production">
-        <script src="//ajax.aspnetcdn.com/ajax/jquery/jquery-3.1.1.min.js"
+        <script src="//ajax.aspnetcdn.com/ajax/jquery/jquery-3.2.1.min.js"
                 asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
                 asp-fallback-test="window.jQuery">
         </script>
-        <script src="//ajax.aspnetcdn.com/ajax/bootstrap/3.3.7/bootstrap.min.js"
-                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
+        <script src="//oss.maxcdn.com/semantic-ui/2.2.10/semantic.min.js"
+                asp-fallback-src="~/lib/semantic/dist/semantic.min.js"
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
         </script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/js/material.min.js"
-                asp-fallback-src="~/lib/bootstrap-material-design/dist/js/material.min.js"
-                asp-fallback-test="$.material">
-        </script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-material-design/0.5.10/js/ripples.min.js"
-                asp-fallback-src="~/lib/bootstrap-material-design/dist/js/ripples.min.js"
-                asp-fallback-test="Ripples">
+        <script src="//cdnjs.cloudflare.com/ajax/libs/sugar/2.0.4/sugar.min.js"
+                integrity="sha256-c7FnJVJH6WwxSjY5uCP8SSEoX6ySv4ueEAf556KL2Gk=" crossorigin="anonymous"
+                asp-fallback-src="~/lib/sugar/dist/sugar.min.js"
+                asp-fallback-test="Sugar">
         </script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>
 
     @RenderSection("scripts", required: false)
-
 </body>
 </html>

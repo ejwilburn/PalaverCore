@@ -11,15 +11,15 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
+# Cert files
+*.pfx
+*.csr
+*.cer
+*.crt
+*.key
+
 # Environment-specific files.
-*.Development.json
-*.Production.json
-
-# Skip paket downloaded packages.
-paket-files
-
-# Skip README for now, it's a scaffold default.
-README.md
+appsettings.*.json
 
 # Build results
 [Dd]ebug/
@@ -34,10 +34,17 @@ bld/
 [Oo]bj/
 
 # JS libraries managed by bower.
-wwwroot/lib/
+wwwroot/lib/jquery
+wwwroot/lib/mustache.js
+wwwroot/lib/signalr
+wwwroot/lib/sugar
+wwwroot/lib/semantic
+wwwroot/lib/jquery-validation
+wwwroot/lib/jquery-validation-unobtrusive
+wwwroot/js/ckeditor/samples
 
-# Local history tracking.
-.history/
+#Ignore user uploads but not the upload folder and the README.md within.
+wwwroot/uploads/*/
 
 # Visual Studio 2015 cache/options directory
 .vs/

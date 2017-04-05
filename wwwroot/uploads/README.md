@@ -1,0 +1,1 @@
+This directory is for file and image uploads from users.  Files will be stored in per-user directories based off the user id.

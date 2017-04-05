@@ -18,29 +18,42 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Palaver.Data;
+using Palaver.Models;
 
 namespace Palaver.Controllers
 {
-    [RequireHttps]
     public class HomeController : Controller
     {
+        private readonly IHostingEnvironment _environment;
+
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly PalaverDbContext _context;
+        private readonly UserManager<User> _userManager;
+        private readonly IMapper _mapper;
+        private readonly ILogger _logger;
+
+        public HomeController(IHostingEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
+            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
+        {
+            this._environment = environment;
+            this._context = context;
+            this._userManager = userManager;
+            this._mapper = mapper;
+            this._httpContextAccessor = httpContextAccessor;
+            this._logger = loggerFactory.CreateLogger<HomeController>();
+        }
+
+        [Authorize]
         public IActionResult Index()
         {
-            return View();
-        }
-
-        public IActionResult About()
-        {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
-        }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
             return View();
         }
 

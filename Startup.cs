@@ -18,10 +18,8 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,12 +41,6 @@ namespace Palaver
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
 
-            if (env.IsDevelopment())
-            {
-                // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
-                builder.AddUserSecrets();
-            }
-
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
         }
@@ -58,16 +50,7 @@ namespace Palaver
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // services.Configure<KestrelServerOptions>(options => {
-            //     options.UseHttps("testCert.pfx", "testPassword");
-            //     options.NoDelay = true;
-            // });
-
-            services.AddMvc(options =>
-            {
-                options.SslPort = 5001;
-                options.Filters.Add(new RequireHttpsAttribute());
-            });
+            services.AddMvc();
 
             services.AddAutoMapper();
 
@@ -84,28 +67,12 @@ namespace Palaver
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
 
+            // Add primary config-file based options.
+            services.Configure<IdentityOptions>(Configuration.GetSection("IdentityOptions"));
+            // Add forced identity options.
             services.Configure<IdentityOptions>(options =>
             {
-                // Password settings
-                // TODO: Change these.. make them config based.
-                options.Password.RequireDigit = false;
-                options.Password.RequiredLength = 4;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireLowercase = false;
-
-                // Signin options
-                // TODO: Enable this.
-                //options.SignIn.RequireConfirmedEmail = true;
-
-                // Lockout settings
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(30);
-                options.Lockout.MaxFailedAccessAttempts = 10;
-                options.Lockout.AllowedForNewUsers = true;
-
-                // Cookie settings
-                options.Cookies.ApplicationCookie.CookieName = Configuration["CookieName"];
-                options.Cookies.ApplicationCookie.ExpireTimeSpan = TimeSpan.FromDays(150);
+                // Cookie settings.
                 options.Cookies.ApplicationCookie.LoginPath = "/Account/LogIn";
                 options.Cookies.ApplicationCookie.LogoutPath = "/Account/LogOff";
                 options.Cookies.ApplicationCookie.AutomaticAuthenticate = true;
@@ -117,22 +84,23 @@ namespace Palaver
             });
 
             services.Configure<SmtpOptions>(Configuration.GetSection(SmtpOptions.CONFIG_SECTION_NAME));
+            services.Configure<GoogleOptions>(Configuration.GetSection("GoogleOptions"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
 
             if (env.IsDevelopment())
             {
+                loggerFactory.AddDebug();
                 app.UseDeveloperExceptionPage();
                 app.UseDatabaseErrorPage();
                 app.UseBrowserLink();
             }
             else
-                {
+            {
                 app.UseExceptionHandler("/Home/Error");
             }
 
@@ -148,11 +116,7 @@ namespace Palaver
 
             app.UseIdentity();
 
-            app.UseGoogleAuthentication(new GoogleOptions()
-            {
-                ClientId = Configuration["Authentication:Google:ClientId"],
-                ClientSecret = Configuration["Authentication:Google:ClientSecret"]
-            });
+            app.UseGoogleAuthentication();
 
             app.UseMvc(routes =>
             {

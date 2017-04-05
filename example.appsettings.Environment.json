@@ -7,7 +7,17 @@
     "ConnectionStrings": {
         "Palaver": "User ID=;Password=;Host=;Port=;Database=;Pooling=true;"
     },
-    "CookieName": "ExampleCookieName",
+    "GoogleOptions": {
+        "ClientId": "<Google oAuth clientid>",
+        "ClientSecret": "<Google oAuth ClientSecret>"
+    },
+    "IdentityOptions": {
+        "Cookies": {
+            "ApplicationCookie": {
+                "CookieName": "ExampleCookieName"
+            }
+        }
+    },
     "Smtp": {
         "Server": "localhost",
         "Port": 25,
@@ -16,9 +26,5 @@
         "RequireTls": false,
         "FromName": "Palaver",
         "FromAddress": "noreply@noreply.com"
-    },
-    "Https": {
-        "CertFile": "",
-        "CertPassword": ""
     }
 }

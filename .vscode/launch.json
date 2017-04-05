@@ -1,25 +1,15 @@
 {
     "version": "0.2.0",
+    "compounds": [{
+        "name": "Launch Browser & Debug",
+        "configurations": ["Kestrel Server", "Launch Chrome"]
+    }],
     "configurations": [{
-            "name": "Kestrel Server",
             "type": "coreclr",
             "request": "launch",
-            "launchBrowser": {
-                "enabled": false,
-                "args": "${auto-detect-url}",
-                "windows": {
-                    "command": "cmd.exe",
-                    "args": "/C start ${auto-detect-url}"
-                },
-                "osx": {
-                    "command": "open"
-                },
-                "linux": {
-                    "command": "xdg-open"
-                }
-            },
+            "name": "Kestrel Server",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/bin/Debug/netcoreapp1.1/Palaver.dll",
+            "program": "${workspaceRoot}/bin/Debug/netcoreapp1.1/PalaverCore.dll",
             "args": [],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": false,
@@ -41,15 +31,8 @@
                 "--high-dpi-support=1",
                 "--force-device-scale-factor=1"
             ],
-            "url": "https://localhost:5001/",
+            "url": "http://localhost:5001/",
             "webRoot": "${workspaceRoot}/wwwroot"
         }
-    ],
-    "compounds": [{
-        "name": "Full Debugging",
-        "configurations": [
-            "Kestrel Server",
-            "Launch Chrome"
-        ]
-    }]
+    ]
 }

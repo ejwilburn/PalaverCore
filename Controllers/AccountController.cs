@@ -2,6 +2,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -13,7 +14,6 @@ using Palaver.Services;
 namespace Palaver.Controllers
 {
     [Authorize]
-    [RequireHttps]
     public class AccountController : Controller
     {
         private readonly UserManager<User> _userManager;
@@ -116,7 +116,6 @@ namespace Palaver.Controllers
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
                     // Send an email with this link
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
@@ -141,7 +140,7 @@ namespace Palaver.Controllers
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation(4, "User logged out.");
-            return RedirectToAction(nameof(HomeController.Index), "Home");
+            return Redirect(Url.Content("~/"));
         }
 
         //
@@ -226,7 +225,7 @@ namespace Palaver.Controllers
                 {
                     return View("ExternalLoginFailure");
                 }
-                var user = new User { UserName = model.Username, Email = model.Email };
+                var user = new User { UserName = model.Username, Email = model.Email, EmailConfirmed = true };
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
@@ -288,7 +287,6 @@ namespace Palaver.Controllers
                     return View("ForgotPasswordConfirmation");
                 }
 
-                // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=532713
                 // Send an email with this link
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
                 var callbackUrl = Url.Action("ResetPassword", "Account", new { userId = user.Id, code = code }, protocol: HttpContext.Request.Scheme);
@@ -474,7 +472,7 @@ namespace Palaver.Controllers
             }
             else
             {
-                return RedirectToAction(nameof(HomeController.Index), "Home");
+                return Redirect(Url.Content("~/"));
             }
         }
 

@@ -1,13 +1,17 @@
 Dumbasses:
     ☐ Install To Do Tasks so this file is cooler and the lists are checkable (sandy081.todotasks)
 
+FIX:
+    ✔ New comments are currently coming in as unread and editor isn't closing afterwards. @done (3/28/2017, 6:50:28 PM)
+    ✔ Make sure new comments have the same thread id as their parent. @done (3/28/2017, 6:50:13 PM)
+
 STUFF:
     ☐ Make DB Config file-based
     ☐ Make server port(s) and cert info config-file based
     ☐ Change password complexity options to be config-file based.
 
 THINGS:
-    ☐ STOP FUCKING AROUND!
+    ✔ STOP FUCKING AROUND! @done (3/28/2017, 6:50:38 PM)
 
 Features:
     ☐ Subscriptions - Add UI

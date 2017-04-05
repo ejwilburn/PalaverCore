@@ -25,10 +25,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Hubs;
+using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
+using Palaver.Models.CommentViewModels;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using Palaver.Helpers;
 
 namespace Palaver
 {
@@ -38,16 +42,19 @@ namespace Palaver
         public HubCallerContext Context { get; set; }
         public IGroupManager Groups { get; set; }
 
+        private static Dictionary<string, int> _userIdsByConnection = new Dictionary<string, int>();
+
         private readonly PalaverDbContext _dbContext;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        private static Dictionary<string, int> _userIdsByConnection = new Dictionary<string, int>();
+        private readonly ILogger _logger;
 
-        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper)
+        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory)
         {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _mapper = mapper;
+            this._dbContext = dbContext;
+            this._userManager = userManager;
+            this._mapper = mapper;
+            this._logger = loggerFactory.CreateLogger<SignalrHub>();
         }
 
         public Task OnConnected()
@@ -91,10 +98,14 @@ namespace Palaver
         /// <param name="threadTitle">Text of the thread subject.</param>
         public async Task NewThread(string threadTitle)
         {
+            if (String.IsNullOrWhiteSpace(threadTitle))
+            {
+                throw new Exception("The thread title cannot be empty.");
+            }
+
             Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
             Palaver.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, Palaver.Models.ThreadViewModels.CreateResultViewModel>(newThread);
-            Clients.Caller.addOwnThread(resultView);
-            Clients.Others.addThread(resultView);
+            Clients.All.addThread(resultView);
         }
 
         /// <summary>
@@ -105,24 +116,63 @@ namespace Palaver
         /// <param name="replyText">Text of the reply.</param>
         public async Task NewComment(string commentText, int threadId, int? parentId)
         {
+            if (String.IsNullOrWhiteSpace(commentText))
+            {
+
+                throw new Exception("The comment text cannot be empty.");
+            }
+
             User curUser = await GetUserAsync();
-            Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
+            Comment newComment = await _dbContext.CreateCommentAsync(CustomHtmlHelper.Linkify(commentText), threadId, parentId, curUser);
             Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
-            Clients.Caller.addOwnComment(resultView);
-            Clients.Others.addComment(resultView);
+            Clients.All.addComment(resultView);
+        }
+
+        /// <summary>
+        /// Edit an existing comment.  The editor must be the creator of the comment or an exception is thrown.
+        /// Subscribers will get an updated comment but the unread flag will not be changed.
+        /// </summary>
+        /// <param name="parentId">Id of the parent comment.</param>
+        /// <param name="replyText">Text of the reply.</param>
+        public async Task EditComment(int commentId, string commentText)
+        {
+            if (String.IsNullOrWhiteSpace(commentText))
+            {
+                throw new Exception("The comment text cannot be empty.");
+            }
+
+            Comment existingComment = await _dbContext.Comments.Where(c => c.Id == commentId)
+                .Include(c => c.Thread)
+                .Include(c => c.User)
+                .SingleOrDefaultAsync();
+            if (existingComment == null)
+            {
+                throw new Exception($"Unable to find comment id {commentId}.");
+            }
+
+            if (existingComment.UserId != GetUserId())
+            {
+                throw new Exception("Ony the comment creator may edit a comment.");
+            }
+
+            existingComment.Text = CustomHtmlHelper.Linkify(commentText);
+            await _dbContext.SaveChangesAsync();
+
+            EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);
+            Clients.All.updateComment(resultView);
         }
 
         public async Task MarkRead(int id)
         {
-            _dbContext.Remove(new UnreadComment { UserId = GetUserId(), CommentId = id });
-            try 
-            {
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                // This means the unreadcomment is already deleted, ignore it.
-            }
+            UnreadComment uc = await _dbContext.UnreadComments.FindAsync(GetUserId(), id);
+            _dbContext.UnreadComments.Remove( uc );
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<List<SearchResultViewModel>> Search(string searchText)
+        {
+            List<Comment> found = await _dbContext.Search(searchText);
+            return _mapper.Map<List<Comment>, List<SearchResultViewModel>>(found);
         }
 
         private int GetUserId()

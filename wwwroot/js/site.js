@@ -1,40 +1,34 @@
-var themes = {
-    "material": "lib/bootstrap/dist/css/bootstrap.css",
-    "bootstrap default": "//netdna.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.css",
-    "cerulean": "//bootswatch.com/cerulean/bootstrap.css",
-    "cosmo": "//bootswatch.com/cosmo/bootstrap.css",
-    "cyborg": "//bootswatch.com/cyborg/bootstrap.css",
-    "darkly": "//bootswatch.com/darkly/bootstrap.css",
-    "flatly": "//bootswatch.com/flatly/bootstrap.css",
-    "lumen": "//bootswatch.com/lumen/bootstrap.css",
-    "paper": "//bootswatch.com/paper/bootstrap.css",
-    "journal": "//bootswatch.com/journal/bootstrap.css",
-    "readable": "//bootswatch.com/readable/bootstrap.css",
-    "sandstone": "//bootswatch.com/sandstone/bootstrap.css",
-    "simplex": "//bootswatch.com/simplex/bootstrap.css",
-    "slate": "//bootswatch.com/slate/bootstrap.css",
-    "spacelab": "//bootswatch.com/spacelab/bootstrap.css",
-    "superhero": "//bootswatch.com/superhero/bootstrap.css",
-    "united": "//bootswatch.com/united/bootstrap.css",
-    "yeti": "//bootswatch.com/yeti/bootstrap.css",
-}
+/*
+Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+This program is distributed under the terms of the GNU General Public License.
 
+This file is part of Palaver.
+
+Palaver is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+Palaver is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// jshint esversion:6
 $(document).ready(function() {
-    $.material.init();
-
-    $('[data-toggle="tooltip"]').tooltip();
-    $('[data-toggle=offcanvas]').click(function() {
-        $('.row-offcanvas').toggleClass('active');
-    });
-
-    // Initialize the theme switcher.
-    var $themesheet = $('<link href="' + themes['material'] + '" rel="stylesheet" />')
-    $themesheet.appendTo('head');
-    var options = $.map(themes, function(url, theme) {
-        return '<li class="theme-option" data-theme="' + theme + '"><a href="#">' + theme + '</a></li>';
-    }).join('');
-    $('#theme-selector ul').html(options);
-    $('#theme-selector .theme-option').on('click', function() {
-        $themesheet.attr('href', themes[$(this).data('theme')]);
-    });
+    $('.ui.search')
+        .search({
+            apiSettings: {
+                url: BASE_URL + 'api/comment/search/{query}'
+            },
+            fields: {
+                description: 'text'
+            },
+            minCharacters: 3,
+            maxResults: 20
+        });
 });

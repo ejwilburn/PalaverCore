@@ -1,16 +1,46 @@
 {
     "version": "0.1.0",
-    "command": "dotnet",
-    "isShellCommand": true,
-    "args": [],
-    "tasks": [
-        {
-            "taskName": "build",
-            "args": [
-                "${workspaceRoot}\\project.json"
-            ],
-            "isBuildCommand": true,
-            "problemMatcher": "$msCompile"
-        }
-    ]
+    "tasks": [{
+        "taskName": "build",
+        "command": "dotnet",
+        "isShellCommand": true,
+        "args": [
+            "build"
+        ],
+        "isBuildCommand": true,
+        "problemMatcher": "$msCompile"
+    }, {
+        "taskName": "clean Semantic UI",
+        "command": "gulp",
+        "isShellCommand": true,
+        "options": {
+            "cwd": "${workspaceRoot}/wwwroot/lib/semantic"
+        },
+        "args": [
+            "clean"
+        ],
+        "isBuildCommand": false
+    }, {
+        "taskName": "build Semantic UI",
+        "command": "gulp",
+        "isShellCommand": true,
+        "options": {
+            "cwd": "${workspaceRoot}/wwwroot/lib/semantic"
+        },
+        "args": [
+            "build"
+        ],
+        "isBuildCommand": false
+    }, {
+        "taskName": "watch Semantic UI",
+        "command": "gulp",
+        "isShellCommand": true,
+        "options": {
+            "cwd": "${workspaceRoot}/wwwroot/lib/semantic"
+        },
+        "args": [
+            "watch"
+        ],
+        "isBuildCommand": false
+    }]
 }

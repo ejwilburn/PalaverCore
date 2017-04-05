@@ -29,6 +29,12 @@ namespace Palaver.Models.ThreadViewModels
         [Required]
         public string Title { get; set; }
         [Required]
+        public int UserId { get; set; }
+        [Required]
+        public string UserName { get; set; }
+        [Required]
+        public bool hasUnread { get; set; }
+        [Required]
         public int UnreadCount { get; set; }
         [Required]
         public string UpdatedDisplay { get; set; }

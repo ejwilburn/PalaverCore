@@ -23,43 +23,63 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 using Palaver.Models.CommentViewModels;
-using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 
 namespace Palaver.Controllers
 {
     [Authorize]
-    [RequireHttps]
     [Route("api/[controller]")]
     public class CommentController : Controller
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly PalaverDbContext _context;
+        private readonly PalaverDbContext _dbContext;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
+        private readonly ILogger _logger;
         private readonly int _userId;
 
-        public CommentController(PalaverDbContext context, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper,
+            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
         {
-            _context = context;
-            _userManager = userManager;
-            _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
-            _userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
+            this._dbContext = dbContext;
+            this._userManager = userManager;
+            this._mapper = mapper;
+            this._httpContextAccessor = httpContextAccessor;
+            this._logger = loggerFactory.CreateLogger<CommentController>();
+            this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            Comment comment = await _context.GetCommentAsync(id, _userId);
+            Comment comment = await _dbContext.GetCommentAsync(id, _userId);
             if (comment == null)
             {
                 return NotFound();
             }
             return new ObjectResult(_mapper.Map<Comment, DetailViewModel>(comment));
+        }
+
+        [HttpGet("Search/{searchText}")]
+        public async Task<SearchResultsViewModel> Search(string searchText)
+        {
+            SearchResultsViewModel results = new SearchResultsViewModel();
+            List<Comment> comments = await _dbContext.Search(searchText);
+            if (comments != null && comments.Count > 0)
+            {
+                results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments);
+                results.success = true;
+            }
+            else
+            {
+                results.success = false;
+            }
+            return results;
         }
 
         [HttpPost]
@@ -69,7 +89,7 @@ namespace Palaver.Controllers
             {
                 return BadRequest();
             }
-            Comment newComment = await _context.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
+            Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
             return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, CreateResultViewModel>(newComment));
         }
 
@@ -77,15 +97,7 @@ namespace Palaver.Controllers
         [Route("MarkRead/{id}")]
         public async Task<IActionResult> MarkRead(int id)
         {
-            _context.Remove(new UnreadComment { UserId = _userId, CommentId = id });
-            try 
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                // This means the unreadcomment is already deleted, ignore it.
-            }
+            await _dbContext.MarkCommentReadByUser(id, _userId);
             return new NoContentResult();
         }
 

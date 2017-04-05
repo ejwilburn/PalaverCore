@@ -32,7 +32,9 @@ namespace Palaver.Models.MappingProfiles
             CreateMap<Thread, SelectedViewModel>()
                 .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))
                 .ForMember(d => d.Comments, opt => opt.MapFrom(s => s.ImmediateChildren));
-            CreateMap<Thread, ListViewModel>();
+            CreateMap<Thread, ListViewModel>()
+                .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))
+                .ForMember(d => d.hasUnread, opt => opt.MapFrom(s => s.UnreadCount > 0));
             CreateMap<Thread, StickyChangeViewModel>();
         }
     }
