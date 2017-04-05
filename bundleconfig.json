@@ -22,7 +22,7 @@
         "sourceMap": false
     },
     {
-        "outputFileName": "wwwroot/js/thrad.min.js",
+        "outputFileName": "wwwroot/js/thread.min.js",
         "inputFiles": [
             "wwwroot/js/thread.js"
         ],

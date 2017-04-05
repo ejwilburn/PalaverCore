@@ -19,6 +19,7 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -91,6 +92,11 @@ namespace Palaver
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+
+            // Use a non-root base path for the external URL for the site if configured.
+            string sitePathBase = Configuration["SitePathBase"];
+            if (!string.IsNullOrEmpty(sitePathBase))
+                app.UsePathBase(sitePathBase);
 
             if (env.IsDevelopment())
             {

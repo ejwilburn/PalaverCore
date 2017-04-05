@@ -59,17 +59,10 @@
 
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <Exec Command="bower install" />
-    <Exec Command="dotnet bundle" />
   </Target>
 
-<!--
   <Target Name="PrecompileScript" BeforeTargets="BeforeBuild">
     <Exec Command="dotnet bundle" />
-  </Target>
--->
-
-  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
-    <Exec Command="bower install" />
   </Target>
 
   <ItemGroup>
