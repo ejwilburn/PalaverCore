@@ -24,12 +24,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Palaver.Data;
 using Palaver.Models;
 
 namespace Palaver.Controllers
 {
-    [RequireHttps]
     public class HomeController : Controller
     {
         private readonly IHostingEnvironment _environment;
@@ -38,17 +38,17 @@ namespace Palaver.Controllers
         private readonly PalaverDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        //private readonly int _userId;
+        private readonly ILogger _logger;
 
         public HomeController(IHostingEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
         {
             this._environment = environment;
             this._context = context;
             this._userManager = userManager;
             this._mapper = mapper;
             this._httpContextAccessor = httpContextAccessor;
-            //this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
+            this._logger = loggerFactory.CreateLogger<HomeController>();
         }
 
         [Authorize]

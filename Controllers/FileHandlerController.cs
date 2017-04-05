@@ -29,13 +29,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Palaver.Data;
 using Palaver.Models;
 
 namespace Palaver.Controllers
 {
     [Authorize]
-    [RequireHttps]
     [Route("api/[controller]/[action]")]
     public class FileHandlerController : Controller
     {
@@ -52,16 +52,18 @@ namespace Palaver.Controllers
         private readonly PalaverDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
+        private readonly ILogger _logger;
         private readonly int _userId;
 
         public FileHandlerController(IHostingEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
         {
             this._environment = environment;
             this._context = context;
             this._userManager = userManager;
             this._mapper = mapper;
             this._httpContextAccessor = httpContextAccessor;
+            this._logger = loggerFactory.CreateLogger<FileHandlerController>();
             this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
 
             FULL_UPLOADS_BASE = Path.Combine(_environment.WebRootPath, UPLOADS_DIR) + Path.DirectorySeparatorChar;

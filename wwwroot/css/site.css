@@ -3,6 +3,11 @@ head,
 body {
     height: 100%;
     width: 100%;
+    background-color: #eeeeee;
+}
+
+#threadList .ui {
+    background-color: #eeeeee;
 }
 
 .hidden.menu,

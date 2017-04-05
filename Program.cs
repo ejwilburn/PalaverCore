@@ -10,16 +10,15 @@ namespace Palaver
         public static void Main(string[] args)
         {
             var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
                 .AddCommandLine(args)
                 .AddEnvironmentVariables(prefix: "ASPNETCORE_")
+                .AddJsonFile("hosting.json", optional: true)
                 .Build();
 
             var host = new WebHostBuilder()
                 .UseConfiguration(config)
-                .UseKestrel(options => {
-                    options.UseHttps("Palaver.pfx", null);
-                })
-                .UseUrls("http://*:5000/", "https://*:5001")
+                .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
                 .UseSetting("detailedErrors", "true")

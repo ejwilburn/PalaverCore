@@ -5,9 +5,26 @@
         ]
     },
     {
+        "outputFileName": "wwwroot/css/login.min.css",
+        "inputFiles": [
+            "wwwroot/css/login.css"
+        ]
+    },
+    {
         "outputFileName": "wwwroot/js/site.min.js",
         "inputFiles": [
             "wwwroot/js/site.js"
+        ],
+        "minify": {
+            "enabled": true,
+            "renameLocals": true
+        },
+        "sourceMap": false
+    },
+    {
+        "outputFileName": "wwwroot/js/thrad.min.js",
+        "inputFiles": [
+            "wwwroot/js/thread.js"
         ],
         "minify": {
             "enabled": true,

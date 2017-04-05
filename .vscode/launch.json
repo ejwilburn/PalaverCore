@@ -31,7 +31,7 @@
                 "--high-dpi-support=1",
                 "--force-device-scale-factor=1"
             ],
-            "url": "https://localhost:5001/",
+            "url": "http://localhost:5001/",
             "webRoot": "${workspaceRoot}/wwwroot"
         }
     ]

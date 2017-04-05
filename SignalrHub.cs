@@ -25,12 +25,14 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Hubs;
+using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 using Palaver.Models.CommentViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using Palaver.Helpers;
 
 namespace Palaver
 {
@@ -40,16 +42,19 @@ namespace Palaver
         public HubCallerContext Context { get; set; }
         public IGroupManager Groups { get; set; }
 
+        private static Dictionary<string, int> _userIdsByConnection = new Dictionary<string, int>();
+
         private readonly PalaverDbContext _dbContext;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        private static Dictionary<string, int> _userIdsByConnection = new Dictionary<string, int>();
+        private readonly ILogger _logger;
 
-        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper)
+        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory)
         {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _mapper = mapper;
+            this._dbContext = dbContext;
+            this._userManager = userManager;
+            this._mapper = mapper;
+            this._logger = loggerFactory.CreateLogger<SignalrHub>();
         }
 
         public Task OnConnected()
@@ -113,11 +118,12 @@ namespace Palaver
         {
             if (String.IsNullOrWhiteSpace(commentText))
             {
+
                 throw new Exception("The comment text cannot be empty.");
             }
-            
+
             User curUser = await GetUserAsync();
-            Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
+            Comment newComment = await _dbContext.CreateCommentAsync(CustomHtmlHelper.Linkify(commentText), threadId, parentId, curUser);
             Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
             Clients.All.addComment(resultView);
         }
@@ -149,7 +155,7 @@ namespace Palaver
                 throw new Exception("Ony the comment creator may edit a comment.");
             }
 
-            existingComment.Text = commentText;
+            existingComment.Text = CustomHtmlHelper.Linkify(commentText);
             await _dbContext.SaveChangesAsync();
 
             EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);

@@ -28,7 +28,7 @@ const NOTIFICATION_SNIPPET_SIZE = 100; // in characters
 const NOTIFICATION_DURATION = 5000; // In ms
 const ASYNC_SCRIPTS = [
     { url: '//wow.zamimg.com/widgets/power.js', callback: null } // wowhead
-]
+];
 
 const wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
 
@@ -109,6 +109,7 @@ class Thread {
     }
 
     openEditor(openAt, initialValue) {
+        this.cancelReply();
         $(openAt).append(Mustache.render(this.templates.editor));
         this.editorForm = $('#editorForm');
         this.editor = CKEDITOR.replace('editor');

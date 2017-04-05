@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
@@ -32,7 +33,6 @@ using System.Collections.Generic;
 namespace Palaver.Controllers
 {
     [Authorize]
-    [RequireHttps]
     [Route("api/[controller]")]
     public class CommentController : Controller
     {
@@ -40,15 +40,18 @@ namespace Palaver.Controllers
         private readonly PalaverDbContext _dbContext;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
+        private readonly ILogger _logger;
         private readonly int _userId;
 
-        public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor)
+        public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper,
+            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
         {
-            _dbContext = dbContext;
-            _userManager = userManager;
-            _mapper = mapper;
-            _httpContextAccessor = httpContextAccessor;
-            _userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
+            this._dbContext = dbContext;
+            this._userManager = userManager;
+            this._mapper = mapper;
+            this._httpContextAccessor = httpContextAccessor;
+            this._logger = loggerFactory.CreateLogger<CommentController>();
+            this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
         }
 
         [HttpGet("{id}")]
@@ -67,7 +70,7 @@ namespace Palaver.Controllers
         {
             SearchResultsViewModel results = new SearchResultsViewModel();
             List<Comment> comments = await _dbContext.Search(searchText);
-            if (comments != null && comments.Count > 0) 
+            if (comments != null && comments.Count > 0)
             {
                 results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments);
                 results.success = true;

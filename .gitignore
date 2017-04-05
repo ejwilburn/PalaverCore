@@ -19,11 +19,7 @@
 *.key
 
 # Environment-specific files.
-*.Development.json
-*.Production.json
-
-# Skip paket downloaded packages.
-paket-files
+appsettings.*.json
 
 # Build results
 [Dd]ebug/
