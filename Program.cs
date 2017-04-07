@@ -13,7 +13,7 @@ namespace Palaver
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddCommandLine(args)
                 .AddEnvironmentVariables(prefix: "ASPNETCORE_")
-                .AddJsonFile("hosting.json", optional: true)
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
             var host = new WebHostBuilder()

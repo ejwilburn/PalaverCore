@@ -33,7 +33,6 @@ namespace Palaver.Controllers
     public class HomeController : Controller
     {
         private readonly IHostingEnvironment _environment;
-
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly PalaverDbContext _context;
         private readonly UserManager<User> _userManager;

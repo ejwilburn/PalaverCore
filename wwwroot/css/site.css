@@ -18,12 +18,16 @@ body {
 #mainContent,
 #threadList,
 #thread {
-    padding-top: 53px !important;
+    margin-top: 53px !important;
 }
 
 .divider-column {
     position: relative !important;
     padding: 0 !important;
+}
+
+#searchResults {
+    width: 800px;
 }
 
 .grid {

@@ -32,7 +32,7 @@ using Palaver.Models;
 using Palaver.Models.CommentViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using Palaver.Helpers;
+using Palaver.Services;
 
 namespace Palaver
 {
@@ -45,13 +45,15 @@ namespace Palaver
         private static Dictionary<string, int> _userIdsByConnection = new Dictionary<string, int>();
 
         private readonly PalaverDbContext _dbContext;
+        private readonly CustomHtmlHelperService _htmlHelper;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory)
+        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory, CustomHtmlHelperService htmlHelper)
         {
             this._dbContext = dbContext;
+            this._htmlHelper = htmlHelper;
             this._userManager = userManager;
             this._mapper = mapper;
             this._logger = loggerFactory.CreateLogger<SignalrHub>();
@@ -123,7 +125,7 @@ namespace Palaver
             }
 
             User curUser = await GetUserAsync();
-            Comment newComment = await _dbContext.CreateCommentAsync(CustomHtmlHelper.Linkify(commentText), threadId, parentId, curUser);
+            Comment newComment = await _dbContext.CreateCommentAsync(_htmlHelper.Linkify(commentText), threadId, parentId, curUser);
             Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
             Clients.All.addComment(resultView);
         }
@@ -155,7 +157,7 @@ namespace Palaver
                 throw new Exception("Ony the comment creator may edit a comment.");
             }
 
-            existingComment.Text = CustomHtmlHelper.Linkify(commentText);
+            existingComment.Text = _htmlHelper.Linkify(commentText);
             await _dbContext.SaveChangesAsync();
 
             EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);
@@ -167,12 +169,6 @@ namespace Palaver
             UnreadComment uc = await _dbContext.UnreadComments.FindAsync(GetUserId(), id);
             _dbContext.UnreadComments.Remove( uc );
             await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task<List<SearchResultViewModel>> Search(string searchText)
-        {
-            List<Comment> found = await _dbContext.Search(searchText);
-            return _mapper.Map<List<Comment>, List<SearchResultViewModel>>(found);
         }
 
         private int GetUserId()

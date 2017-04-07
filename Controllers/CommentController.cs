@@ -72,7 +72,9 @@ namespace Palaver.Controllers
             List<Comment> comments = await _dbContext.Search(searchText);
             if (comments != null && comments.Count > 0)
             {
-                results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments);
+                results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments, opts => {
+                    opts.Items["UrlHelper"] = Url;
+                });
                 results.success = true;
             }
             else
