@@ -18,8 +18,9 @@
 *.crt
 *.key
 
-# Environment-specific files.
-appsettings.*.json
+# Exclude appsettings files, only the examples will be checked in.
+appsettings.json
+appsettings*.json
 
 # Build results
 [Dd]ebug/

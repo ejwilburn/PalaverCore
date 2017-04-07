@@ -2,21 +2,24 @@
  * Example environment sepecific appsettings file.  Customize the settings and rename to appsettings.<Environment>.json
  * The environment name will be pulled from the ASPNETCORE_ENVIRONMENT environment variable set before launch or via .vscode/launch.json
  * By default VSCode use Development for the dev environment name.
+ * Availble settings are the same as in appsettings.json, with environment specific settings taking precedent.
  */
 {
+    "urls": "http://*:5001/",
+    "SiteRoot": "/Palaver",
     "ConnectionStrings": {
-        "Palaver": "User ID=;Password=;Host=;Port=;Database=;Pooling=true;"
-    },
-    "GoogleOptions": {
-        "ClientId": "<Google oAuth clientid>",
-        "ClientSecret": "<Google oAuth ClientSecret>"
+        "Palaver": "User ID=<user>;Password=<password>;Host=<postgres server>;Port=<postgres port>;Database=<palaver db>;Pooling=true;"
     },
     "IdentityOptions": {
         "Cookies": {
             "ApplicationCookie": {
-                "CookieName": "ExampleCookieName"
+                "CookieName": "PalaverCore-<Env>"
             }
         }
+    },
+    "GoogleOptions": {
+        "ClientId": "<Google oAuth clientid>",
+        "ClientSecret": "<Google oAuth ClientSecret>"
     },
     "Smtp": {
         "Server": "localhost",
@@ -26,5 +29,12 @@
         "RequireTls": false,
         "FromName": "Palaver",
         "FromAddress": "noreply@noreply.com"
+    },
+    "Logging": {
+        "IncludeScopes": true,
+        "LogLevel": {
+            "Default": "Warning",
+            "System": "Information"
+        }
     }
 }

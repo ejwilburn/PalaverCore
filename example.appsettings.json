@@ -1,7 +1,16 @@
+/*
+ * Example appsettings file.  Customize the settings and rename to appsettings.json for the primary settings for PalaverCore for
+ * all environments.
+ * See example.appsettings.Environment.json for configuring sensitive or environment specific options, they will over-ride any
+ * values specified in this file.
+ */
 {
     "urls": "http://*:5001/",
     "SiteRoot": "/Palaver",
     "CacheTemplates": true,
+    "ConnectionStrings": {
+        "Palaver": "User ID=<user>;Password=<password>;Host=<postgres server>;Port=<postgres port>;Database=<palaver db>;Pooling=true;"
+    },
     "IdentityOptions": {
         "Cookies": {
             "ApplicationCookie": {
@@ -24,6 +33,16 @@
             "MaxFailedAccessAttempts": 5,
             "AllowedForNewUsers": false
         }
+    },
+    "GoogleOptions": {
+        "ClientId": "<Google oAuth clientid>",
+        "ClientSecret": "<Google oAuth ClientSecret>"
+    },
+    "FaceBookOptions": {
+        "AppId": "<FaceBook oAuth AppId>",
+        "AppSecret": "<FaceBook oAuth AppSecret",
+        "Fields": ["<list of fields to retrieve from FaceBook>"],
+        "SendAppSecretProof": "<FaceBook oAuth AppSecretProof>"
     },
     "Smtp": {
         "Server": "localhost",

@@ -7,22 +7,6 @@ CKEDITOR.editorConfig = function(config) {
     // Define changes to default configuration here.
     // For complete reference see:
     // http://docs.ckeditor.com/#!/api/CKEDITOR.config
-
-    // The toolbar groups arrangement, optimized for a single toolbar row.
-    /*
-    config.toolbarGroups = [
-        { name: 'forms' },
-        { name: 'basicstyles', groups: ['basicstyles', 'cleanup'] },
-        { name: 'paragraph', groups: ['list', 'indent', 'blocks', 'align'] },
-        { name: 'styles' },
-        { name: 'insert', groups: ['link', 'image', 'media', 'codesnippet'] },
-        { name: 'colors' },
-        { name: 'tools' },
-        { name: 'others' },
-        { name: 'editing', groups: ['paste', 'find', 'selection', 'spellchecker'] }
-    ];
-	*/
-
     config.toolbar = [
         { name: 'insert', items: ['Link', 'Unlink', 'Image', 'Youtube', 'CodeSnippet'] },
         { name: 'styles', items: ['FontSize', 'TextColor'] },
@@ -37,11 +21,10 @@ CKEDITOR.editorConfig = function(config) {
     config.toolbarCanCollapse = true;
     config.extraPlugins = 'codesnippet,image,image2,link,prism,youtube';
     config.removePlugins = 'about';
-    //config.extraPlugins = 'autogrow,find,image,autolink,codesnippet,embedbase,embed';
-    //config.removePlugins = 'tab,elementspath,bidi';
     config.autoGrow_onStartup = true;
     config.autoGrow_minHeight = 100;
     config.height = 100;
+    config.htmlEncodeOutput = false;
     config.youtube_privacy = true;
     config.youtube_autoplay = false;
     config.youtube_controls = true;
@@ -61,7 +44,6 @@ CKEDITOR.editorConfig = function(config) {
     // The default plugins included in the basic setup define some buttons that
     // are not needed in a basic editor. They are removed here.
     config.removeButtons = 'Cut,Copy,Paste,Undo,Redo,Anchor,Subscript,Superscript';
-
     // Simplify the dialog windows.
     config.removeDialogTabs = 'image:advanced;link:advanced';
 };

@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using Palaver.Models.CommentViewModels;
 
 namespace Palaver.Models.MappingProfiles
@@ -17,7 +18,8 @@ namespace Palaver.Models.MappingProfiles
             CreateMap<Comment, EditResultViewModel>();
             CreateMap<Comment, SearchResultViewModel>()
                 .ForMember(d => d.Title, opt => opt.MapFrom(s => $"[{s.CreatedDisplay}] {s.User.UserName} - {s.Thread.Title}"))
-                .ForMember(d => d.Url, opt => opt.MapFrom(s => $"/Thread/{s.ThreadId}/{s.Id}"));
+                .ForMember(d => d.Url, opt => opt.ResolveUsing( (s, d, member, res) =>
+                    d.Url = ((IUrlHelper)res.Items["UrlHelper"]).Action("Show", "Thread", new { Id = s.ThreadId, CommentId = s.Id })));
         }
     }
 }

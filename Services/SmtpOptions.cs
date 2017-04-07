@@ -29,8 +29,8 @@ namespace Palaver.Services
         public bool RequireTls { get; set; } = false;
         public string Username { get; set; } = null;
         public string Password { get; set; } = null;
-        public string FromName { get; set; }
-        public string FromAddress { get; set; }
+        public string FromName { get; set; } = "Palaver";
+        public string FromAddress { get; set; } = "noreply@noreply.com";
 
         public SmtpOptions()
         {

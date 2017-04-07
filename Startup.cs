@@ -19,7 +19,6 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +29,7 @@ using Palaver.Data;
 using Palaver.Models;
 using Palaver.Services;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Palaver
 {
@@ -67,6 +67,8 @@ namespace Palaver
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
+            services.AddSingleton<CustomHtmlHelperService>(new CustomHtmlHelperService(Configuration["SiteRoot"],
+                Configuration.GetValue<bool>("CacheTemplates")));
 
             // Add primary config-file based options.
             services.Configure<IdentityOptions>(Configuration.GetSection("IdentityOptions"));
@@ -91,10 +93,16 @@ namespace Palaver
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+            app.UseHttpMethodOverride();
+
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
 
             // Use a non-root base path for the external URL for the site if configured.
-            string sitePathBase = Configuration["SitePathBase"];
+            string sitePathBase = Configuration["SiteRoot"];
             if (!string.IsNullOrEmpty(sitePathBase))
                 app.UsePathBase(sitePathBase);
 
