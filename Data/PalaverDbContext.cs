@@ -236,29 +236,35 @@ namespace Palaver.Data
         {
             base.OnModelCreating(builder);
 
-            // Use singular table names.
+            // Use singular and lower case table names and lower case column names.
             foreach (var entityType in builder.Model.GetEntityTypes())
             {
                 // Only handle user-defined types, skipping shadow types.
-                if (entityType.ClrType != null)
-                    entityType.Relational().TableName = entityType.ClrType.Name;
+                if (entityType.ClrType == null)
+                    continue;
+
+                entityType.Relational().TableName = entityType.ClrType.Name.ToLower();
+                foreach (var property in entityType.GetProperties())
+                {
+                    property.Relational().ColumnName = property.Name.ToLower();
+                }
             }
 
             // Shorten up identity table names.
             builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<int>", b => {
-                    b.ToTable("RoleClaim");
+                    b.ToTable("roleclaim");
             });
             builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserClaim<int>", b => {
-                    b.ToTable("UserClaim");
+                    b.ToTable("userclaim");
             });
             builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserLogin<int>", b => {
-                    b.ToTable("UserLogin");
+                    b.ToTable("userlogin");
             });
             builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserRole<int>", b => {
-                    b.ToTable("UserRole");
+                    b.ToTable("userrole");
             });
             builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserToken<int>", b => {
-                    b.ToTable("UserToken");
+                    b.ToTable("usertoken");
             });
 
             builder.Entity<User>(u => {

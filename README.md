@@ -2,9 +2,11 @@
 
 1) run **npm install**
 2) run **bower install**
-3) Put a cert named Palaver.pfx in project root with no password.
+3) copy example.appsettings.json to appsettings.json and customize
+4) copy example.appsettings.Environment.json to appsettings.Development.json (or whatever environment name you need) and customize.
+5) build (command line: dotnet build) then create the database with dotnet ef database update
 
-## Semantic UI Tasks
+## Semantic UI Tasks - Ignore Currently
 
 **gulp build-sui** - rebuild Semantic UI CSS and JS files.
 **gulp clean-sui** - clean shit

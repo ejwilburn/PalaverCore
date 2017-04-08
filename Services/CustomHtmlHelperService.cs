@@ -29,17 +29,30 @@ namespace Palaver.Services
     public class CustomHtmlHelperService
     {
         // Find URLs within text outside of HTML tag properties.
-        private static readonly Regex URL_REGEX = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)\b(?:(?:https?|ftps?|file)://|www\.)[-A-Z0-9+&@#/%=~_|$?!:,.]*[A-Z0-9+&@#/%=~_|$]", RegexOptions.IgnoreCase);
+        private static readonly Regex URL_REGEX = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
+            @"\b((?:https?://|www\.)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
+        private static readonly String URL_REPLACE = "<a href=\"$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
+        private static readonly Regex URL_ESCAPED_AMPERSAND = new Regex(@"(?<=href=""https?://[^/]+[^""]?)&amp;(?="" class=""autolinked"")", RegexOptions.IgnoreCase);
 
         private StubbleRenderer _stubble;
-        private String _siteRoot;
         private bool _cacheTemplates;
 
-        public CustomHtmlHelperService(String siteRoot, bool cacheTemplates)
+        public CustomHtmlHelperService(bool cacheTemplates)
         {
-            this._siteRoot = siteRoot;
             this._cacheTemplates = cacheTemplates;
             LoadTemplates();
+        }
+
+        /// <summary>
+        /// Convert URLs in the text to links if they're not already a link.
+        /// </summary>
+        /// <param name="input">Text</param>
+        /// <returns>The input string with links outside HTML tags formatted as &gt;A&lt; tags.</returns>
+        public string Linkify(string input)
+        {
+            String output = URL_REGEX.Replace(input, URL_REPLACE);
+            output = URL_ESCAPED_AMPERSAND.Replace(output, "&");
+            return output;
         }
 
         /// <summary>
@@ -50,7 +63,7 @@ namespace Palaver.Services
         public string RenderThreadFromTemplate(Palaver.Models.ThreadViewModels.SelectedViewModel thread)
         {
             if (!_cacheTemplates)
-                ResetTemplateCache();
+                _stubble.ClearCache();
             return _stubble.Render("thread", thread);
         }
 
@@ -62,7 +75,7 @@ namespace Palaver.Services
         public string RenderCommentFromTemplate(Palaver.Models.CommentViewModels.DetailViewModel comment)
         {
             if (!_cacheTemplates)
-                ResetTemplateCache();
+                _stubble.ClearCache();
             return _stubble.Render("comment", comment);
         }
 
@@ -74,7 +87,7 @@ namespace Palaver.Services
         public string RenderThreadListFromTemplate(IEnumerable<Palaver.Models.ThreadViewModels.ListViewModel> threads)
         {
             if (!_cacheTemplates)
-                ResetTemplateCache();
+                _stubble.ClearCache();
             return _stubble.Render("threadList", threads);
         }
 
@@ -87,18 +100,8 @@ namespace Palaver.Services
         public string RenderThreadListItemFromTemplate(Palaver.Models.ThreadViewModels.ListViewModel thread)
         {
             if (!_cacheTemplates)
-                ResetTemplateCache();
+                _stubble.ClearCache();
             return _stubble.Render("threadListItem", thread);
-        }
-
-        /// <summary>
-        /// Convert URLs in the text to links if they're not already a link.
-        /// </summary>
-        /// <param name="input">Text</param>
-        /// <returns>The input string with links outside HTML tags formatted as &gt;A&lt; tags.</returns>
-        public string Linkify(string input)
-        {
-            return URL_REGEX.Replace(input, "<a href=\"$1\" target=\"_blank\">$1</a>");
         }
 
         /// <summary>
@@ -125,7 +128,8 @@ namespace Palaver.Services
                 .SetTemplateLoader(new FileSystemLoader("./wwwroot/templates/"))
                 .SetMaxRecursionDepth(5000)
                 .Build();
-            CacheTemplates();
+            if (_cacheTemplates)
+                CacheTemplates();
         }
 
         /// <summary>
@@ -136,16 +140,6 @@ namespace Palaver.Services
         {
             _stubble.CacheTemplate("thread");
             _stubble.CacheTemplate("threadList");
-        }
-
-        /// <summary>
-        /// Clear the stubble template cache and reload it.
-        /// Used in dev environments to allow for changes without restarting the server.
-        /// </summary>
-        private void ResetTemplateCache()
-        {
-            _stubble.ClearCache();
-            CacheTemplates();
         }
     }
 }

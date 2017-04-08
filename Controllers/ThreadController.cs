@@ -70,6 +70,7 @@ namespace Palaver.Controllers
             List<ListViewModel> threads = _mapper.Map<List<Thread>, List<ListViewModel>>(await _dbContext.GetThreadsListAsync(_userId));
             ViewData["userId"] = _userId;
             ViewData["ThreadListViewHtml"] = _htmlHelper.RenderThreadListFromTemplate(threads);
+            ViewData["ThreadViewHtml"] = _htmlHelper.RenderThreadFromTemplate(null);
             return View("~/Views/Thread/Thread.cshtml");
         }
 

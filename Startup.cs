@@ -67,8 +67,7 @@ namespace Palaver
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
-            services.AddSingleton<CustomHtmlHelperService>(new CustomHtmlHelperService(Configuration["SiteRoot"],
-                Configuration.GetValue<bool>("CacheTemplates")));
+            services.AddSingleton<CustomHtmlHelperService>(new CustomHtmlHelperService(Configuration.GetValue<bool>("CacheTemplates")));
 
             // Add primary config-file based options.
             services.Configure<IdentityOptions>(Configuration.GetSection("IdentityOptions"));
