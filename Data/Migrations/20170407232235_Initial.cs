@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Metadata;
 
@@ -392,6 +391,13 @@ namespace PalaverCore.Data.Migrations
                 name: "IX_user_username",
                 table: "user",
                 column: "username");
+
+            migrationBuilder.Sql("CREATE INDEX \"IX_comment_text_fulltextsearch\" ON comment USING gist(to_tsvector('english', text));");
+            migrationBuilder.Sql(@"CREATE FUNCTION search_comments(p_find text)
+                RETURNS SETOF comment AS $func$
+                    SELECT * FROM comment WHERE to_tsvector('english', text) @@ to_tsquery('english', p_find)
+                    ORDER BY ts_rank_cd(to_tsvector('english', text), to_tsquery('english', p_find)) DESC, created DESC;
+                $func$ LANGUAGE sql;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
