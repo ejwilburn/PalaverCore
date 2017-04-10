@@ -269,6 +269,7 @@ namespace Palaver.Data
 
             builder.Entity<User>(u => {
                 u.Property(props => props.Email).IsRequired(true);
+                u.Property(props => props.NotificationEnabled).HasDefaultValueSql("true");
                 u.HasIndex(props => props.UserName).IsUnique(false);
                 u.HasIndex(props => props.Email).IsUnique(false);
             });

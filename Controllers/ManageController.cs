@@ -38,7 +38,6 @@ namespace Palaver.Controllers
             ViewData["StatusMessage"] =
                 message == ManageMessageId.ChangePasswordSuccess ? "Your password has been changed."
                 : message == ManageMessageId.SetPasswordSuccess ? "Your password has been set."
-                : message == ManageMessageId.SetTwoFactorSuccess ? "Your two-factor authentication provider has been set."
                 : message == ManageMessageId.Error ? "An error has occurred."
                 : "";
 
@@ -50,9 +49,8 @@ namespace Palaver.Controllers
             var model = new IndexViewModel
             {
                 HasPassword = await _userManager.HasPasswordAsync(user),
-                TwoFactor = await _userManager.GetTwoFactorEnabledAsync(user),
-                Logins = await _userManager.GetLoginsAsync(user),
-                BrowserRemembered = await _signInManager.IsTwoFactorClientRememberedAsync(user)
+                NotificationEnabled = user.NotificationEnabled,
+                Logins = await _userManager.GetLoginsAsync(user)
             };
             return View(model);
         }
@@ -78,33 +76,33 @@ namespace Palaver.Controllers
         }
 
         //
-        // POST: /Manage/EnableTwoFactorAuthentication
+        // POST: /Manage/EnableNotification
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EnableTwoFactorAuthentication()
+        public async Task<IActionResult> EnableNotification()
         {
             var user = await GetCurrentUserAsync();
             if (user != null)
             {
-                await _userManager.SetTwoFactorEnabledAsync(user, true);
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                _logger.LogInformation(1, "User enabled two-factor authentication.");
+                user.NotificationEnabled = true;
+                await _userManager.UpdateAsync(user);
+                _logger.LogInformation(1, "User enabled notification.");
             }
             return RedirectToAction(nameof(Index), "Manage");
         }
 
         //
-        // POST: /Manage/DisableTwoFactorAuthentication
+        // POST: /Manage/DisableNotification
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DisableTwoFactorAuthentication()
+        public async Task<IActionResult> DisableNotification()
         {
             var user = await GetCurrentUserAsync();
             if (user != null)
             {
-                await _userManager.SetTwoFactorEnabledAsync(user, false);
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                _logger.LogInformation(2, "User disabled two-factor authentication.");
+                user.NotificationEnabled = false;
+                await _userManager.UpdateAsync(user);
+                _logger.LogInformation(1, "User disabled notification.");
             }
             return RedirectToAction(nameof(Index), "Manage");
         }
@@ -247,7 +245,7 @@ namespace Palaver.Controllers
         {
             AddLoginSuccess,
             ChangePasswordSuccess,
-            SetTwoFactorSuccess,
+            SetNotificationSuccess,
             SetPasswordSuccess,
             RemoveLoginSuccess,
             Error

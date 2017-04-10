@@ -2,7 +2,10 @@
     <a class="avatar"><img class="rounded" src="https://seccdn.libravatar.org/avatar/{{EmailHash}}?s=40&d=retro"></a>
     <div class="content">
         <a class="author">{{UserName}}</a>
-        <div class="metadata"><span class="date">{{CreatedDisplay}}</span></div>
+        <div class="metadata">
+            <span class="date">{{CreatedDisplay}}</span>
+            <a class="ui icon disabled" href="{{Url}}"><i class="linkify icon"></i></a>
+        </div>
         <div class="text">{{{Text}}}</div>
         <div class="actions">
             <a class="edit" onclick="thread.editComment({{Id}})">Edit</a>
@@ -11,4 +14,4 @@
         </div>
     </div>
     <div class="minimal comments">{{#Comments}}{{>comment}}{{/Comments}}</div>
-</div> <!-- Comment {{Id}} -->
+</div>

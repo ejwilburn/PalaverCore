@@ -40,8 +40,6 @@
     <script src="~/templates/commentNotification.mustache" type="x-mustache-template" name="commentNotification"></script>
     <script src="~/templates/threadNotification.mustache" type="x-mustache-template" name="threadNotification"></script>
     <script type="text/javascript">
-Sugar.extend();
-
 var thread = new Thread(@(threadId != null ? threadId.ToString() : "null"),
     @(commentId != null ? commentId.ToString() : "null"),
     @ViewData["userId"]);

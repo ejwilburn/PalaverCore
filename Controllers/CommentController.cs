@@ -28,6 +28,7 @@ using AutoMapper;
 using Palaver.Data;
 using Palaver.Models;
 using Palaver.Models.CommentViewModels;
+using Palaver.Services;
 using System.Collections.Generic;
 
 namespace Palaver.Controllers
@@ -38,15 +39,17 @@ namespace Palaver.Controllers
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly PalaverDbContext _dbContext;
+        private readonly CustomHtmlHelperService _htmlHelper;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
         private readonly int _userId;
 
-        public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
+        public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor,
+            ILoggerFactory loggerFactory, CustomHtmlHelperService htmlHelper)
         {
             this._dbContext = dbContext;
+            this._htmlHelper = htmlHelper;
             this._userManager = userManager;
             this._mapper = mapper;
             this._httpContextAccessor = httpContextAccessor;
@@ -62,7 +65,9 @@ namespace Palaver.Controllers
             {
                 return NotFound();
             }
-            return new ObjectResult(_mapper.Map<Comment, DetailViewModel>(comment));
+            return new ObjectResult(_mapper.Map<Comment, DetailViewModel>(comment, opts => {
+                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
+                }));
         }
 
         [HttpGet("Search/{searchText}")]
@@ -73,7 +78,7 @@ namespace Palaver.Controllers
             if (comments != null && comments.Count > 0)
             {
                 results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments, opts => {
-                    opts.Items["UrlHelper"] = Url;
+                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
                 });
                 results.success = true;
             }
@@ -92,7 +97,9 @@ namespace Palaver.Controllers
                 return BadRequest();
             }
             Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
-            return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, CreateResultViewModel>(newComment));
+            return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, CreateResultViewModel>(newComment, opts => {
+                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
+                }));
         }
 
         [HttpPut("{id}")]

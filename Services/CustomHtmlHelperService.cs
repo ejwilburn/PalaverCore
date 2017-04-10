@@ -28,6 +28,8 @@ namespace Palaver.Services
 {
     public class CustomHtmlHelperService
     {
+        public String SiteRoot { get { return _siteRoot; } }
+
         // Find URLs within text outside of HTML tag properties.
         private static readonly Regex URL_REGEX = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
             @"\b((?:https?://|www\.)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
@@ -35,10 +37,12 @@ namespace Palaver.Services
         private static readonly Regex URL_ESCAPED_AMPERSAND = new Regex(@"(?<=href=""https?://[^/]+[^""]?)&amp;(?="" class=""autolinked"")", RegexOptions.IgnoreCase);
 
         private StubbleRenderer _stubble;
+        private String _siteRoot;
         private bool _cacheTemplates;
 
-        public CustomHtmlHelperService(bool cacheTemplates)
+        public CustomHtmlHelperService(String siteRoot, bool cacheTemplates)
         {
+            this._siteRoot = siteRoot;
             this._cacheTemplates = cacheTemplates;
             LoadTemplates();
         }
@@ -63,7 +67,7 @@ namespace Palaver.Services
         public string RenderThreadFromTemplate(Palaver.Models.ThreadViewModels.SelectedViewModel thread)
         {
             if (!_cacheTemplates)
-                _stubble.ClearCache();
+                LoadTemplates();
             return _stubble.Render("thread", thread);
         }
 
@@ -75,7 +79,7 @@ namespace Palaver.Services
         public string RenderCommentFromTemplate(Palaver.Models.CommentViewModels.DetailViewModel comment)
         {
             if (!_cacheTemplates)
-                _stubble.ClearCache();
+                LoadTemplates();
             return _stubble.Render("comment", comment);
         }
 
@@ -87,7 +91,7 @@ namespace Palaver.Services
         public string RenderThreadListFromTemplate(IEnumerable<Palaver.Models.ThreadViewModels.ListViewModel> threads)
         {
             if (!_cacheTemplates)
-                _stubble.ClearCache();
+                LoadTemplates();
             return _stubble.Render("threadList", threads);
         }
 
@@ -100,7 +104,7 @@ namespace Palaver.Services
         public string RenderThreadListItemFromTemplate(Palaver.Models.ThreadViewModels.ListViewModel thread)
         {
             if (!_cacheTemplates)
-                _stubble.ClearCache();
+                LoadTemplates();
             return _stubble.Render("threadListItem", thread);
         }
 
@@ -128,8 +132,7 @@ namespace Palaver.Services
                 .SetTemplateLoader(new FileSystemLoader("./wwwroot/templates/"))
                 .SetMaxRecursionDepth(5000)
                 .Build();
-            if (_cacheTemplates)
-                CacheTemplates();
+            CacheTemplates();
         }
 
         /// <summary>

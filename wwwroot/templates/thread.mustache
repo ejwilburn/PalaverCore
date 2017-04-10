@@ -1,10 +1,13 @@
 <div id="thread" class="pusher">
     {{#Id}}
-    <div class="ui white container fluid minimal threaded comments" data-id="{{Id}}">
+    <div id="threadInner" class="ui white container fluid minimal threaded comments" data-id="{{Id}}">
         <div id="threadTitle" class="ui fixed dividing header"><h3>{{Title}}<div class="sub header">{{UserName}}&nbsp;-&nbsp;<span class="date">{{CreatedDisplay}}</span></div></h3></div>
         {{#Comments}}
             {{>comment}}
         {{/Comments}}
+    </div>
+    <div class="ui blue labeled submit icon button" onclick="thread.replyTo();">
+        <i class="icon plus"></i> Add Comment
     </div>
     {{/Id}}
 </div>

@@ -36,7 +36,7 @@ namespace Palaver.Controllers
     [Authorize]
     public class ThreadController : Controller
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly HttpContext _httpContext;
         private readonly PalaverDbContext _dbContext;
         private readonly CustomHtmlHelperService _htmlHelper;
         private readonly UserManager<User> _userManager;
@@ -51,9 +51,9 @@ namespace Palaver.Controllers
             this._htmlHelper = htmlHelper;
             this._userManager = userManager;
             this._mapper = mapper;
-            this._httpContextAccessor = httpContextAccessor;
+            this._httpContext = httpContextAccessor.HttpContext;
             this._logger = loggerFactory.CreateLogger<ThreadController>();
-            this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
+            this._userId = int.Parse(_userManager.GetUserId(_httpContext.User));
         }
 
         // Adding this just for the default route until I figure out how to do it right.
@@ -79,7 +79,9 @@ namespace Palaver.Controllers
         public async Task<IActionResult> Show(int id)
         {
             List<ListViewModel> threads = _mapper.Map<List<Thread>, List<ListViewModel>>(await _dbContext.GetThreadsListAsync(_userId));
-            SelectedViewModel selectedThread = _mapper.Map<Thread, SelectedViewModel>(await _dbContext.GetThreadAsync(id, _userId));
+            SelectedViewModel selectedThread = _mapper.Map<Thread, SelectedViewModel>(await _dbContext.GetThreadAsync(id, _userId), opts => {
+                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
+                });
             ViewData["threadId"] = selectedThread.Id;
             ViewData["userId"] = _userId;
             ViewData["ThreadListViewHtml"] = _htmlHelper.RenderThreadListFromTemplate(threads);
@@ -92,7 +94,9 @@ namespace Palaver.Controllers
         public async Task<IActionResult> Show(int id, int commentId)
         {
             List<ListViewModel> threads = _mapper.Map<List<Thread>, List<ListViewModel>>(await _dbContext.GetThreadsListAsync(_userId));
-            SelectedViewModel selectedThread = _mapper.Map<Thread, SelectedViewModel>(await _dbContext.GetThreadAsync(id, _userId));
+            SelectedViewModel selectedThread = _mapper.Map<Thread, SelectedViewModel>(await _dbContext.GetThreadAsync(id, _userId), opts => {
+                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
+                });
             ViewData["threadId"] = selectedThread.Id;
             ViewData["commentId"] = commentId;
             ViewData["userId"] = _userId;
@@ -118,7 +122,9 @@ namespace Palaver.Controllers
             {
                 return NotFound();
             }
-            return new ObjectResult(_mapper.Map<Thread, SelectedViewModel>(thread));
+            return new ObjectResult(_mapper.Map<Thread, SelectedViewModel>(thread, opts => {
+                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
+                }));
         }
 
         [HttpPost]
@@ -139,7 +145,9 @@ namespace Palaver.Controllers
         {
             List<Thread> threads = await _dbContext.GetThreadsListAsync(_userId);
             Thread selectedThread = await _dbContext.GetThreadAsync(id, _userId);
-            return _htmlHelper.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread));
+            return _htmlHelper.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread, opts => {
+                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
+                }));
         }
     }
 }

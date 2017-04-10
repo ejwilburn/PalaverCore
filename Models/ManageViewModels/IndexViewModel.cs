@@ -9,9 +9,7 @@ namespace Palaver.Models.ManageViewModels
 
         public IList<UserLoginInfo> Logins { get; set; }
 
-        public string PhoneNumber { get; set; }
-
-        public bool TwoFactor { get; set; }
+        public bool NotificationEnabled { get; set; }
 
         public bool BrowserRemembered { get; set; }
     }

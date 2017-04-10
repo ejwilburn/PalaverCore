@@ -55,10 +55,10 @@ namespace Palaver.Models
 
         private string DisplayFormatDateTime(DateTime time)
         {
-            if (time < DateTime.Now.AddDays(-1))
-                return time.ToLocalTime().ToString("d");
-            else
+            if (time.Date == DateTime.Today)
                 return time.ToLocalTime().ToString("t");
+            else
+                return time.ToLocalTime().ToString("d");
         }
     }
 }

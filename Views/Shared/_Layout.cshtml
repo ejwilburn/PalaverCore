@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Palaver</title>
+    <title>Palaver</title>
 
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/semantic/dist/semantic.css" />
@@ -24,13 +24,17 @@
         <link rel="stylesheet" href="~/css/site.min.css" />
     </environment>
 </head>
-<body>
-    <div id="topMenu" class="ui fixed inverted main menu">
-        <a class="header item" href="~/">Palaver</a>
+<body class="pushable">
+    <div id="topMenu" class="ui top fixed inverted menu">
+        <a class="item tablet mobile only" onclick="$('#threadList').sidebar('toggle');">
+            <i class="content icon"></i>
+        </a>
+        <div id="mobileUnread" class="header item tablet mobile only"></div>
+        <a class="header item tablet or lower media-query-hidden" href="~/">Palaver</a>
         <div class="right menu">
             <div class="ui right aligned category search item">
                 <div class="ui icon input">
-                    <input class="prompt" type="text" placeholder="Search comments...">
+                    <input class="prompt" type="text" placeholder="Search...">
                     <i class="search icon"></i>
                 </div>
                 <div id="searchResults" class="results"></div>
@@ -44,11 +48,12 @@
     <script type="text/javascript">
         // jshint esversion:6
         const BASE_URL = "@Url.Content("~/")";
+        const NOTIFICATION_ENABLED = true;
     </script>
     <environment names="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/semantic/dist/semantic.js"></script>
-        <script src="~/lib/sugar/dist/sugar.js"></script>
+        <script src="~/js/util.js" asp-append-version="true"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
@@ -60,11 +65,7 @@
                 asp-fallback-src="~/lib/semantic/dist/semantic.min.js"
                 asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
         </script>
-        <script src="//cdnjs.cloudflare.com/ajax/libs/sugar/2.0.4/sugar.min.js"
-                integrity="sha256-c7FnJVJH6WwxSjY5uCP8SSEoX6ySv4ueEAf556KL2Gk=" crossorigin="anonymous"
-                asp-fallback-src="~/lib/sugar/dist/sugar.min.js"
-                asp-fallback-test="Sugar">
-        </script>
+        <script src="~/js/util.min.js" asp-append-version="true"></script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>
 

@@ -7,20 +7,29 @@ CKEDITOR.editorConfig = function(config) {
     // Define changes to default configuration here.
     // For complete reference see:
     // http://docs.ckeditor.com/#!/api/CKEDITOR.config
-    config.toolbar = [
-        { name: 'insert', items: ['Link', 'Unlink', 'Image', 'Youtube', 'CodeSnippet'] },
-        { name: 'styles', items: ['FontSize', 'TextColor'] },
-        { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', '-', 'RemoveFormat'] },
-        { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'] },
-        { name: 'paste', items: ['PasteText'] },
-        { name: 'about', items: ['a11yhelp'] }
-    ];
+    if (!Util.isMobileDisplay()) {
+        config.toolbar = [
+            { name: 'insert', items: ['Link', 'Unlink', 'Image', 'Youtube', 'CodeSnippet'] },
+            { name: 'styles', items: ['FontSize', 'TextColor'] },
+            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', '-', 'RemoveFormat'] },
+            { name: 'paragraph', items: ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent'] },
+            { name: 'paste', items: ['PasteText'] },
+            { name: 'about', items: ['a11yhelp'] }
+        ];
+        config.extraPlugins = 'codesnippet,image,image2,link,prism,youtube';
+        config.removePlugins = 'about';
+    } else {
+        config.toolbar = [
+            { name: 'insert', items: ['Link', 'Unlink', 'Image', 'Youtube'] },
+            { name: 'basicstyles', items: ['Bold', 'Italic', 'Underline', 'Strike', '-', 'RemoveFormat'] }
+        ];
+        config.extraPlugins = 'image,image2,link,youtube';
+        config.removePlugins = 'about,paste,codesnippet,prism';
+    }
     config.skin = 'moono-dark';
     config.disableNativeSpellChecker = false;
     config.startupFocus = true;
     config.toolbarCanCollapse = true;
-    config.extraPlugins = 'codesnippet,image,image2,link,prism,youtube';
-    config.removePlugins = 'about';
     config.autoGrow_onStartup = true;
     config.autoGrow_minHeight = 100;
     config.height = 100;

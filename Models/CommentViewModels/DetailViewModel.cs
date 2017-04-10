@@ -43,6 +43,8 @@ namespace Palaver.Models.CommentViewModels
         public bool IsFavorite { get; set; }
         [Required]
         public string CreatedDisplay { get; set; }
+        [Required]
+        public string Url { get; set; }
         public IEnumerable<DetailViewModel> Comments { get; set; }
     }
 }

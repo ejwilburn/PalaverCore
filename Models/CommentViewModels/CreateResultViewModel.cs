@@ -41,5 +41,7 @@ namespace Palaver.Models.CommentViewModels
         public string EmailHash { get; set; }
         [Required]
         public string CreatedDisplay { get; set; }
+        [Required]
+        public string Url { get; set; }
     }
 }

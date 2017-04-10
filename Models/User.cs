@@ -25,11 +25,14 @@ using EntityFrameworkCore.Triggers;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Cryptography;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
 
 namespace Palaver.Models
 {
     public class User : IdentityUser<int>
     {
+        [Required]
+        public bool NotificationEnabled { get; set; } = true;
         public DateTime Created { get; set; }
         public List<Thread> Threads { get; set; }
         public List<Comment> Comments { get; set; }

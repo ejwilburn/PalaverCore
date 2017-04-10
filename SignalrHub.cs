@@ -50,7 +50,8 @@ namespace Palaver
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory, CustomHtmlHelperService htmlHelper)
+        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory,
+            CustomHtmlHelperService htmlHelper)
         {
             this._dbContext = dbContext;
             this._htmlHelper = htmlHelper;
@@ -126,7 +127,9 @@ namespace Palaver
 
             User curUser = await GetUserAsync();
             Comment newComment = await _dbContext.CreateCommentAsync(_htmlHelper.Linkify(commentText), threadId, parentId, curUser);
-            Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
+            Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment, opts => {
+                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
+                });
             Clients.All.addComment(resultView);
         }
 
