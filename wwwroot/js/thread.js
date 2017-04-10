@@ -289,7 +289,7 @@ class Thread {
 
         let title = `Palaver thread posted by ${thread.UserName}.`;
         let filteredThread = {
-            Title: $.trim(stripHtml(thread.Title).substring(0, NOTIFICATION_SNIPPET_SIZE))
+            Title: $.trim(this.stripHtml(thread.Title).substring(0, NOTIFICATION_SNIPPET_SIZE))
         };
 
         let notification = new Notification(title, {
@@ -311,7 +311,7 @@ class Thread {
 
         let title = `Palaver comment posted by ${comment.UserName}.`;
         let filteredComment = {
-            Text: $.trim(stripHtml(comment.Text).substring(0, NOTIFICATION_SNIPPET_SIZE))
+            Text: $.trim(this.stripHtml(comment.Text).substring(0, NOTIFICATION_SNIPPET_SIZE))
         };
 
         let notification = new Notification(title, {
