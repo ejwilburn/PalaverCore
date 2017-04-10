@@ -540,7 +540,7 @@ class Thread {
         // We're doing this by using a fake DIV with jquery to find the links.
         let tempDiv = document.createElement('DIV');
         tempDiv.innerHTML = text;
-        let links = $(tempDiv).children('a').each(function(index) {
+        let links = $(tempDiv).find('a').each(function(index) {
             if (!$(this).attr('target'))
                 $(this).attr('target', '_blank');
         });
