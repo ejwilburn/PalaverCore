@@ -2,20 +2,41 @@
     "version": "0.2.0",
     "compounds": [{
         "name": "Launch Browser & Debug",
-        "configurations": ["Kestrel Server", "Launch Chrome"]
+        "configurations": ["Kestrel Server - Debug", "Launch Chrome"]
     }],
     "configurations": [{
             "type": "coreclr",
             "request": "launch",
-            "name": "Kestrel Server",
+            "name": "Kestrel Server - Debug",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/bin/Debug/netcoreapp1.1/PalaverCore.dll",
+            "requireExactSource": false,
+            "program": "${workspaceRoot}/bin/x64/Debug/netcoreapp1.1/PalaverCore.dll",
             "args": [],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": false,
             "internalConsoleOptions": "openOnSessionStart",
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceRoot}/Views"
+            }
+        },
+        {
+            "type": "coreclr",
+            "request": "launch",
+            "name": "Kestrel Server - Release",
+            "preLaunchTask": "build-release",
+            "program": "${workspaceRoot}/bin/x64/Release/netcoreapp1.1/PalaverCore.dll",
+            "args": [
+                "--configuration",
+                "Release"
+            ],
+            "cwd": "${workspaceRoot}",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Production"
             },
             "sourceFileMap": {
                 "/Views": "${workspaceRoot}/Views"

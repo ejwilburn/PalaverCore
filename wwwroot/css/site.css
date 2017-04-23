@@ -43,6 +43,7 @@ body,
 }
 
 #thread {
+    top: -20px;
     padding: 10px 20px 5px 20px;
     height: 100%;
     overflow-y: auto;

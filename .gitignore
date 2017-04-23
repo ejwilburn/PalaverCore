@@ -18,6 +18,10 @@
 *.crt
 *.key
 
+# Private RSA keys for ssh
+*_rsa
+*_rsa.key
+
 # Exclude appsettings files, only the examples will be checked in.
 appsettings.json
 appsettings*.json

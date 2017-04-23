@@ -1,5 +1,5 @@
 /*
-Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -31,10 +31,14 @@ namespace Palaver.Services
         public String SiteRoot { get { return _siteRoot; } }
 
         // Find URLs within text outside of HTML tag properties.
-        private static readonly Regex URL_REGEX = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
-            @"\b((?:https?://|www\.)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
-        private static readonly String URL_REPLACE = "<a href=\"$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
+        private static readonly Regex URL_REGEX_WITH_PROTOCOL = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
+            @"\b((?:https?://)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
+        private static readonly Regex URL_REGEX_WITHOUT_PROTOCOL = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
+            @"\b((?:www\.)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
+        private static readonly String URL_REPLACE_BASIC = "<a href=\"$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
+        private static readonly String URL_REPLACE_ADD_PROTOCOL = "<a href=\"http://$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
         private static readonly Regex URL_ESCAPED_AMPERSAND = new Regex(@"(?<=href=""https?://[^/]+[^""]?)&amp;(?="" class=""autolinked"")", RegexOptions.IgnoreCase);
+        private static readonly Regex TRAILING_WHITESPACE = new Regex(@"(?:&nbsp;|[ \t])+?(?=$|<br|</?p>|</?div>)", RegexOptions.IgnoreCase);
 
         private StubbleRenderer _stubble;
         private String _siteRoot;
@@ -54,7 +58,9 @@ namespace Palaver.Services
         /// <returns>The input string with links outside HTML tags formatted as &gt;A&lt; tags.</returns>
         public string Linkify(string input)
         {
-            String output = URL_REGEX.Replace(input, URL_REPLACE);
+            String output = TRAILING_WHITESPACE.Replace(input, "");
+            output = URL_REGEX_WITH_PROTOCOL.Replace(output, URL_REPLACE_BASIC);
+            output = URL_REGEX_WITHOUT_PROTOCOL.Replace(output, URL_REPLACE_ADD_PROTOCOL);
             output = URL_ESCAPED_AMPERSAND.Replace(output, "&");
             return output;
         }
@@ -72,18 +78,6 @@ namespace Palaver.Services
         }
 
         /// <summary>
-        /// Render an HTML formatted view of a given comment based on the comment mustache partial template file in wwwroot\templates\partials.
-        /// </summary>
-        /// <param name="comment"></param>
-        /// <returns>HTML formatted view of the comment</returns>
-        public string RenderCommentFromTemplate(Palaver.Models.CommentViewModels.DetailViewModel comment)
-        {
-            if (!_cacheTemplates)
-                LoadTemplates();
-            return _stubble.Render("comment", comment);
-        }
-
-        /// <summary>
         /// Render an HTML formatted view of the list of threads based on the threadList mustache template file in wwwroot\templates.
         /// </summary>
         /// <param name="threads"></param>
@@ -93,19 +87,6 @@ namespace Palaver.Services
             if (!_cacheTemplates)
                 LoadTemplates();
             return _stubble.Render("threadList", threads);
-        }
-
-        /// <summary>
-        /// Render an HTML formatted view of a thread in the thread list based on the threadListItem mustache partial template file
-        /// in wwwroot\templates\partials.
-        /// </summary>
-        /// <param name="thread"></param>
-        /// <returns>HTML formatted view of a thread for the thread list.</returns>
-        public string RenderThreadListItemFromTemplate(Palaver.Models.ThreadViewModels.ListViewModel thread)
-        {
-            if (!_cacheTemplates)
-                LoadTemplates();
-            return _stubble.Render("threadListItem", thread);
         }
 
         /// <summary>

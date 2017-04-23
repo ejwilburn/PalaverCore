@@ -1,5 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <DebugType>portable</DebugType>
@@ -7,70 +7,93 @@
     <AssemblyName>PalaverCore</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>PalaverCore</PackageId>
-    <UserSecretsId>aspnet-Palaver-bleepity-bopitty-boo</UserSecretsId>
-    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+    <RuntimeIdentifiers>win10-x64;ubuntu.16.10-x64;</RuntimeIdentifiers>
+    <SuppressDockerTargets>True</SuppressDockerTargets>
+    <RuntimeFrameworkVersion>*</RuntimeFrameworkVersion>
+    <PackageTargetFallback>portable-net45+win8</PackageTargetFallback>
+    <Authors />
+    <Company />
+    <Description />
+    <RepositoryUrl>https://github.com/ejwilburn/PalaverCore</RepositoryUrl>
+    <!-- These two lines added to work around MSBuild being too stupid to pick up files generated in prepublish tasks, like minification. -->
+    <GeneratedItemPatterns>wwwroot\js\**;wwwroot\css\**</GeneratedItemPatterns>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedItemPatterns)</DefaultItemExcludes>
   </PropertyGroup>
-
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DefineConstants>RELEASE;NETCOREAPP1_1</DefineConstants>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
   <ItemGroup>
-    <None Update="wwwroot\**\*;Views\**\*;Areas\**\Views">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None>
+    <Compile Remove="release\**" />
+    <Compile Remove="wwwroot\lib\**" />
+    <Content Remove="release\**" />
+    <Content Remove="wwwroot\lib\**" />
+    <Content Remove="appsettings*" />
+    <EmbeddedResource Remove="release\**" />
+    <EmbeddedResource Remove="wwwroot\lib\**" />
+    <None Remove="release\**" />
+    <None Remove="wwwroot\lib\**" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.HttpOverrides" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.1.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Routing" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="1.1.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="1.0.0">
+    <Content Update="Views\**;wwwroot\css\**;wwwroot\js\**;wwwroot\templates\**;wwwroot\images\**;wwwroot\uploads\README.md;wwwroot\favicon.ico" PublishState="Included" CopyToOutputDirectory="PreserveNewest" />
+    <Content Update="appsettings*;bundleconfig.json;release;wwwroot\lib\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never" />
+    <Content Update="release\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never" />
+    <Content Update="wwwroot\lib\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never" />
+    <None Update="appsettings*;bundleconfig.json;release\**;wwwroot\lib\**" Visible="true" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.HttpOverrides" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Routing" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="*">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="1.1.1" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="1.1.0" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.0">
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="*" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="*" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="*">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="1.1.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="1.1.0" />
-    <PackageReference Include="MailKit" Version="1.10.2" />
-    <PackageReference Include="EntityFrameworkCore.Triggers" Version="1.0.5" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.WebSockets.Server" Version="0.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="1.1.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="*" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="*" />
+    <PackageReference Include="MailKit" Version="*" />
+    <PackageReference Include="EntityFrameworkCore.Triggers" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="*" />
+    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="*" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Server" Version="0.2.0-*" />
-    <PackageReference Include="AutoMapper" Version="5.2.0" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="1.2.0" />
+    <PackageReference Include="AutoMapper" Version="*" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="*" />
     <PackageReference Include="Stubble.Core" Version="1.0.0-alpha15" />
     <PackageReference Include="Stubble.Extensions.Loaders" Version="1.0.0-alpha3" />
   </ItemGroup>
-
-  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
-    <Exec Command="dotnet bundle" />
-    <Exec Command="bower install" />
-  </Target>
-
-  <!--
-  <Target Name="PrecompileScript" BeforeTargets="BeforeBuild">
-  </Target>
-  -->
-
   <ItemGroup>
     <DotNetCliToolReference Include="BundlerMinifier.Core" Version="2.3.327" />
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="1.0.0" />
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="1.0.0" />
   </ItemGroup>
-
+  <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
+    <Exec Command="dotnet bundle" />
+    <ItemGroup>
+      <_GeneratedFiles Include="$(GeneratedItemPatterns)" />
+      <ContentWithTargetPath Include="@(_GeneratedFiles->'%(FullPath)')" RelativePath="%(_GeneratedFiles.Identity)" TargetPath="%(_GeneratedFiles.Identity)" CopyToPublishDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
 </Project>

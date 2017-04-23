@@ -6,9 +6,9 @@ FIX:
     ✔ Make sure new comments have the same thread id as their parent. @done (3/28/2017, 6:50:13 PM)
 
 STUFF:
-    ☐ Make DB Config file-based
-    ☐ Make server port(s) and cert info config-file based
-    ☐ Change password complexity options to be config-file based.
+    ✔ Make DB Config file-based @done (4/23/2017, 2:06:44 AM)
+    ✔ Make server port(s) and cert info config-file based @done (4/23/2017, 2:06:34 AM)
+    ✔ Change password complexity options to be config-file based. @done (4/23/2017, 2:06:42 AM)
 
 THINGS:
     ✔ STOP FUCKING AROUND! @done (3/28/2017, 6:50:38 PM)

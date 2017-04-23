@@ -1,5 +1,5 @@
 /*
-Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -98,6 +98,8 @@ class Thread {
             this.focusCommentId(this.commentId);
 
         this.fixEditing();
+
+        this.requestNotificationPermission();
 
         Util.loadScriptsAsync(this.asyncScripts);
     }
@@ -282,9 +284,21 @@ class Thread {
         return (new Date()).toLocaleTimeString().replace(/:\d\d /, ' ');
     }
 
+    requestNotificationPermission() {
+        if (this.isNotificationAllowed() && Notification.permission === "default") {
+            Notification.requestPermission();
+        }
+    }
+
+    isNotificationAllowed() {
+        if (!Notification || Notification.permission === "denied")
+            return false;
+        return true;
+    }
+
     // Notify the user of new threads
     notifyNewThread(thread) {
-        if (!Notification || Notification.permission !== "granted")
+        if (!this.isNotificationAllowed())
             return;
 
         let title = `Palaver thread posted by ${thread.UserName}.`;
@@ -296,32 +310,32 @@ class Thread {
             icon: BASE_URL + 'images/new_message-icon.gif',
             body: Mustache.render(this.templates.threadNotification, filteredThread)
         });
-        notification.onclick = function() {
+        notification.onclick = (event) => {
+            event.preventDefault();
+            event.currentTarget.close();
             window.focus();
-            window.location.href = `${BASE_URL}Thread/${thread.Id}`;
-            this.cancel();
+            this.loadThread(thread.Id);
         };
         setTimeout(function() { if (notification) notification.close(); }, NOTIFICATION_DURATION);
     }
 
     // Notify the user of new comments
     notifyNewComment(comment) {
-        if (!Notification || Notification.permission !== "granted")
+        if (!this.isNotificationAllowed())
             return;
 
         let title = `Palaver comment posted by ${comment.UserName}.`;
-        let filteredComment = {
-            Text: $.trim(this.stripHtml(comment.Text).substring(0, NOTIFICATION_SNIPPET_SIZE))
-        };
+        let filteredComment = $.trim(this.stripHtml(comment.Text).substring(0, NOTIFICATION_SNIPPET_SIZE));
 
         let notification = new Notification(title, {
             icon: BASE_URL + 'images/new_message-icon.gif',
-            body: filteredMessage
+            body: filteredComment
         });
-        notification.onclick = () => {
+        notification.onclick = (event) => {
+            event.preventDefault();
+            event.currentTarget.close();
             window.focus();
-            this.loadThread(this.threadId, this.commentId);
-            this.cancel();
+            this.loadThread(comment.ThreadId, comment.Id);
         };
         setTimeout(function() { if (notification) notification.close(); }, NOTIFICATION_DURATION);
     }
@@ -333,7 +347,7 @@ class Thread {
 
         let tempDiv = document.createElement('DIV');
         tempDiv.innerHTML = text;
-        return innerDiv.textContent || innerDiv.innerText;
+        return tempDiv.textContent || tempDiv.innerText;
     }
 
     countAllUnread() {
@@ -476,7 +490,8 @@ class Thread {
                 this.selectThread(threadId);
                 this.updateTotalUnreadDisplay();
                 this.fixEditing();
-                $('#thread').scrollTop(0);
+                if (!haveCommentId)
+                    $('#thread').scrollTop(0);
                 this.clearBusy();
             }
         ).fail((error) => {

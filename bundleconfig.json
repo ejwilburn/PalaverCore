@@ -27,6 +27,28 @@
         "sourceMap": false
     },
     {
+        "outputFileName": "wwwroot/js/util.min.js",
+        "inputFiles": [
+            "wwwroot/js/util.js"
+        ],
+        "minify": {
+            "enabled": true,
+            "renameLocals": true
+        },
+        "sourceMap": false
+    },
+    {
+        "outputFileName": "wwwroot/js/editor.min.js",
+        "inputFiles": [
+            "wwwroot/js/editor.js"
+        ],
+        "minify": {
+            "enabled": true,
+            "renameLocals": true
+        },
+        "sourceMap": false
+    },
+    {
         "outputFileName": "wwwroot/js/semantic.validation.min.js",
         "inputFiles": [
             "wwwroot/js/semantic.validation.js"

@@ -1,10 +1,15 @@
-## Intial Setup
+## Initial Setup
 
 1) run **npm install**
 2) run **bower install**
 3) copy example.appsettings.json to appsettings.json and customize
 4) copy example.appsettings.Environment.json to appsettings.Development.json (or whatever environment name you need) and customize.
 5) build (command line: dotnet build) then create the database with dotnet ef database update
+
+## Publishing
+
+1) Modify the publish task in .vscode/tasks.json to fit your environment.
+2) Open the command pallete and choose Tasks: Run Task then choose publish.  The output will be placed in the release dir, deploy as needed.
 
 ## Semantic UI Tasks - Ignore Currently
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -92,22 +92,14 @@ namespace Palaver
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
-            {
-                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-            });
-            app.UseHttpMethodOverride();
-
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-
-            // Use a non-root base path for the external URL for the site if configured.
-            string sitePathBase = Configuration["SiteRoot"];
-            if (!string.IsNullOrEmpty(sitePathBase))
-                app.UsePathBase(sitePathBase);
 
             if (env.IsDevelopment())
             {
-                loggerFactory.AddDebug();
+    			loggerFactory.WithFilter(new FilterLoggerSettings{
+                        { "Default", LogLevel.Warning },
+                        { "Microsoft.EntityFrameworkCore", LogLevel.Information }
+                    }).AddDebug();
                 app.UseDeveloperExceptionPage();
                 app.UseDatabaseErrorPage();
                 app.UseBrowserLink();
@@ -117,18 +109,29 @@ namespace Palaver
                 app.UseExceptionHandler("/Home/Error");
             }
 
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+            app.UseHttpMethodOverride();
+
+            // Use a non-root base path for the external URL for the site if configured.
+            string sitePathBase = Configuration["SiteRoot"];
+            if (!string.IsNullOrEmpty(sitePathBase))
+                app.UsePathBase(sitePathBase);
+
             // Set up custom content types -associating file extension to MIME type
             // This has to be done for supporting the .mustache template files, either
             // that or allow all unknown types.
             var provider = new FileExtensionContentTypeProvider();
             provider.Mappings[".mustache"] = "text/html";
 
-            app.UseStaticFiles(new StaticFileOptions {
+            app.UseStaticFiles(new StaticFileOptions
+            {
                 ContentTypeProvider = provider
             });
 
             app.UseIdentity();
-
             app.UseGoogleAuthentication();
 
             app.UseMvc(routes =>

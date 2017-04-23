@@ -10,6 +10,32 @@
         "isBuildCommand": true,
         "problemMatcher": "$msCompile"
     }, {
+        "taskName": "build-release",
+        "command": "dotnet",
+        "isShellCommand": true,
+        "args": [
+            "build",
+            "--configuration",
+            "Release"
+        ],
+        "isBuildCommand": false,
+        "problemMatcher": "$msCompile"
+    }, {
+        "taskName": "publish",
+        "command": "dotnet",
+        "isShellCommand": true,
+        "args": [
+            "publish",
+            "--configuration",
+            "Release",
+            "--runtime",
+            "ubuntu.16.10-x64",
+            "--output",
+            "./release"
+        ],
+        "isBuildCommand": false,
+        "problemMatcher": "$msCompile"
+    }, {
         "taskName": "clean Semantic UI",
         "command": "gulp",
         "isShellCommand": true,

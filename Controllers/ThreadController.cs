@@ -1,5 +1,5 @@
 /*
-Copyright 2017, Marcus McKinnon, E.J. Wilburn, Kevin Williams
+Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -24,7 +24,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using AutoMapper;
 using Palaver.Data;
 using Palaver.Services;
@@ -41,18 +40,18 @@ namespace Palaver.Controllers
         private readonly CustomHtmlHelperService _htmlHelper;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        private readonly ILogger _logger;
+        //private readonly ILogger _logger;
         private readonly int _userId;
 
-        public ThreadController(PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory, CustomHtmlHelperService htmlHelper)
+        public ThreadController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper,
+            IHttpContextAccessor httpContextAccessor, CustomHtmlHelperService htmlHelper)
         {
-            this._dbContext = context;
+            this._dbContext = dbContext;
             this._htmlHelper = htmlHelper;
             this._userManager = userManager;
             this._mapper = mapper;
             this._httpContext = httpContextAccessor.HttpContext;
-            this._logger = loggerFactory.CreateLogger<ThreadController>();
+            //this._logger = loggerFactory.CreateLogger<ThreadController>();
             this._userId = int.Parse(_userManager.GetUserId(_httpContext.User));
         }
 
