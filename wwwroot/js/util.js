@@ -27,21 +27,6 @@ class Util {
         return window.innerWidth <= MAX_MOBILE_WIDTH;
     }
 
-    // For all scripts in asyncScripts load them via AJAX then execute their callbacks.
-    // This is done for faster page loading for non-critical scripts.
-    static loadScriptsAsync(asyncScripts) {
-        for (var script of asyncScripts) {
-            this.loadScriptAsync(script.url, script.callback);
-        }
-    }
-
-    static loadScriptAsync(url, callback) {
-        if (callback)
-            $.getScript(url, (data, textStatus, jqxhr) => { return callback(data, textStatus, jqxhr); });
-        else
-            $.getScript(url);
-    }
-
     static isNumber(val) {
         return typeof val === 'number';
     }
@@ -59,14 +44,5 @@ class Util {
             return true;
 
         return false;
-    }
-
-    static loadTemplates(saveTo) {
-        if (Util.isNull(saveTo.templates))
-            saveTo.templates = {};
-        $('script[type=x-mustache-template]').each((index, item) => {
-            let name = item.attributes.name.value;
-            $.get(item.src, (data) => { saveTo.templates[name] = data; });
-        });
     }
 }

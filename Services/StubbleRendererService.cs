@@ -20,49 +20,20 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Stubble.Core;
 using Stubble.Extensions.Loaders;
 
 namespace Palaver.Services
 {
-    public class CustomHtmlHelperService
+    public class StubbleRendererService
     {
-        public String SiteRoot { get { return _siteRoot; } }
-
-        // Find URLs within text outside of HTML tag properties.
-        private static readonly Regex URL_REGEX_WITH_PROTOCOL = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
-            @"\b((?:https?://)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
-        private static readonly Regex URL_REGEX_WITHOUT_PROTOCOL = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
-            @"\b((?:www\.)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
-        private static readonly String URL_REPLACE_BASIC = "<a href=\"$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
-        private static readonly String URL_REPLACE_ADD_PROTOCOL = "<a href=\"http://$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
-        private static readonly Regex URL_ESCAPED_AMPERSAND = new Regex(@"(?<=href=""https?://[^/]+[^""]?)&amp;(?="" class=""autolinked"")", RegexOptions.IgnoreCase);
-        private static readonly Regex TRAILING_WHITESPACE = new Regex(@"(?:&nbsp;|[ \t])+?(?=$|<br|</?p>|</?div>)", RegexOptions.IgnoreCase);
-
         private StubbleRenderer _stubble;
-        private String _siteRoot;
         private bool _cacheTemplates;
 
-        public CustomHtmlHelperService(String siteRoot, bool cacheTemplates)
+        public StubbleRendererService(bool cacheTemplates)
         {
-            this._siteRoot = siteRoot;
             this._cacheTemplates = cacheTemplates;
             LoadTemplates();
-        }
-
-        /// <summary>
-        /// Convert URLs in the text to links if they're not already a link.
-        /// </summary>
-        /// <param name="input">Text</param>
-        /// <returns>The input string with links outside HTML tags formatted as &gt;A&lt; tags.</returns>
-        public string Linkify(string input)
-        {
-            String output = TRAILING_WHITESPACE.Replace(input, "");
-            output = URL_REGEX_WITH_PROTOCOL.Replace(output, URL_REPLACE_BASIC);
-            output = URL_REGEX_WITHOUT_PROTOCOL.Replace(output, URL_REPLACE_ADD_PROTOCOL);
-            output = URL_ESCAPED_AMPERSAND.Replace(output, "&");
-            return output;
         }
 
         /// <summary>
@@ -88,20 +59,6 @@ namespace Palaver.Services
                 LoadTemplates();
             return _stubble.Render("threadList", threads);
         }
-
-        /// <summary>
-        /// Returns a locally formatted date/time string based on the given DateTime show a date if the datetime
-        /// is from a previous day and time only if it's from the current day.
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns>A locally formatted date or time string.</returns>
-        public string GetDisplayTime(DateTime time)
-		{
-			if (DateTime.Today == time.Date)
-                return time.ToString("t");
-			else
-				return time.ToString("d");
-		}
 
         /// <summary>
         /// Load mustache templates for rendering content with Stubble, pre-compiling and caching them for speed.

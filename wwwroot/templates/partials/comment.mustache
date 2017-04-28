@@ -3,10 +3,10 @@
     <div class="content">
         <a class="author">{{UserName}}</a>
         <div class="metadata">
-            <span class="date">{{CreatedDisplay}}</span>
+            <time class="timeago" datetime="{{CreatedIsoTime}}">{{CreatedDisplay}}</time>
             <a class="ui icon disabled" href="{{Url}}"><i class="linkify icon"></i></a>
         </div>
-        <div class="text">{{{Text}}}</div>
+        <div class="text">{{{DisplayText}}}</div>
         <div class="actions">
             <a class="edit" onclick="thread.editComment({{Id}})">Edit</a>
             <a class="reply" onclick="thread.replyTo({{ParentCommentId}})">Reply</a>

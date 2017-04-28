@@ -23,9 +23,11 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using EntityFrameworkCore.Triggers;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Palaver.Data;
 
 namespace Palaver.Models
@@ -35,7 +37,9 @@ namespace Palaver.Models
         [Key]
         public int Id { get; set; }
         [Required]
-        public string Text { get; set; }
+        public string Text { get { return _text; } set { _text = FilterComment(value); } }
+        [NotMapped]
+        public string DisplayText { get { return DisplayFilterComment(_text); } }
         [Required]
         public int UserId { get; set; }
         [Required]
@@ -48,12 +52,12 @@ namespace Palaver.Models
         public Comment Parent { get; set; }
         [NotMapped]
         public bool IsUnread { get; set; }
-        [NotMapped]
-        public bool IsFavorite { get; set; }
 
         public List<Comment> Comments { get; set; }
         public List<UnreadComment> UnreadComments { get; set; }
         public List<FavoriteComment> FavoriteComments { get; set; }
+
+        private string _text;
 
         public Comment()
         {
@@ -72,7 +76,6 @@ namespace Palaver.Models
                 UserId = user.Id,
                 User = user,
                 ParentCommentId = parentId,
-                IsUnread = true
             };
 
             if (thread.Comments == null)
@@ -96,6 +99,91 @@ namespace Palaver.Models
             }
 
             return newComment;
+        }
+
+        /// <summary>
+        /// Apply temporary filtering for comment text display, such as modifying images so they're lazy loaded.
+        /// </summary>
+        /// <param name="commentText"></param>
+        /// <returns></returns>
+        private string DisplayFilterComment(string commentText)
+        {
+            if (String.IsNullOrWhiteSpace(commentText))
+                return commentText;
+
+            string output = EnableGifPlayOnHover(commentText);
+            output = EnableLazyLoadingImages(output);
+            output = EnableTwitterEmbedding(output);
+            return output;
+        }
+
+        // Regexes for modifying images to lazy load.
+        private static readonly Regex GIF_IMAGE_REGEX = new Regex(@"(<img [^>]*?)(?:\s+src=)([""'][^""'>]+[""'](?<=\.gif[""']))([^>]*?>)", RegexOptions.IgnoreCase);
+        private static readonly string GIF_IMAGE_REPLACE = "$1 data-gifffer=$2 class=\"animated\"$3";
+
+        /// <summary>
+        /// Modifies any img tag with a gif src to add an animated class.
+        /// </summary>
+        /// <param name="commentText"></param>
+        /// <returns></returns>
+        private string EnableGifPlayOnHover(string commentText)
+        {
+            return GIF_IMAGE_REGEX.Replace(commentText, GIF_IMAGE_REPLACE);
+        }
+
+        // Regexes for modifying images to lazy load.
+        private static readonly Regex IMAGE_TAG_REGEX = new Regex(@"(<img [^>]*?)\s+(src=[""'][^""'>]+[""'](?<!\.gif['""]))([^>]*?>)", RegexOptions.IgnoreCase);
+        private static readonly string IMAGE_TAG_LAZY_LOAD_REPLACE = "$1 data-$2 class=\"lazy\"$3";
+
+        private string EnableLazyLoadingImages(string commentText)
+        {
+            return IMAGE_TAG_REGEX.Replace(commentText, IMAGE_TAG_LAZY_LOAD_REPLACE);
+        }
+
+        // Regexes for modifying images to lazy load.
+        private static readonly Regex TWITTER_URL_REGEX = new Regex(@"(<a [^>]*?href=[""'](?:https?://|//)(?:www\.)?twitter\.com[^""'>]+[""'][^>]*?>)", RegexOptions.IgnoreCase);
+        private static readonly string TWITTER_URL_REPLACEMENT = "<blockquote class=\"twitter-tweet\">$1</blockquote>";
+
+        private string EnableTwitterEmbedding(string commentText)
+        {
+            return TWITTER_URL_REGEX.Replace(commentText, TWITTER_URL_REPLACEMENT);
+        }
+
+        /// <summary>
+        /// Apply any needed filters to comment text when modified, such as auto-linking of URLs.
+        /// </summary>
+        /// <param name="commentText">Comment's primary text.</param>
+        /// <returns>Filtered comment string.</returns>
+        private string FilterComment(string commentText)
+        {
+            if (String.IsNullOrWhiteSpace(commentText))
+                return commentText;
+
+            return Linkify(commentText);
+        }
+
+        // Find URLs within text outside of HTML tag properties.
+        private static readonly Regex URL_REGEX_WITH_PROTOCOL = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
+            @"\b((?:https?://)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
+        private static readonly Regex URL_REGEX_WITHOUT_PROTOCOL = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
+            @"\b((?:www\.)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
+        private static readonly string URL_REPLACE_BASIC = "<a href=\"$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
+        private static readonly string URL_REPLACE_ADD_PROTOCOL = "<a href=\"http://$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
+        private static readonly Regex URL_ESCAPED_AMPERSAND = new Regex(@"(?<=href=""https?://[^/]+[^""]?)&amp;(?="" class=""autolinked"")", RegexOptions.IgnoreCase);
+        private static readonly Regex TRAILING_WHITESPACE = new Regex(@"(?:&nbsp;|[ \t])+?(?=$|<br|</?p>|</?div>)", RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// Convert URLs in the text to links if they're not already a link.
+        /// </summary>
+        /// <param name="input">Text</param>
+        /// <returns>The input string with links outside HTML tags formatted as &gt;A&lt; tags.</returns>
+        private String Linkify(string input)
+        {
+            String output = TRAILING_WHITESPACE.Replace(input, "");
+            output = URL_REGEX_WITH_PROTOCOL.Replace(output, URL_REPLACE_BASIC);
+            output = URL_REGEX_WITHOUT_PROTOCOL.Replace(output, URL_REPLACE_ADD_PROTOCOL);
+            output = URL_ESCAPED_AMPERSAND.Replace(output, "&");
+            return output;
         }
     }
 }

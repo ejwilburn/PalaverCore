@@ -29,6 +29,8 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public string Title { get; set; }
         [Required]
+        public string CreatedIsoTime { get; set; }
+        [Required]
         public string Text { get; set; }
         [Required]
         public string Url { get; set; }

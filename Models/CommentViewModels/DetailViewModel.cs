@@ -28,7 +28,7 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public int Id { get; set; }
         [Required]
-        public string Text { get; set; }
+        public string DisplayText { get; set; }
         [Required]
         public int? ParentCommentId { get; set; }
         [Required]
@@ -40,9 +40,9 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public bool IsUnread { get; set; }
         [Required]
-        public bool IsFavorite { get; set; }
-        [Required]
         public string CreatedDisplay { get; set; }
+        [Required]
+        public string CreatedIsoTime { get; set; }
         [Required]
         public string Url { get; set; }
         public IEnumerable<DetailViewModel> Comments { get; set; }

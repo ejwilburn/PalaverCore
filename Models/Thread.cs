@@ -37,34 +37,14 @@ namespace Palaver.Models
         [Required]
         public User User { get; set; }
 
-        public List<Comment> Comments { get; set; }
+        public List<Comment> Comments { get; set; } = new List<Comment>();
         public List<Subscription> Subscriptions { get; set; }
         public List<FavoriteThread> FavoriteThreads { get; set; }
 
-        [NotMapped]
-        public bool IsSubscribed { get; set; }
-        [NotMapped]
-        public bool IsFavorite { get; set; }
 		[NotMapped]
 		public int UnreadCount { get; set; }
         [NotMapped]
-        public List<Comment> ImmediateChildren {
-            get {
-                if (_immediateChildren != null)
-                    return _immediateChildren;
-                else
-                {
-                    _immediateChildren = new List<Comment>();
-                    if (Comments != null && Comments.Count > 0)
-                    {
-                        _immediateChildren = Comments.FindAll(c => !c.ParentCommentId.HasValue);
-                    }
-                    return _immediateChildren;
-                }
-            }
-        }
-
-        private List<Comment> _immediateChildren;
+        public List<Comment> ImmediateChildren { get { return Comments.FindAll(c => !c.ParentCommentId.HasValue); } }
 
         public Thread()
         {
@@ -79,7 +59,6 @@ namespace Palaver.Models
                 UserId = user.Id,
                 User = user,
                 IsSticky = false,
-                IsSubscribed = true,
                 UnreadCount = 0
             };
 

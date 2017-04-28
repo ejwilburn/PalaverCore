@@ -18,23 +18,26 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+// jshint esversion:6
 
-namespace Palaver.Models.ThreadViewModels
-{
-    public class SelectedViewModel
-    {
-        [Required]
-        public int Id { get; set; }
-        [Required]
-        public string Title { get; set; }
-        [Required]
-        public string UserName { get; set; }
-        [Required]
-        public string CreatedDisplay { get; set; }
-        [Required]
-        public string CreatedIsoTime { get; set; }
-        public IEnumerable<CommentViewModels.DetailViewModel> Comments { get; set; }
+// Mustache rendering templates.
+var templates = {};
+
+class TemplateRenderer {
+    static staticConstructor() {
+        TemplateRenderer.loadTemplates();
+    }
+
+    static render(templateName, data = null) {
+        return Mustache.render(templates[templateName], data);
+    }
+
+    static loadTemplates() {
+        $('script[data-istemplate="true"]').each((index, item) => {
+            let name = item.attributes.name.value;
+            $.get(item.src, (data) => { templates[name] = data; });
+        });
     }
 }
+
+TemplateRenderer.staticConstructor();

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Palaver.Data;
 using Palaver.Models;
 using Palaver.Models.AccountViewModels;
 using Palaver.Services;
@@ -18,17 +19,20 @@ namespace Palaver.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
+        private readonly PalaverDbContext _dbContext;
 
         public AccountController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
             IEmailSender emailSender,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            PalaverDbContext dbContext)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = loggerFactory.CreateLogger<AccountController>();
+            _dbContext = dbContext;
         }
 
         //
@@ -106,7 +110,7 @@ namespace Palaver.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = new User { UserName = model.Username, Email = model.Email };
+                var user = await _dbContext.NewUserAsync( model.Username, model.Email );
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -215,7 +219,7 @@ namespace Palaver.Controllers
                 {
                     return View("ExternalLoginFailure");
                 }
-                var user = new User { UserName = model.Username, Email = model.Email, EmailConfirmed = true };
+                var user = await _dbContext.NewUserAsync( model.Username, model.Email, true );
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {

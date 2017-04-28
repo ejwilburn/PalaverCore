@@ -7,6 +7,7 @@
     {
         "outputFileName": "wwwroot/js/site.min.js",
         "inputFiles": [
+            "wwwroot/js/util.js",
             "wwwroot/js/site.js"
         ],
         "minify": {
@@ -18,28 +19,8 @@
     {
         "outputFileName": "wwwroot/js/thread.min.js",
         "inputFiles": [
-            "wwwroot/js/thread.js"
-        ],
-        "minify": {
-            "enabled": true,
-            "renameLocals": true
-        },
-        "sourceMap": false
-    },
-    {
-        "outputFileName": "wwwroot/js/util.min.js",
-        "inputFiles": [
-            "wwwroot/js/util.js"
-        ],
-        "minify": {
-            "enabled": true,
-            "renameLocals": true
-        },
-        "sourceMap": false
-    },
-    {
-        "outputFileName": "wwwroot/js/editor.min.js",
-        "inputFiles": [
+            "wwwroot/js/thread.js",
+            "wwwroot/js/templateRenderer.js",
             "wwwroot/js/editor.js"
         ],
         "minify": {

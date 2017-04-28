@@ -39,17 +39,15 @@ namespace Palaver.Controllers
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly PalaverDbContext _dbContext;
-        private readonly CustomHtmlHelperService _htmlHelper;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
         private readonly int _userId;
 
         public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor,
-            ILoggerFactory loggerFactory, CustomHtmlHelperService htmlHelper)
+            ILoggerFactory loggerFactory)
         {
             this._dbContext = dbContext;
-            this._htmlHelper = htmlHelper;
             this._userManager = userManager;
             this._mapper = mapper;
             this._httpContextAccessor = httpContextAccessor;
@@ -65,9 +63,7 @@ namespace Palaver.Controllers
             {
                 return NotFound();
             }
-            return new ObjectResult(_mapper.Map<Comment, DetailViewModel>(comment, opts => {
-                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
-                }));
+            return new ObjectResult(_mapper.Map<Comment, DetailViewModel>(comment));
         }
 
         [HttpGet("Search/{searchText}")]
@@ -77,9 +73,7 @@ namespace Palaver.Controllers
             List<Comment> comments = await _dbContext.Search(searchText);
             if (comments != null && comments.Count > 0)
             {
-                results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments, opts => {
-                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
-                });
+                results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments);
                 results.success = true;
             }
             else
@@ -97,16 +91,14 @@ namespace Palaver.Controllers
                 return BadRequest();
             }
             Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
-            return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, CreateResultViewModel>(newComment, opts => {
-                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
-                }));
+            return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, CreateResultViewModel>(newComment));
         }
 
-        [HttpPut("{id}")]
-        [Route("MarkRead/{id}")]
-        public async Task<IActionResult> MarkRead(int id)
+        [HttpPut("{threadId}/{commentId}")]
+        [Route("MarkRead/{threadId}/{commentId}")]
+        public async Task<IActionResult> MarkRead(int threadId, int commentId)
         {
-            await _dbContext.MarkCommentReadByUser(id, _userId);
+            await _dbContext.MarkCommentReadByUser(threadId, commentId, _userId);
             return new NoContentResult();
         }
 

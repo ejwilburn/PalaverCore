@@ -9,7 +9,6 @@
             "request": "launch",
             "name": "Kestrel Server - Debug",
             "preLaunchTask": "build",
-            "requireExactSource": false,
             "program": "${workspaceRoot}/bin/x64/Debug/netcoreapp1.1/PalaverCore.dll",
             "args": [],
             "cwd": "${workspaceRoot}",

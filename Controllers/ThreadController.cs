@@ -29,6 +29,7 @@ using Palaver.Data;
 using Palaver.Services;
 using Palaver.Models;
 using Palaver.Models.ThreadViewModels;
+using Microsoft.Extensions.Logging;
 
 namespace Palaver.Controllers
 {
@@ -37,21 +38,21 @@ namespace Palaver.Controllers
     {
         private readonly HttpContext _httpContext;
         private readonly PalaverDbContext _dbContext;
-        private readonly CustomHtmlHelperService _htmlHelper;
+        private readonly StubbleRendererService _stubble;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
-        //private readonly ILogger _logger;
+        private readonly ILogger _logger;
         private readonly int _userId;
 
         public ThreadController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor, CustomHtmlHelperService htmlHelper)
+            IHttpContextAccessor httpContextAccessor, StubbleRendererService stubble, ILoggerFactory loggerFactory)
         {
             this._dbContext = dbContext;
-            this._htmlHelper = htmlHelper;
+            this._stubble = stubble;
             this._userManager = userManager;
             this._mapper = mapper;
             this._httpContext = httpContextAccessor.HttpContext;
-            //this._logger = loggerFactory.CreateLogger<ThreadController>();
+            this._logger = loggerFactory.CreateLogger<ThreadController>();
             this._userId = int.Parse(_userManager.GetUserId(_httpContext.User));
         }
 
@@ -59,56 +60,37 @@ namespace Palaver.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            return await Show();
+            return await Show(null, null);
         }
 
         [HttpGet("show")]
-        [Route("Thread")]
-        public async Task<IActionResult> Show()
+        [Route("Thread/{threadId?}/{commentId?}")]
+        public async Task<IActionResult> Show(int? threadId, int? commentId)
         {
-            List<ListViewModel> threads = _mapper.Map<List<Thread>, List<ListViewModel>>(await _dbContext.GetThreadsListAsync(_userId));
             ViewData["userId"] = _userId;
-            ViewData["ThreadListViewHtml"] = _htmlHelper.RenderThreadListFromTemplate(threads);
-            ViewData["ThreadViewHtml"] = _htmlHelper.RenderThreadFromTemplate(null);
+            List<ListViewModel> threads = _mapper.Map<List<Thread>, List<ListViewModel>>(await _dbContext.GetPagedThreadsListAsync(_userId));
+            ViewData["ThreadListViewHtml"] = _stubble.RenderThreadListFromTemplate(threads);
+
+            if (commentId != null )
+                ViewData["commentId"] = commentId;
+
+            if (threadId != null)
+            {
+                SelectedViewModel selectedThread = _mapper.Map<Thread, SelectedViewModel>(await _dbContext.GetThreadAsync((int)threadId, _userId));
+                ViewData["threadId"] = selectedThread.Id;
+                ViewData["ThreadViewHtml"] = _stubble.RenderThreadFromTemplate(selectedThread);
+            }
+            else
+                ViewData["ThreadViewHtml"] = _stubble.RenderThreadFromTemplate(null);
+
             return View("~/Views/Thread/Thread.cshtml");
         }
 
         [HttpGet]
-        [Route("Thread/{id}")]
-        public async Task<IActionResult> Show(int id)
+        [Route("/api/PagedThreads/{startIndex?}/{maxResults?}")]
+        public async Task<IEnumerable<ListViewModel>> Get(int startIndex = 0, int maxResults = 10)
         {
-            List<ListViewModel> threads = _mapper.Map<List<Thread>, List<ListViewModel>>(await _dbContext.GetThreadsListAsync(_userId));
-            SelectedViewModel selectedThread = _mapper.Map<Thread, SelectedViewModel>(await _dbContext.GetThreadAsync(id, _userId), opts => {
-                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
-                });
-            ViewData["threadId"] = selectedThread.Id;
-            ViewData["userId"] = _userId;
-            ViewData["ThreadListViewHtml"] = _htmlHelper.RenderThreadListFromTemplate(threads);
-            ViewData["ThreadViewHtml"] = _htmlHelper.RenderThreadFromTemplate(selectedThread);
-            return View("~/Views/Thread/Thread.cshtml");
-        }
-
-        [HttpGet]
-        [Route("Thread/{id}/{commentId}")]
-        public async Task<IActionResult> Show(int id, int commentId)
-        {
-            List<ListViewModel> threads = _mapper.Map<List<Thread>, List<ListViewModel>>(await _dbContext.GetThreadsListAsync(_userId));
-            SelectedViewModel selectedThread = _mapper.Map<Thread, SelectedViewModel>(await _dbContext.GetThreadAsync(id, _userId), opts => {
-                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
-                });
-            ViewData["threadId"] = selectedThread.Id;
-            ViewData["commentId"] = commentId;
-            ViewData["userId"] = _userId;
-            ViewData["ThreadListViewHtml"] = _htmlHelper.RenderThreadListFromTemplate(threads);
-            ViewData["ThreadViewHtml"] = _htmlHelper.RenderThreadFromTemplate(selectedThread);
-            return View("~/Views/Thread/Thread.cshtml");
-        }
-
-        [HttpGet]
-        [Route("/api/Thread")]
-        public async Task<IEnumerable<ListViewModel>> Get()
-        {
-            List<Thread> threads = await _dbContext.GetThreadsListAsync(_userId);
+            List<Thread> threads = await _dbContext.GetPagedThreadsListAsync(_userId, startIndex, maxResults);
             return _mapper.Map<List<Thread>, List<ListViewModel>>(threads);
         }
 
@@ -121,9 +103,7 @@ namespace Palaver.Controllers
             {
                 return NotFound();
             }
-            return new ObjectResult(_mapper.Map<Thread, SelectedViewModel>(thread, opts => {
-                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
-                }));
+            return new ObjectResult(_mapper.Map<Thread, SelectedViewModel>(thread));
         }
 
         [HttpPost]
@@ -136,17 +116,6 @@ namespace Palaver.Controllers
             }
             Thread newThread = await _dbContext.CreateThreadAsync(title, _userId);
             return CreatedAtRoute(new { id = newThread.Id }, _mapper.Map<Thread, CreateResultViewModel>(newThread));
-        }
-
-        [HttpGet]
-        [Route("/api/RenderThread/{id}")]
-        public async Task<string> ShowThreadPartial(int id)
-        {
-            List<Thread> threads = await _dbContext.GetThreadsListAsync(_userId);
-            Thread selectedThread = await _dbContext.GetThreadAsync(id, _userId);
-            return _htmlHelper.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread, opts => {
-                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
-                }));
         }
     }
 }

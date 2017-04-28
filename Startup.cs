@@ -30,11 +30,14 @@ using Palaver.Models;
 using Palaver.Services;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.HttpOverrides;
+using System;
 
 namespace Palaver
 {
     public class Startup
     {
+        public static string SiteRoot = "";
+
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -44,6 +47,7 @@ namespace Palaver
 
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
+            SiteRoot = Configuration["SiteRoot"];
         }
 
         public IConfigurationRoot Configuration { get; }
@@ -52,10 +56,11 @@ namespace Palaver
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-
             services.AddAutoMapper();
 
-            services.AddSignalR(options => options.Hubs.EnableDetailedErrors = true);
+            services.AddSignalR(options => {
+                    options.Hubs.EnableDetailedErrors = true;
+                });
 
             // Add framework services.
             services.AddDbContext<PalaverDbContext>(options =>
@@ -67,7 +72,7 @@ namespace Palaver
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
-            services.AddSingleton<CustomHtmlHelperService>(new CustomHtmlHelperService(Configuration["SiteRoot"], Configuration.GetValue<bool>("CacheTemplates")));
+            services.AddSingleton<StubbleRendererService>(new StubbleRendererService(Configuration.GetValue<bool>("CacheTemplates")));
 
             // Add primary config-file based options.
             services.Configure<IdentityOptions>(Configuration.GetSection("IdentityOptions"));
@@ -116,9 +121,8 @@ namespace Palaver
             app.UseHttpMethodOverride();
 
             // Use a non-root base path for the external URL for the site if configured.
-            string sitePathBase = Configuration["SiteRoot"];
-            if (!string.IsNullOrEmpty(sitePathBase))
-                app.UsePathBase(sitePathBase);
+            if (!string.IsNullOrEmpty(SiteRoot))
+                app.UsePathBase(SiteRoot);
 
             // Set up custom content types -associating file extension to MIME type
             // This has to be done for supporting the .mustache template files, either

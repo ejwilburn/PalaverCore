@@ -8,9 +8,10 @@ using Palaver.Data;
 namespace PalaverCore.Data.Migrations
 {
     [DbContext(typeof(PalaverDbContext))]
-    partial class PalaverDbContextModelSnapshot : ModelSnapshot
+    [Migration("20170427030240_AddTimezoneToDbDateFields")]
+    partial class AddTimezoneToDbDateFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
             modelBuilder
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)

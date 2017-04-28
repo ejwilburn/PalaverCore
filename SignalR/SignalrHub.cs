@@ -33,65 +33,103 @@ using Palaver.Models.CommentViewModels;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Palaver.Services;
+using Palaver.Models.ThreadViewModels;
 
 namespace Palaver
 {
-    public class SignalrHub : IHub, IDisposable
+    [Authorize]
+    public class SignalrHub : Hub, IDisposable
     {
-        public IHubCallerConnectionContext<dynamic> Clients { get; set; }
-        public HubCallerContext Context { get; set; }
-        public IGroupManager Groups { get; set; }
-
-        private static Dictionary<string, int> _userIdsByConnection = new Dictionary<string, int>();
+        private static Dictionary<string, string> _threadWatchedByConnection = new Dictionary<string, string>();
 
         private readonly PalaverDbContext _dbContext;
-        private readonly CustomHtmlHelperService _htmlHelper;
+        private readonly StubbleRendererService _stubble;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public SignalrHub(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory,
-            CustomHtmlHelperService htmlHelper)
+        public SignalrHub(PalaverDbContext dbContext, StubbleRendererService stubble, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory)
         {
             this._dbContext = dbContext;
-            this._htmlHelper = htmlHelper;
+            this._stubble = stubble;
             this._userManager = userManager;
             this._mapper = mapper;
             this._logger = loggerFactory.CreateLogger<SignalrHub>();
         }
 
-        public Task OnConnected()
+        public override Task OnConnected()
         {
-            _userIdsByConnection.Add(Context.ConnectionId, GetUserId());
             System.Diagnostics.Debug.WriteLine("Connected ConnectionId: " + Context.ConnectionId);
-            return Clients.Client(Context.ConnectionId).SetConnectionId(Context.ConnectionId);
+            Clients.Client(Context.ConnectionId).SetConnectionId(Context.ConnectionId);
+            return base.OnConnected();
         }
 
-        public Task OnDisconnected(bool stopCalled)
+        public override Task OnDisconnected(bool stopCalled)
         {
-            _userIdsByConnection.Remove(Context.ConnectionId);
             if (stopCalled)
                 System.Diagnostics.Debug.WriteLine("Disconnected ConnectionId: " + Context.ConnectionId);
             else
                 System.Diagnostics.Debug.WriteLine("Lost Connection on ConnectionId: " + Context.ConnectionId);
-            return Clients.Client(Context.ConnectionId).Remove();
+            Clients.Client(Context.ConnectionId).Remove();
+            return base.OnDisconnected(stopCalled);
         }
 
-        public Task OnReconnected()
+        public override Task OnReconnected()
         {
-            _userIdsByConnection.Add(Context.ConnectionId, GetUserId());
             System.Diagnostics.Debug.WriteLine("Reconnected ConnectionId: " + Context.ConnectionId);
-            return Clients.Client(Context.ConnectionId).SetConnectionId(Context.ConnectionId);
+            Clients.Client(Context.ConnectionId).SetConnectionId(Context.ConnectionId);
+            return base.OnReconnected();
         }
 
-        public Task Subscribe(int threadId)
+        public void WatchThread(int threadId)
         {
-            return Groups.Add(Context.ConnectionId, threadId.ToString());
+            lock(_threadWatchedByConnection)
+            {
+                if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId) && _threadWatchedByConnection[Context.ConnectionId] != null)
+                    UnsubscribeFromGroup(_threadWatchedByConnection[Context.ConnectionId]);
+                string group = threadId.ToString();
+                Groups.Add(Context.ConnectionId, group);
+                _threadWatchedByConnection[Context.ConnectionId] = group;
+            }
         }
 
-        public Task Unsubscribe(int threadId)
+        public void StopWatchingThread(int threadId)
         {
-            return Groups.Remove(Context.ConnectionId, threadId.ToString());
+            string group = threadId.ToString();
+            Groups.Remove(Context.ConnectionId, group);
+            lock(_threadWatchedByConnection)
+            {
+                if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId))
+                    _threadWatchedByConnection.Remove(Context.ConnectionId);
+            }
+        }
+
+        public void SubscribeToGroup(string group)
+        {
+            Groups.Add(Context.ConnectionId, group);
+        }
+
+        public void UnsubscribeFromGroup(string group)
+        {
+            Groups.Remove(Context.ConnectionId, group);
+        }
+
+        public async Task GetPagedThreadsList(int startIndex)
+        {
+            List<Thread> threads = await _dbContext.GetPagedThreadsListAsync(GetUserId(), startIndex);
+            Clients.Caller.addToThreadsList(_mapper.Map<List<Thread>, List<ListViewModel>>(threads));
+        }
+
+        /// <summary>
+        /// Request an HTML rendered thread.  The result is sent back to the client via a remote call.
+        /// </summary>
+        /// <param name="threadId">Thread Id</param>
+        public async Task LoadThread(int threadId)
+        {
+            Thread selectedThread = await _dbContext.GetThreadAsync(threadId, GetUserId());
+            WatchThread(threadId);
+            string output = _stubble.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread));
+            Clients.Caller.showThread(output);
         }
 
         /// <summary>
@@ -108,6 +146,7 @@ namespace Palaver
 
             Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
             Palaver.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, Palaver.Models.ThreadViewModels.CreateResultViewModel>(newThread);
+            WatchThread(newThread.Id);
             Clients.All.addThread(resultView);
         }
 
@@ -121,15 +160,12 @@ namespace Palaver
         {
             if (String.IsNullOrWhiteSpace(commentText))
             {
-
                 throw new Exception("The comment text cannot be empty.");
             }
 
             User curUser = await GetUserAsync();
-            Comment newComment = await _dbContext.CreateCommentAsync(_htmlHelper.Linkify(commentText), threadId, parentId, curUser);
-            Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment, opts => {
-                    opts.Items["SiteRoot"] = _htmlHelper.SiteRoot;
-                });
+            Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
+            Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
             Clients.All.addComment(resultView);
         }
 
@@ -160,18 +196,16 @@ namespace Palaver
                 throw new Exception("Ony the comment creator may edit a comment.");
             }
 
-            existingComment.Text = _htmlHelper.Linkify(commentText);
+            existingComment.Text = commentText;
             await _dbContext.SaveChangesAsync();
 
             EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);
             Clients.All.updateComment(resultView);
         }
 
-        public async Task MarkRead(int id)
+        public async Task MarkRead(int threadId, int commentId)
         {
-            UnreadComment uc = await _dbContext.UnreadComments.FindAsync(GetUserId(), id);
-            _dbContext.UnreadComments.Remove( uc );
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.MarkCommentReadByUser(threadId, commentId, GetUserId());
         }
 
         private int GetUserId()
@@ -184,13 +218,15 @@ namespace Palaver
             return await _userManager.GetUserAsync((ClaimsPrincipal)Context.User);
         }
 
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            Dispose(true);
-        }
+            lock(_threadWatchedByConnection)
+            {
+                if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId))
+                    _threadWatchedByConnection.Remove(Context.ConnectionId);
+            }
 
-        protected virtual void Dispose(bool disposing)
-        {
+            base.Dispose(disposing);
         }
     }
 }

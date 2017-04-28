@@ -35,6 +35,10 @@ namespace Palaver.Models.ThreadViewModels
         [Required]
         public string CreatedDisplay { get; set; }
         [Required]
+        public string CreatedIsoTime { get; set; }
+        [Required]
         public string UpdatedDisplay { get; set; }
+        [Required]
+        public string UpdatedIsoTime { get; set; }
     }
 }

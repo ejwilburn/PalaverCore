@@ -26,24 +26,37 @@ namespace Palaver.Models
 {
     public abstract class TimeStamper
     {
+        [Column(TypeName="timestamptz")]
         public virtual DateTime Created { get; set; }
+        [Column(TypeName="timestamptz")]
         public virtual DateTime Updated { get; set; }
         [NotMapped]
         public virtual string CreatedDisplay {
             get {
-                return DisplayFormatDateTime(Created);
+                return DisplayFormatLocalDateTime(Created);
+            }
+        }
+        [NotMapped]
+        public virtual string CreatedIsoTime {
+            get {
+                return Iso8601FormatDateTime(Created);
             }
         }
         [NotMapped]
         public virtual string UpdatedDisplay {
             get {
-                return DisplayFormatDateTime(Updated);
+                return DisplayFormatLocalDateTime(Updated);
+            }
+        }
+        [NotMapped]
+        public virtual string UpdatedIsoTime {
+            get {
+                return Iso8601FormatDateTime(Updated);
             }
         }
 
         static TimeStamper()
         {
-            Triggers<TimeStamper>.Inserting += entry => entry.Entity.Created = entry.Entity.Updated = DateTime.UtcNow;
             Triggers<TimeStamper>.Updating += entry => entry.Entity.Updated = DateTime.UtcNow;
         }
 
@@ -53,12 +66,24 @@ namespace Palaver.Models
             Updated = DateTime.UtcNow;
         }
 
-        private string DisplayFormatDateTime(DateTime time)
+        /// <summary>
+        /// Return a short-format local date and time string from the provided DateTime.
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns>Short local date and time string.</returns>
+        private string DisplayFormatLocalDateTime(DateTime dateTime)
         {
-            if (time.Date == DateTime.Today)
-                return time.ToLocalTime().ToString("t");
-            else
-                return time.ToLocalTime().ToString("d");
+            return dateTime.ToLocalTime().ToString("g");
+        }
+
+        /// <summary>
+        /// Return an UTC Iso8601 date/time string from the given DateTime
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns>UTC Iso8601 date/time string.</returns>
+        private string Iso8601FormatDateTime(DateTime dateTime)
+        {
+            return dateTime.ToString("o");
         }
     }
 }

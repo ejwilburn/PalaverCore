@@ -30,5 +30,7 @@ namespace Palaver.Models.ThreadViewModels
         public bool IsSticky { get; set; }
         [Required]
         public string UpdatedDisplay { get; set; }
+        [Required]
+        public string UpdatedIsoTime { get; set; }
     }
 }

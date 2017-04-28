@@ -29,6 +29,6 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public int UserId { get; set; }
         [Required]
-        public string Text { get; set; }
+        public string DisplayText { get; set; }
     }
 }

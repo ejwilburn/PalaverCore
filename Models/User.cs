@@ -33,6 +33,7 @@ namespace Palaver.Models
     {
         [Required]
         public bool NotificationEnabled { get; set; } = true;
+        [Column(TypeName="timestamptz")]
         public DateTime Created { get; set; }
         public List<Thread> Threads { get; set; }
         public List<Comment> Comments { get; set; }

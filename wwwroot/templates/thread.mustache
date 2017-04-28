@@ -1,7 +1,14 @@
 <div id="thread" class="pusher">
     {{#Id}}
     <div id="threadInner" class="ui white container fluid minimal threaded comments" data-id="{{Id}}">
-        <div id="threadTitle" class="ui fixed dividing header"><h3>{{Title}}<div class="sub header">{{UserName}}&nbsp;-&nbsp;<span class="date">{{CreatedDisplay}}</span></div></h3></div>
+        <div id="threadTitle" class="ui fixed dividing header">
+            <h3>
+                {{Title}}
+                <div class="sub header">
+                    {{UserName}}&nbsp;-&nbsp;<time class="timeago" datetime="{{CreatedIsoTime}}">{{CreatedDisplay}}</time>
+                </div>
+            </h3>
+        </div>
         {{#Comments}}
             {{>comment}}
         {{/Comments}}

@@ -38,5 +38,7 @@ namespace Palaver.Models.ThreadViewModels
         public int UnreadCount { get; set; }
         [Required]
         public string UpdatedDisplay { get; set; }
+        [Required]
+        public string UpdatedIsoTime { get; set; }
     }
 }

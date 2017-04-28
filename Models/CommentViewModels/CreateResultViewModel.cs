@@ -27,7 +27,7 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public int Id { get; set; }
         [Required]
-        public string Text { get; set; }
+        public string DisplayText { get; set; }
         [Required]
         public int ThreadId { get; set; }
         public int? ParentCommentId { get; set; }
@@ -41,6 +41,8 @@ namespace Palaver.Models.CommentViewModels
         public string EmailHash { get; set; }
         [Required]
         public string CreatedDisplay { get; set; }
+        [Required]
+        public string CreatedIsoTime { get; set; }
         [Required]
         public string Url { get; set; }
     }
