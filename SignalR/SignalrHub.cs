@@ -165,8 +165,11 @@ namespace Palaver
 
             User curUser = await GetUserAsync();
             Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
-            Palaver.Models.CommentViewModels.CreateResultViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.CreateResultViewModel>(newComment);
-            Clients.All.addComment(resultView);
+            Palaver.Models.CommentViewModels.DetailViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.DetailViewModel>(newComment);
+            Clients.Caller.addComment(resultView);
+            Palaver.Models.CommentViewModels.DetailViewModel othersView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.DetailViewModel>(newComment);
+            othersView.IsAuthor = false;
+            Clients.Others.addComment(othersView);
         }
 
         /// <summary>

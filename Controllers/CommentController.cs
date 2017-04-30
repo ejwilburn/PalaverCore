@@ -91,7 +91,7 @@ namespace Palaver.Controllers
                 return BadRequest();
             }
             Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
-            return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, CreateResultViewModel>(newComment));
+            return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, DetailViewModel>(newComment));
         }
 
         [HttpPut("{threadId}/{commentId}")]

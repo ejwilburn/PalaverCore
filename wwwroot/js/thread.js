@@ -34,6 +34,9 @@ const wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelink
 class Thread {
     constructor(threadId, commentId, userId) {
         // Thread-centric properties.
+        this.$thread = null;
+        this.$threadList = null;
+        this.$threads = null;
         this.threadId = threadId;
         this.commentId = commentId;
         this.totalUnread = 0;
@@ -60,6 +63,10 @@ class Thread {
     }
 
     initPage() {
+        this.$thread = $('#thread');
+        this.$threadList = $('#threadList');
+        this.$threads = $('#threads');
+
         $('#reconnectingModal').modal({
             backdrop: 'static',
             keyboard: false,
@@ -80,13 +87,13 @@ class Thread {
             this.loadThread(this.threadId, this.commentId, true);
         };
 
-        $('#threadList').sidebar('setting', 'dimPage', false)
+        this.$threadList.sidebar('setting', 'dimPage', false)
             .sidebar('setting', 'closable', false);
 
         // Close the sidebar if a thread is selected and this is a mobile
         // device.
         if (this.isMobile && Util.isNumber(this.threadId)) {
-            $('#threadList').sidebar('hide');
+            this.$threadList.sidebar('hide');
         }
 
         $('#newthreadicon').on('click', () => { this.newThread(); });
@@ -99,39 +106,33 @@ class Thread {
         this.prepImages();
         this.formatDateTimes();
 
-        if (!Util.isNumber(this.threadId))
-            return;
-
         // Select the current thread if one is loaded.
-        this.selectThread(this.threadId);
-        if (Util.isNumber(this.commentId))
-            this.focusCommentId(this.commentId);
-
-        this.fixEditing();
+        if (Util.isNumber(this.threadId)) {
+            this.selectThread(this.threadId);
+            if (Util.isNumber(this.commentId))
+                this.focusCommentId(this.commentId);
+        }
 
         // Enable infinite scrolling of the thread list.
-        let context = $('#threadList');
-        let pane = $('#threads');
-        $('#threads')
-            .visibility({
-                once: false,
-                initialCheck: true,
-                continuous: true,
-                checkOnRefresh: true,
-                //includeMargin: true,
-                context: context,
-                // update size when new content loads
-                observeChanges: true,
-                // load content on bottom edge visible
-                // The onUpdate call is a temporary workaround to fix a bug in Semantic-UI 2.2.10 not firing onBottomVisible properly.
-                onBottomVisible: () => {
-                    //this.loadMoreThreads();
-                },
-                onUpdate: (e) => {
-                    if (pane.height() - context.scrollTop() <= context.height())
-                        this.loadMoreThreads();
-                }
-            });
+        this.$threads.visibility({
+            once: false,
+            initialCheck: true,
+            continuous: true,
+            checkOnRefresh: true,
+            //includeMargin: true,
+            context: this.$threadList,
+            // update size when new content loads
+            observeChanges: true,
+            // load content on bottom edge visible
+            // The onUpdate call is a temporary workaround to fix a bug in Semantic-UI 2.2.10 not firing onBottomVisible properly.
+            onBottomVisible: () => {
+                //this.loadMoreThreads();
+            },
+            onUpdate: (e) => {
+                if (this.$threads.height() - this.$threadList.scrollTop() <= this.$threadList.height())
+                    this.loadMoreThreads();
+            }
+        });
 
         this.requestNotificationPermission();
     }
@@ -170,10 +171,6 @@ class Thread {
             $(this.editorForm).remove();
             this.editorForm = null;
         }
-    }
-
-    fixEditing() {
-        $(`#thread .comment:not([data-authorid="${this.userId}"])>.content>.actions>.edit`).remove();
     }
 
     showDisconnected() {
@@ -249,8 +246,14 @@ class Thread {
         });
     }
 
-    formatDateTimes() {
-        $('time.timeago').timeago();
+    formatDateTimes(element) {
+        let targets = null;
+        if (element)
+            targets = element;
+        else
+            targets = $('time.timeago');
+
+        targets.timeago();
     }
 
     prepImages(element) {
@@ -283,7 +286,7 @@ class Thread {
             return;
         }
 
-        let threadsList = $('#threads');
+        let threadsList = this.$threads;
         let threadsCount = threadsList.children('.item').length;
         this.srConnection.server.getPagedThreadsList(threadsCount).fail((error) => {
             this.loadMoreThreadsFailed(error);
@@ -292,8 +295,8 @@ class Thread {
 
     addToThreadsList(threads) {
         $(threads).each((index, element) => {
-            if ($(`#threads>.item[data-id="${element.Id}"]`).length === 0)
-                $('#threads').append(TemplateRenderer.render('threadListItem', element));
+            if (this.$threads.children(`.item[data-id="${element.Id}"]`).length === 0)
+                this.$threads.append(TemplateRenderer.render('threadListItem', element));
         });
         $('#threadsLoader').removeClass('active');
     }
@@ -315,7 +318,7 @@ class Thread {
         if (isAuthor)
             thread.UnreadCount = 0;
 
-        $('#threads').prepend(TemplateRenderer.render('threadListItem', thread));
+        this.$threads.prepend(TemplateRenderer.render('threadListItem', thread));
 
         if (isAuthor) {
             this.loadOwnThread(thread);
@@ -340,9 +343,9 @@ class Thread {
         if (comment.ThreadId === this.threadId) {
             renderedComment = $(TemplateRenderer.render('comment', comment));
             if (Util.isNumber(comment.ParentCommentId))
-                commentList = $(`#thread .comment[data-id="${comment.ParentCommentId}"]>.comments`);
+                commentList = this.$thread.find(`.comment[data-id="${comment.ParentCommentId}"]>.comments`);
             else
-                commentList = $('#thread>.comments');
+                commentList = this.$thread.children('.comments');
 
             renderedComment.appendTo(commentList);
             commentList.removeClass('hidden');
@@ -362,7 +365,7 @@ class Thread {
 
         if (comment.ThreadId === this.threadId) {
             this.prepImages(renderedComment);
-            this.formatDateTimes();
+            this.formatDateTimes(renderedComment);
             twttr.widgets.load(renderedComment.get());
         }
     }
@@ -376,17 +379,17 @@ class Thread {
             this.clearBusy();
         }
 
-        let commentBody = $(`#thread .comment[data-id="${comment.Id}"]>.content>.text`);
+        let commentElement = this.$thread.find(`.comment[data-id="${comment.Id}"]`);
+        let commentBody = commentElement.find('.content>.text');
         commentBody.html(comment.DisplayText);
-        this.prepImages();
-        this.formatDateTimes();
+        this.prepImages(commentBody);
         twttr.widgets.load(commentBody.get());
     }
 
     // Move the new comment's thread to the top of the thread list.
     popThread(threadId) {
-        let thread = $(`#threads [data-id="${threadId}"]`);
-        thread.prependTo('#threads');
+        let thread = this.$threads.find(`[data-id="${threadId}"]`);
+        thread.prependTo(this.$threads);
         // Update the thread's time.
         var curTime = new Date();
         let time = $(thread).find('time.timeago');
@@ -463,7 +466,7 @@ class Thread {
 
     countAllUnread() {
         this.totalUnread = 0;
-        let threadCounts = $('#threads .unread .unreadcount');
+        let threadCounts = this.$threads.find('.unread .unreadcount');
 
         // Loop through the thread counters and total them.
         if (threadCounts.length > 0) {
@@ -497,7 +500,7 @@ class Thread {
     }
 
     markReadByCommentId(id) {
-        this.markRead($(`#thread .comment[data-id="${id}"]`));
+        this.markRead(this.$thread.find(`.comment[data-id="${id}"]`));
     }
 
     markRead(comment) {
@@ -524,11 +527,11 @@ class Thread {
 
     updateCurrentThreadUnread(threadId) {
         // First, get our current unread count.
-        let unreadCount = $('#thread .unread').length;
+        let unreadCount = this.$thread.find('.unread').length;
 
         // If the count is greater than 0, simply update the unread counter next to the thread.
         // Otherwise, clear the unread counter for the thread.
-        let thread = $(`#threads [data-id="${threadId}"]`);
+        let thread = this.$threads.find(`[data-id="${threadId}"]`);
         let unreadCounter = thread.find('.unreadcount');
         if (unreadCount > 0) {
             unreadCounter.html(unreadCount.toString());
@@ -547,7 +550,7 @@ class Thread {
     incrementThreadUnread(threadId) {
         this.totalUnread++;
         // Get the thread.
-        let thread = $(`#threads [data-id="${threadId}"]`);
+        let thread = this.$threads.find(`[data-id="${threadId}"]`);
         // If the counter is empty, set it to (1)
         let unreadCounter = thread.find('.unreadcount');
         let threadCounterHtml = unreadCounter.html();
@@ -577,18 +580,21 @@ class Thread {
         this.allowBack = true;
 
         this.closeEditor();
-        $('#thread').replaceWith(TemplateRenderer.render('thread', thread));
+        this.$thread.replaceWith(TemplateRenderer.render('thread', thread));
+        this.$thread = $('#thread');
         this.selectThread(thread.Id);
-        $('#thread').scrollTop(0);
-        this.prepImages();
+        this.$thread.scrollTop(0);
         this.formatDateTimes();
-        this.openEditor('#thread .comments');
+        this.openEditor(this.$thread.children('.comments'));
     }
 
     loadThread(threadId, commentId = null, isBack = false) {
         this.threadId = threadId;
         this.commentId = commentId;
         let haveCommentId = Util.isNumber(commentId);
+
+        // Blank out current comments change the class to commentsLoading.
+        $('#threadLoader').addClass('active');
 
         // Change our URL.
         if (!isBack) {
@@ -600,9 +606,6 @@ class Thread {
             this.allowBack = true;
         }
 
-        // Blank out current comments change the class to commentsLoading.
-        this.showBusy();
-
         this.srConnection.server.loadThread(threadId).fail((error, threadId, commentId) => {
             this.loadThreadFailed(error, threadId, commentId);
             this.clearBusy();
@@ -611,28 +614,31 @@ class Thread {
 
     showThread(renderedThread) {
         let haveCommentId = Util.isNumber(this.commentId);
+        this.$threads.visibility('disable callbacks');
+        let newContent = $(renderedThread);
+        this.prepImages(newContent);
+        this.formatDateTimes(newContent);
+        twttr.widgets.load(newContent);
 
         this.closeEditor();
-        $('#thread').replaceWith(renderedThread);
+        this.$thread.replaceWith(newContent);
+        this.$thread = $('#thread');
         if (haveCommentId) {
             this.focusAndMarkReadCommentId(this.commentId);
             this.commentId = null;
         }
         this.selectThread(this.threadId);
         this.updateTotalUnreadDisplay();
-        this.fixEditing();
-        this.prepImages();
-        this.formatDateTimes();
-        twttr.widgets.load();
         if (!haveCommentId)
-            $('#thread').scrollTop(0);
+            this.$thread.scrollTop(0);
 
-        this.clearBusy();
+        $('#threadLoader').removeClass('active');
 
         if (this.loadToFirstUnread) {
             this.loadToFirstUnread = false;
             this.goToNextUnread();
         }
+        this.$threads.visibility('enable callbacks');
     }
 
     loadThreadFailed(error, threadId, commentId) {
@@ -647,25 +653,25 @@ class Thread {
     }
 
     selectThread(threadId) {
-        $('#threads .active').removeClass('active');
-        $(`#threads [data-id="${threadId}"]`).addClass('active');
+        this.$threads.find('.active').removeClass('active');
+        this.$threads.find(`[data-id="${threadId}"]`).addClass('active');
         if (this.isMobile)
-            $('#threadList').sidebar('hide');
+            this.$threadList.sidebar('hide');
     }
 
     replyTo(parentId) {
         if (!Util.isNumber(parentId)) {
             // They're replying to the thread or a direct reply to a top level comment.
-            this.openEditor($('#thread>.comments'));
+            this.openEditor(this.$thread.children('.comments'));
             return;
         }
         this.editingParentId = parentId;
-        this.openEditor($(`.comment[data-id="${parentId}"]>.comments`));
+        this.openEditor(this.$thread.find(`.comment[data-id="${parentId}"]>.comments`));
     }
 
     editComment(id) {
         this.editingCommentId = id;
-        this.editing = $(`.comment[data-id="${id}"]>.content>.text`);
+        this.editing = this.$thread.find(`.comment[data-id="${id}"]>.content>.text`);
         this.editingOrigText = this.editing.html();
         this.editing.empty();
         this.openEditor(this.editing, this.editingOrigText);
@@ -794,7 +800,7 @@ class Thread {
     }
 
     isEditorInUse() {
-        if ($('input:focus').length > 0 || $('.jodit_editor:focus').length > 0 || $('textarea:focus').length > 0)
+        if (this.editor || $('input:focus').length > 0 || $('textarea:focus').length > 0)
             return true;
         return false;
     }
@@ -808,12 +814,12 @@ class Thread {
             } else if (e.keyCode == 82) { // 'r'
                 // Find the selected comment if there is one.
                 // If not, find the first comment.
-                let focusedComment = $('#thread .comment:focus');
+                let focusedComment = this.$thread.find('.comment:focus');
                 let comment;
                 if (focusedComment.length > 0)
                     comment = $(focusedComment[0]);
                 else {
-                    comment = $('#thread');
+                    comment = this.$thread;
                 }
 
                 // Reply to this comment if shift isn't pressed.
@@ -849,7 +855,7 @@ class Thread {
     }
 
     goToNextUnread() {
-        let unreadItems = $('#thread .unread');
+        let unreadItems = this.$thread.find('.unread');
         // Exit if there are no unread items, except on mobile.
         // On mobile find the next thread with unread and load it.
         if (!unreadItems || unreadItems.length === 0) {
@@ -864,7 +870,7 @@ class Thread {
             return;
         }
         // Get the currently selected item.
-        let focusedComments = $('#thread .comment:focus');
+        let focusedComments = this.$thread.find('.comment:focus');
         let focusedId;
         // If we don't have a focused comment, focus and mark the first unread comment as read.
         if (!focusedComments || focusedComments.length === 0) {
@@ -883,7 +889,7 @@ class Thread {
     }
 
     loadNextUnreadThread() {
-        let unreadThreads = $('#threads>.unread');
+        let unreadThreads = this.$threads.children('.unread');
 
         // Exit if no more threads with unread.
         if (!unreadThreads || unreadThreads.length === 0)
@@ -899,25 +905,24 @@ class Thread {
     }
 
     focusCommentId(commentId) {
-        this.focusComment($(`#thread .comment[data-id="${commentId}"]`));
+        this.focusComment(this.$thread.find(`.comment[data-id="${commentId}"]`));
     }
 
     focusAndMarkReadCommentId(commentId) {
-        this.focusAndMarkRead($(`#thread .comment[data-id="${commentId}"]`));
+        this.focusAndMarkRead(this.$thread.find(`.comment[data-id="${commentId}"]`));
     }
 
     focusComment(comment) {
-        let element = $('#thread');
-        element.scrollTop(element.scrollTop() + ($(comment).position().top - element.offset().top));
+        this.$thread.scrollTop(this.$thread.scrollTop() + ($(comment).position().top - this.$thread.offset().top));
         $(comment).focus();
     }
 
     focusNext() {
         // Find the first focused comment.
-        let focusedComments = $('#thread .comment:focus');
+        let focusedComments = this.$thread.find('.comment:focus');
         // If we don't have a focused comment, find the first one and focus that then exit.
         if (focusedComments.length === 0) {
-            this.focusComment($('#thread .comment').first());
+            this.focusComment(this.$thread.find('.comment').first());
             return;
         }
 
@@ -929,7 +934,7 @@ class Thread {
 
     findNextComment(commentId) {
         // Find all comments, exit if there are none.
-        let comments = $('#thread .comment');
+        let comments = this.$thread.find('.comment');
         if (comments.length === 0)
             return null;
 
@@ -951,7 +956,7 @@ class Thread {
 
     findNextUnreadComment(commentId) {
         // Find all comments, exit if there are none.
-        let comments = $('#thread .comment');
+        let comments = this.$thread.find('.comment');
         if (comments.length === 0)
             return null;
 
@@ -978,7 +983,7 @@ class Thread {
 
     focusPrev() {
         // Find all comments, exit if there are none.
-        let comments = $('#thread .comment');
+        let comments = this.$thread.find('.comment');
         if (comments.length === 0)
             return;
 
@@ -989,7 +994,7 @@ class Thread {
         }
 
         // Find the first focused comment.
-        let focusedComments = $('#thread .comment:focus');
+        let focusedComments = this.$thread.find('.comment:focus');
         // If we don't have a focused comment, find the last one and focus that then exit.
         if (focusedComments.length === 0) {
             this.focusComment(comments.last());

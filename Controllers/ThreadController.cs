@@ -115,7 +115,7 @@ namespace Palaver.Controllers
                 return BadRequest();
             }
             Thread newThread = await _dbContext.CreateThreadAsync(title, _userId);
-            return CreatedAtRoute(new { id = newThread.Id }, _mapper.Map<Thread, CreateResultViewModel>(newThread));
+            return CreatedAtRoute(new { id = newThread.Id }, _mapper.Map<Thread, Models.CommentViewModels.DetailViewModel>(newThread));
         }
     }
 }

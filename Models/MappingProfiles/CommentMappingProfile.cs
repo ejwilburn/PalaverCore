@@ -8,10 +8,6 @@ namespace Palaver.Models.MappingProfiles
     {
         public CommentMappingProfile()
         {
-            CreateMap<Comment, CreateResultViewModel>()
-                .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))
-                .ForMember(d => d.EmailHash, opt => opt.MapFrom(s => s.User.EmailHash))
-                .ForMember(d => d.Url, opt => opt.MapFrom(s => $"{Startup.SiteRoot}/Thread/{s.ThreadId}/{s.Id}"));
             CreateMap<Comment, CreateViewModel>();
             CreateMap<Comment, DetailViewModel>()
                 .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))

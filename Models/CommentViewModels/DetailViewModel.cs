@@ -30,9 +30,12 @@ namespace Palaver.Models.CommentViewModels
         [Required]
         public string DisplayText { get; set; }
         [Required]
+        public int ThreadId { get; set; }
         public int? ParentCommentId { get; set; }
         [Required]
         public int UserId { get; set; }
+        [Required]
+        public bool IsAuthor { get; set; }
         [Required]
         public string UserName { get; set; }
         [Required]

@@ -89,10 +89,11 @@ namespace Palaver.Data
             {
                 thread = comments[0].Thread;
 
-                // Sort comment.comments by creation date
+                // Sort comment.comments by creation date and set IsAuthor
                 foreach (Comment comment in comments)
                 {
                     comment.Comments = comment.Comments.OrderBy(c => c.Created).ToList();
+                    comment.IsAuthor = comment.UserId == userId;
                 }
 
                 // Get unread counts for threads.
@@ -126,10 +127,11 @@ namespace Palaver.Data
 
             if (comment != null)
             {
-                // Sort comment.comments by creation date.
+                // Sort comment.comments by creation date and set isAuthor flag.
                 foreach (Comment curComment in comment.Thread.Comments)
                 {
                     curComment.Comments = curComment.Comments.OrderBy(c => c.Created).ToList();
+                    curComment.IsAuthor = curComment.UserId == userId;
                 }
 
                 // Get unread flag for comments.

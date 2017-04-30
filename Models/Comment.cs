@@ -48,10 +48,12 @@ namespace Palaver.Models
         public int ThreadId { get; set; }
         [Required]
         public Thread Thread { get; set; }
-        public int? ParentCommentId { get; set; }
-        public Comment Parent { get; set; }
+        public int? ParentCommentId { get; set; } = null;
+        public Comment Parent { get; set; } = null;
         [NotMapped]
-        public bool IsUnread { get; set; }
+        public bool IsUnread { get; set; } = false;
+        [NotMapped]
+        public bool IsAuthor { get; set; } = false;
 
         public List<Comment> Comments { get; set; }
         public List<UnreadComment> UnreadComments { get; set; }
@@ -61,8 +63,6 @@ namespace Palaver.Models
 
         public Comment()
         {
-            this.Parent = null;
-            this.IsUnread = false;
             Triggers<Comment>.Inserting += entry => entry.Entity.Thread.Updated = DateTime.UtcNow;
             Triggers<Comment>.Updating += entry => entry.Entity.Thread.Updated = DateTime.UtcNow;
         }
@@ -76,6 +76,7 @@ namespace Palaver.Models
                 UserId = user.Id,
                 User = user,
                 ParentCommentId = parentId,
+                IsAuthor = true
             };
 
             if (thread.Comments == null)
