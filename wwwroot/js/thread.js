@@ -249,11 +249,11 @@ class Thread {
     formatDateTimes(element) {
         let targets = null;
         if (element)
-            targets = element;
+            targets = $(element).find('time.timeago-new');
         else
-            targets = $('time.timeago');
+            targets = $('time.timeago-new');
 
-        targets.timeago();
+        targets.timeago().removeClass('timeago-new');
     }
 
     prepImages(element) {
@@ -264,9 +264,9 @@ class Thread {
     enableLazyImageLoading(element) {
         let enableFor = null;
         if (element)
-            enableFor = $(element.find('.text img.lazy'));
+            enableFor = $(element).find('img.lazy');
         else
-            enableFor = $('.comment>.content>.text img.lazy');
+            enableFor = this.$thread.find('img.lazy');
 
         enableFor.visibility({
             context: '#thread',
@@ -329,11 +329,10 @@ class Thread {
     }
 
     addComment(comment) {
-        let isAuthor = comment.UserId === this.userId;
         let commentList = null,
             renderedComment = null;
 
-        if (isAuthor)
+        if (comment.IsAuthor)
             comment.IsUnread = false;
         else {
             comment.IsUnread = true;
@@ -353,8 +352,7 @@ class Thread {
 
         this.popThread(comment.ThreadId);
 
-        if (isAuthor) {
-            renderedComment.children('.edit').removeClass('hidden');
+        if (comment.IsAuthor) {
             this.closeEditor();
             this.focusCommentId(comment.Id);
             this.clearBusy();
@@ -584,7 +582,7 @@ class Thread {
         this.$thread = $('#thread');
         this.selectThread(thread.Id);
         this.$thread.scrollTop(0);
-        this.formatDateTimes();
+        this.formatDateTimes(this.$thread);
         this.openEditor(this.$thread.children('.comments'));
     }
 
@@ -616,13 +614,13 @@ class Thread {
         let haveCommentId = Util.isNumber(this.commentId);
         this.$threads.visibility('disable callbacks');
         let newContent = $(renderedThread);
-        this.prepImages(newContent);
-        this.formatDateTimes(newContent);
         twttr.widgets.load(newContent);
 
         this.closeEditor();
         this.$thread.replaceWith(newContent);
         this.$thread = $('#thread');
+        this.prepImages(this.$thread);
+        this.formatDateTimes(this.$thread);
         if (haveCommentId) {
             this.focusAndMarkReadCommentId(this.commentId);
             this.commentId = null;
