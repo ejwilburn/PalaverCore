@@ -256,11 +256,29 @@ class Thread {
         targets.timeago().removeClass('timeago-new');
     }
 
-    prepImages(element) {
-        this.enableLazyImageLoading(element);
+    prepImages() {
+        if (!this.blazy)
+            this.initBlazy();
+        else
+            this.blazy.revalidate();
         Gifffer(); // Add play controls to animated gifs.
     }
 
+    initBlazy() {
+        if (this.blazy)
+            this.blazy.destroy();
+        this.blazy = new Blazy({
+            container: '#thread',
+            offset: 500,
+            success: function(element) {
+                setTimeout(function() {
+                    $(element.parentNode).removeClass('loading');
+                }, 200);
+            }
+        });
+    }
+
+    /*
     enableLazyImageLoading(element) {
         let enableFor = null;
         if (element)
@@ -275,6 +293,7 @@ class Thread {
             duration: IMAGE_LOADING_TRANSITION_DURATION
         });
     }
+    */
 
     loadMoreThreads() {
         $('#threadsLoader').addClass('active');
@@ -362,7 +381,7 @@ class Thread {
         }
 
         if (comment.ThreadId === this.threadId) {
-            this.prepImages(renderedComment);
+            this.prepImages();
             this.formatDateTimes(renderedComment);
             twttr.widgets.load(renderedComment.get());
         }
@@ -380,7 +399,7 @@ class Thread {
         let commentElement = this.$thread.find(`.comment[data-id="${comment.Id}"]`);
         let commentBody = commentElement.find('.content>.text');
         commentBody.html(comment.DisplayText);
-        this.prepImages(commentBody);
+        this.prepImages();
         twttr.widgets.load(commentBody.get());
     }
 
@@ -614,13 +633,10 @@ class Thread {
         let haveCommentId = Util.isNumber(this.commentId);
         this.$threads.visibility('disable callbacks');
         let newContent = $(renderedThread);
-        twttr.widgets.load(newContent);
 
         this.closeEditor();
         this.$thread.replaceWith(newContent);
         this.$thread = $('#thread');
-        this.prepImages(this.$thread);
-        this.formatDateTimes(this.$thread);
         if (haveCommentId) {
             this.focusAndMarkReadCommentId(this.commentId);
             this.commentId = null;
@@ -636,7 +652,7 @@ class Thread {
             this.loadToFirstUnread = false;
             this.goToNextUnread();
         }
-        this.$threads.visibility('enable callbacks');
+        setTimeout(() => { this.updateThreadDisplayAsync(); }, 100);
     }
 
     loadThreadFailed(error, threadId, commentId) {
@@ -648,6 +664,14 @@ class Thread {
         setTimeout(() => {
             this.loadThread(threadId, commentId);
         }, HUB_ACTION_RETRY_DELAY);
+    }
+
+    updateThreadDisplayAsync() {
+        this.initBlazy();
+        this.prepImages();
+        this.formatDateTimes(this.$thread);
+        setTimeout(() => { twttr.widgets.load(this.$thread); }, 100);
+        this.$threads.visibility('enable callbacks');
     }
 
     selectThread(threadId) {

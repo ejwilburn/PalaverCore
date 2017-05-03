@@ -216,6 +216,10 @@ body,
     color: silver;
 }
 
+#thread img.loading {
+    background: #1E1E1E url('../images/loading.gif') center center no-repeat;
+}
+
 
 /*
  *

@@ -134,7 +134,7 @@ namespace Palaver.Models
 
         // Regexes for modifying images to lazy load.
         private static readonly Regex IMAGE_TAG_REGEX = new Regex(@"(<img [^>]*?)\s+(src=[""'][^""'>]+[""'](?<!\.gif['""]))([^>]*?>)", RegexOptions.IgnoreCase);
-        private static readonly string IMAGE_TAG_LAZY_LOAD_REPLACE = "$1 data-$2 class=\"lazy\"$3";
+        private static readonly string IMAGE_TAG_LAZY_LOAD_REPLACE = "$1 data-$2 class=\"b-lazy loading\"$3";
 
         private string EnableLazyLoadingImages(string commentText)
         {
