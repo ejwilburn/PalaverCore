@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace Palaver.Services
+namespace PalaverCore.Services
 {
     public interface IEmailSender
     {

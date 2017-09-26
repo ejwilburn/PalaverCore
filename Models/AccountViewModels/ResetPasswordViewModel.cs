@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Palaver.Models.AccountViewModels
+namespace PalaverCore.Models.AccountViewModels
 {
     public class ResetPasswordViewModel
     {

@@ -1,8 +1,8 @@
 using System;
 using AutoMapper;
-using Palaver.Models.CommentViewModels;
+using PalaverCore.Models.CommentViewModels;
 
-namespace Palaver.Models.MappingProfiles
+namespace PalaverCore.Models.MappingProfiles
 {
     public class CommentMappingProfile : Profile
     {

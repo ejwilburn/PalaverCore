@@ -19,9 +19,9 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using AutoMapper;
-using Palaver.Models.ThreadViewModels;
+using PalaverCore.Models.ThreadViewModels;
 
-namespace Palaver.Models.MappingProfiles
+namespace PalaverCore.Models.MappingProfiles
 {
     public class ThreadMappingProfile : Profile
     {

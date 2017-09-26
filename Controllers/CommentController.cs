@@ -25,13 +25,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using AutoMapper;
-using Palaver.Data;
-using Palaver.Models;
-using Palaver.Models.CommentViewModels;
-using Palaver.Services;
+using PalaverCore.Data;
+using PalaverCore.Models;
+using PalaverCore.Models.CommentViewModels;
+using PalaverCore.Services;
 using System.Collections.Generic;
 
-namespace Palaver.Controllers
+namespace PalaverCore.Controllers
 {
     [Authorize]
     [Route("api/[controller]")]

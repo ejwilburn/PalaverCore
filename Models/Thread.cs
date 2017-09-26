@@ -21,9 +21,9 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Palaver.Data;
+using PalaverCore.Data;
 
-namespace Palaver.Models
+namespace PalaverCore.Models
 {
     public class Thread : TimeStamper
     {

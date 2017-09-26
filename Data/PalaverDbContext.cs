@@ -23,18 +23,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using EntityFrameworkCore.Triggers;
-using Palaver.Models;
+using PalaverCore.Models;
 using Npgsql;
 
-namespace Palaver.Data
+namespace PalaverCore.Data
 {
     public class PalaverDbContext : IdentityDbContext<User, Role, int>
     {
-        public DbSet<Palaver.Models.Thread> Threads { get; set; }
+        public DbSet<Models.Thread> Threads { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<UnreadComment> UnreadComments { get; set; }
         public DbSet<Subscription> Subscriptions { get; set; }
@@ -46,9 +47,9 @@ namespace Palaver.Data
         {
         }
 
-        public async Task<List<Palaver.Models.Thread>> GetPagedThreadsListAsync(int userId, int startIndex = 0, int maxResults = 10)
+        public async Task<List<Models.Thread>> GetPagedThreadsListAsync(int userId, int startIndex = 0, int maxResults = 10)
         {
-            List<Palaver.Models.Thread> threads = await Threads.OrderByDescending(t => t.Updated)
+            List<Models.Thread> threads = await Threads.OrderByDescending(t => t.Updated)
                 .Include(t => t.User)
                 .Skip(startIndex)
                 .Take(maxResults)
@@ -70,9 +71,9 @@ namespace Palaver.Data
             return threads;
         }
 
-        public async Task<Palaver.Models.Thread> GetThreadAsync(int threadId, int userId)
+        public async Task<Models.Thread> GetThreadAsync(int threadId, int userId)
         {
-            Palaver.Models.Thread thread;
+            Models.Thread thread;
 
             // Includes can't be ordered, so to ge the comments back in order of creation date the comments are loaded directly
             // and include the Thread, rather than the other way around.
@@ -115,7 +116,7 @@ namespace Palaver.Data
             return thread;
         }
 
-        public async Task<Palaver.Models.Comment> GetCommentAsync(int id, int userId)
+        public async Task<Models.Comment> GetCommentAsync(int id, int userId)
         {
             Comment comment = await Comments.Where(c => c.Id == id)
                 .Include(c => c.Thread)
@@ -147,11 +148,11 @@ namespace Palaver.Data
             return comment;
         }
 
-        public async Task<Palaver.Models.Thread> CreateThreadAsync(string title, int userId)
+        public async Task<Models.Thread> CreateThreadAsync(string title, int userId)
         {
             List<User> allUsers = await Users.ToListAsync();
             User currUser = Users.Find(userId);
-            Palaver.Models.Thread newThread = Palaver.Models.Thread.CreateThread(title, currUser, this);
+            Models.Thread newThread = Models.Thread.CreateThread(title, currUser, this);
 
             // Subscribe everyone to all threads by default.
             foreach (User user in allUsers)
@@ -174,7 +175,7 @@ namespace Palaver.Data
                 if (parent != null)
                     useThreadId = parent.ThreadId;
             }
-            Palaver.Models.Thread thread = await Threads.Where(t => t.Id == useThreadId).Include(t => t.Subscriptions).SingleAsync();
+            Models.Thread thread = await Threads.Where(t => t.Id == useThreadId).Include(t => t.Subscriptions).SingleAsync();
             Comment newComment = await Comment.CreateComment(text, thread, parentId, user, this);
             Comments.Add(newComment);
 
@@ -255,19 +256,19 @@ namespace Palaver.Data
             }
 
             // Shorten up identity table names.
-            builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityRoleClaim<int>", b => {
+            builder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b => {
                     b.ToTable("roleclaim");
             });
-            builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserClaim<int>", b => {
+            builder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b => {
                     b.ToTable("userclaim");
             });
-            builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserLogin<int>", b => {
+            builder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b => {
                     b.ToTable("userlogin");
             });
-            builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserRole<int>", b => {
+            builder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b => {
                     b.ToTable("userrole");
             });
-            builder.Entity("Microsoft.AspNetCore.Identity.EntityFrameworkCore.IdentityUserToken<int>", b => {
+            builder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b => {
                     b.ToTable("usertoken");
             });
 

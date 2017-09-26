@@ -24,7 +24,7 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using MailKit.Security;
 
-namespace Palaver.Services
+namespace PalaverCore.Services
 {
     // This class is used by the application to send Email and SMS
     // when you turn on two-factor authentication in ASP.NET Identity.

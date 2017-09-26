@@ -4,11 +4,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Palaver.Models;
-using Palaver.Models.ManageViewModels;
-using Palaver.Services;
+using PalaverCore.Models;
+using PalaverCore.Models.ManageViewModels;
+using PalaverCore.Services;
 
-namespace Palaver.Controllers
+namespace PalaverCore.Controllers
 {
     [Authorize]
     public class ManageController : Controller
@@ -190,7 +190,8 @@ namespace Palaver.Controllers
                 return View("Error");
             }
             var userLogins = await _userManager.GetLoginsAsync(user);
-            var otherLogins = _signInManager.GetExternalAuthenticationSchemes().Where(auth => userLogins.All(ul => auth.AuthenticationScheme != ul.LoginProvider)).ToList();
+            var schemes = await _signInManager.GetExternalAuthenticationSchemesAsync();
+            var otherLogins = schemes.Where(auth => userLogins.All(ul => auth.Name != ul.LoginProvider)).ToList();
             ViewData["ShowRemoveButton"] = user.PasswordHash != null || userLogins.Count > 1;
             return View(new ManageLoginsViewModel
             {

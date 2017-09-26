@@ -1,99 +1,84 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <AssemblyName>PalaverCore</AssemblyName>
+    <PackageId>PalaverCore</PackageId>
+    <Authors/>
+    <Company/>
+    <Description/>
+    <RepositoryUrl>https://github.com/ejwilburn/PalaverCore</RepositoryUrl>
     <DebugType>portable</DebugType>
     <PreserveCompilationContext>true</PreserveCompilationContext>
-    <AssemblyName>PalaverCore</AssemblyName>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
     <OutputType>Exe</OutputType>
-    <PackageId>PalaverCore</PackageId>
     <RuntimeIdentifiers>win10-x64;ubuntu.16.10-x64;</RuntimeIdentifiers>
     <SuppressDockerTargets>True</SuppressDockerTargets>
     <RuntimeFrameworkVersion>*</RuntimeFrameworkVersion>
-    <PackageTargetFallback>portable-net45+win8</PackageTargetFallback>
-    <Authors />
-    <Company />
-    <Description />
-    <RepositoryUrl>https://github.com/ejwilburn/PalaverCore</RepositoryUrl>
-    <!-- These two lines added to work around MSBuild being too stupid to pick up files generated in prepublish tasks, like minification. -->
+    <AssetTargetFallback>portable-net45+win8</AssetTargetFallback>
     <GeneratedItemPatterns>wwwroot\js\**;wwwroot\css\**</GeneratedItemPatterns>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedItemPatterns)</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**;node_modules\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\jspm_packages\**;jspm_packages\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**\bower_components\**;bower_components\**</DefaultItemExcludes>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DefineConstants>RELEASE;NETCOREAPP1_1</DefineConstants>
+    <DefineConstants>RELEASE;NETCOREAPP2_0</DefineConstants>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Remove="release\**" />
-    <Compile Remove="wwwroot\lib\**" />
-    <Content Remove="release\**" />
-    <Content Remove="wwwroot\lib\**" />
-    <Content Remove="appsettings*" />
-    <EmbeddedResource Remove="release\**" />
-    <EmbeddedResource Remove="wwwroot\lib\**" />
-    <None Remove="release\**" />
-    <None Remove="wwwroot\lib\**" />
+    <Compile Remove="release\**"/>
+    <Compile Remove="wwwroot\lib\**"/>
+    <Content Remove="release\**"/>
+    <Content Remove="wwwroot\lib\**"/>
+    <Content Remove="appsettings*"/>
+    <EmbeddedResource Remove="release\**"/>
+    <EmbeddedResource Remove="wwwroot\lib\**"/>
+    <None Remove="release\**"/>
+    <None Remove="wwwroot\lib\**"/>
   </ItemGroup>
   <ItemGroup>
-    <Content Update="Views\**;wwwroot\css\**;wwwroot\js\**;wwwroot\templates\**;wwwroot\images\**;wwwroot\uploads\README.md;wwwroot\favicon.ico" PublishState="Included" CopyToOutputDirectory="PreserveNewest" />
-    <Content Update="appsettings*;bundleconfig.json;release;wwwroot\lib\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never" />
-    <Content Update="release\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never" />
-    <Content Update="wwwroot\lib\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never" />
-    <None Update="appsettings*;bundleconfig.json;release\**;wwwroot\lib\**" Visible="true" CopyToOutputDirectory="Never" />
+    <Content Update="Views\**;wwwroot\css\**;wwwroot\js\**;wwwroot\templates\**;wwwroot\images\**;wwwroot\uploads\README.md;wwwroot\favicon.ico" PublishState="Included" CopyToOutputDirectory="PreserveNewest"/>
+    <Content Update="appsettings*;bundleconfig.json;release;wwwroot\lib\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never"/>
+    <Content Update="release\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never"/>
+    <Content Update="wwwroot\lib\**" PublishState="Excluded" Visible="true" CopyToOutputDirectory="Never"/>
+    <None Update="appsettings*;bundleconfig.json;release\**;wwwroot\lib\**" Visible="true" CopyToOutputDirectory="Never"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.HttpOverrides" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Routing" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="*">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="*" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="*" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="*" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="*" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="*" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="*" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="*" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="*" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="*" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="*" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="*">
-      <PrivateAssets>All</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="*" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="*" />
-    <PackageReference Include="MailKit" Version="*" />
-    <PackageReference Include="EntityFrameworkCore.Triggers" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.Owin" Version="*" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Server" Version="0.2.0-*" />
-    <PackageReference Include="AutoMapper" Version="*" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="*" />
-    <PackageReference Include="Stubble.Core" Version="1.0.0-alpha15" />
-    <PackageReference Include="Stubble.Extensions.Loaders" Version="1.0.0-alpha3" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="*"/>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0-alpha1-final" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="*" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="*"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="*"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="*"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="*"/>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="*"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="*"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="*"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="*"/>
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="*"/>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="*"/>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*"/>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="*" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="*"/>
+    <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="*"/>
+    <PackageReference Include="MailKit" Version="*"/>
+    <PackageReference Include="EntityFrameworkCore.Triggers" Version="*"/>
+    <PackageReference Include="AutoMapper" Version="*"/>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="*"/>
+    <PackageReference Include="Stubble.Core" Version="1.0.27-alpha16"/>
+    <PackageReference Include="Stubble.Extensions.Loaders" Version="1.0.16-alpha4"/>
   </ItemGroup>
   <ItemGroup>
-    <DotNetCliToolReference Include="BundlerMinifier.Core" Version="2.3.327" />
-    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="1.0.0" />
-    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="1.0.0" />
+    <DotNetCliToolReference Include="BundlerMinifier.Core" Version="*"/>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="*"/>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="*"/>
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
-    <Exec Command="dotnet bundle" />
+    <Exec Command="dotnet bundle"/>
     <ItemGroup>
-      <_GeneratedFiles Include="$(GeneratedItemPatterns)" />
-      <ContentWithTargetPath Include="@(_GeneratedFiles->'%(FullPath)')" RelativePath="%(_GeneratedFiles.Identity)" TargetPath="%(_GeneratedFiles.Identity)" CopyToPublishDirectory="PreserveNewest" />
+      <_GeneratedFiles Include="$(GeneratedItemPatterns)"/>
+      <ContentWithTargetPath Include="@(_GeneratedFiles->'%(FullPath)')" RelativePath="%(_GeneratedFiles.Identity)" TargetPath="%(_GeneratedFiles.Identity)" CopyToPublishDirectory="PreserveNewest"/>
     </ItemGroup>
   </Target>
 </Project>

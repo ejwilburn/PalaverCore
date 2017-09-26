@@ -1,4 +1,4 @@
-namespace Palaver.Models.ManageViewModels
+namespace PalaverCore.Models.ManageViewModels
 {
     public class FactorViewModel
     {

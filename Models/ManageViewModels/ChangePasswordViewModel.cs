@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Palaver.Models.ManageViewModels
+namespace PalaverCore.Models.ManageViewModels
 {
     public class ChangePasswordViewModel
     {

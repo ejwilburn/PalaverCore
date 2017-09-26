@@ -1,6 +1,6 @@
 @using System.Collections.Generic
-@using Palaver.Models.ThreadViewModels
-@using Palaver.Services
+@using PalaverCore.Models.ThreadViewModels
+@using PalaverCore.Services
 @model IEnumerable<ListViewModel>
 
 @{
@@ -33,9 +33,8 @@
 
 @section scripts
 {
+    <script src="~/js/signalr-client.min.js"></script>
     <environment names="Development">
-        <script src="~/lib/signalr/jquery.signalR.js"></script>
-        <script src="~/signalr/hubs" asp-append-version="true"></script>
         <script src="~/lib/mustache.js/mustache.js"></script>
         <script src="~/lib/gifffer/build/gifffer.min.js"></script>
         <script src="~/lib/jquery-timeago/jquery.timeago.js"></script>
@@ -45,11 +44,6 @@
         <script src="~/js/templateRenderer.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/signalr.js/2.2.1/jquery.signalR.min.js"
-            asp-fallback-src="~/lib/signalr/jquery.signalR.min.js"
-            asp-fallback-test="$.signalR">
-        </script>
-        <script src="~/signalr/hubs"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js"
             asp-fallback-src="~/lib/mustache.js/mustache.min.js"
             asp-fallback-test="Mustache">

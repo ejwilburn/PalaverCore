@@ -20,25 +20,26 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using AutoMapper;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.SignalR.Hubs;
-using Microsoft.Extensions.Logging;
-using AutoMapper;
-using Palaver.Data;
-using Palaver.Models;
-using Palaver.Models.CommentViewModels;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using Palaver.Services;
-using Palaver.Models.ThreadViewModels;
+using Microsoft.Extensions.Logging;
+using PalaverCore.Data;
+using PalaverCore.Models;
+using PalaverCore.Models.CommentViewModels;
+using PalaverCore.Models.ThreadViewModels;
+using PalaverCore.Services;
 
-namespace Palaver
+namespace PalaverCore.SignalR
 {
     [Authorize]
-    public class SignalrHub : Hub, IDisposable
+    public class SignalrHub : Hub
     {
         private static Dictionary<string, string> _threadWatchedByConnection = new Dictionary<string, string>();
 
@@ -48,7 +49,8 @@ namespace Palaver
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public SignalrHub(PalaverDbContext dbContext, StubbleRendererService stubble, UserManager<User> userManager, IMapper mapper, ILoggerFactory loggerFactory)
+        public SignalrHub(PalaverDbContext dbContext, StubbleRendererService stubble, UserManager<User> userManager,
+            IMapper mapper, ILoggerFactory loggerFactory)
         {
             this._dbContext = dbContext;
             this._stubble = stubble;
@@ -57,67 +59,59 @@ namespace Palaver
             this._logger = loggerFactory.CreateLogger<SignalrHub>();
         }
 
-        public override Task OnConnected()
+        public override async Task OnConnectedAsync()
         {
             System.Diagnostics.Debug.WriteLine("Connected ConnectionId: " + Context.ConnectionId);
-            Clients.Client(Context.ConnectionId).SetConnectionId(Context.ConnectionId);
-            return base.OnConnected();
+            await base.OnConnectedAsync();
         }
 
-        public override Task OnDisconnected(bool stopCalled)
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
-            if (stopCalled)
+            if (exception != null)
                 System.Diagnostics.Debug.WriteLine("Disconnected ConnectionId: " + Context.ConnectionId);
             else
                 System.Diagnostics.Debug.WriteLine("Lost Connection on ConnectionId: " + Context.ConnectionId);
-            Clients.Client(Context.ConnectionId).Remove();
-            return base.OnDisconnected(stopCalled);
+            await base.OnDisconnectedAsync(exception);
         }
 
-        public override Task OnReconnected()
+        public async Task WatchThread(int threadId)
         {
-            System.Diagnostics.Debug.WriteLine("Reconnected ConnectionId: " + Context.ConnectionId);
-            Clients.Client(Context.ConnectionId).SetConnectionId(Context.ConnectionId);
-            return base.OnReconnected();
+            if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId) && _threadWatchedByConnection[Context.ConnectionId] != null)
+                await UnsubscribeFromGroup(_threadWatchedByConnection[Context.ConnectionId]);
+            string group = threadId.ToString();
+            await SubscribeToGroup(group);
         }
 
-        public void WatchThread(int threadId)
+        public async Task SubscribeToGroup(string group)
         {
-            lock(_threadWatchedByConnection)
+            await Groups.AddAsync(Context.ConnectionId, group);
+            lock (_threadWatchedByConnection)
             {
-                if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId) && _threadWatchedByConnection[Context.ConnectionId] != null)
-                    UnsubscribeFromGroup(_threadWatchedByConnection[Context.ConnectionId]);
-                string group = threadId.ToString();
-                Groups.Add(Context.ConnectionId, group);
                 _threadWatchedByConnection[Context.ConnectionId] = group;
             }
         }
 
-        public void StopWatchingThread(int threadId)
+        public async Task UnsubscribeFromGroup(string group)
         {
-            string group = threadId.ToString();
-            Groups.Remove(Context.ConnectionId, group);
+            bool isSubscribed = false;
             lock(_threadWatchedByConnection)
             {
                 if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId))
+                {
+                    if (_threadWatchedByConnection[Context.ConnectionId] != null)
+                        isSubscribed = true;
+
                     _threadWatchedByConnection.Remove(Context.ConnectionId);
+                }
             }
-        }
-
-        public void SubscribeToGroup(string group)
-        {
-            Groups.Add(Context.ConnectionId, group);
-        }
-
-        public void UnsubscribeFromGroup(string group)
-        {
-            Groups.Remove(Context.ConnectionId, group);
+            if (isSubscribed)
+                await Groups.RemoveAsync(Context.ConnectionId, group);
         }
 
         public async Task GetPagedThreadsList(int startIndex)
         {
             List<Thread> threads = await _dbContext.GetPagedThreadsListAsync(GetUserId(), startIndex);
-            Clients.Caller.addToThreadsList(_mapper.Map<List<Thread>, List<ListViewModel>>(threads));
+            await Clients.Client(Context.ConnectionId).InvokeAsync("addToThreadsList", _mapper.Map<List<Thread>, List<ListViewModel>>(threads));
         }
 
         /// <summary>
@@ -127,9 +121,9 @@ namespace Palaver
         public async Task LoadThread(int threadId)
         {
             Thread selectedThread = await _dbContext.GetThreadAsync(threadId, GetUserId());
-            WatchThread(threadId);
+            await WatchThread(threadId);
             string output = _stubble.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread));
-            Clients.Caller.showThread(output);
+            await Clients.Client(Context.ConnectionId).InvokeAsync("showThread", output);
         }
 
         /// <summary>
@@ -145,9 +139,9 @@ namespace Palaver
             }
 
             Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
-            Palaver.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, Palaver.Models.ThreadViewModels.CreateResultViewModel>(newThread);
-            WatchThread(newThread.Id);
-            Clients.All.addThread(resultView);
+            PalaverCore.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, PalaverCore.Models.ThreadViewModels.CreateResultViewModel>(newThread);
+            await WatchThread(newThread.Id);
+            await Clients.All.InvokeAsync("addThread", resultView);
         }
 
         /// <summary>
@@ -165,11 +159,11 @@ namespace Palaver
 
             User curUser = await GetUserAsync();
             Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
-            Palaver.Models.CommentViewModels.DetailViewModel resultView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.DetailViewModel>(newComment);
-            Clients.Caller.addComment(resultView);
-            Palaver.Models.CommentViewModels.DetailViewModel othersView = _mapper.Map<Comment, Palaver.Models.CommentViewModels.DetailViewModel>(newComment);
+			Models.CommentViewModels.DetailViewModel resultView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
+            await Clients.Client(Context.ConnectionId).InvokeAsync("addComment", resultView);
+            Models.CommentViewModels.DetailViewModel othersView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
             othersView.IsAuthor = false;
-            Clients.Others.addComment(othersView);
+            await Clients.AllExcept(new List<String>{ Context.ConnectionId }).InvokeAsync("addComment", othersView);
         }
 
         /// <summary>
@@ -203,7 +197,7 @@ namespace Palaver
             await _dbContext.SaveChangesAsync();
 
             EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);
-            Clients.All.updateComment(resultView);
+            await Clients.All.InvokeAsync("updateComment", resultView);
         }
 
         public async Task MarkRead(int threadId, int commentId)
@@ -219,17 +213,6 @@ namespace Palaver
         private async Task<User> GetUserAsync()
         {
             return await _userManager.GetUserAsync((ClaimsPrincipal)Context.User);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            lock(_threadWatchedByConnection)
-            {
-                if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId))
-                    _threadWatchedByConnection.Remove(Context.ConnectionId);
-            }
-
-            base.Dispose(disposing);
         }
     }
 }

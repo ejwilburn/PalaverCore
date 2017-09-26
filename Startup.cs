@@ -18,23 +18,26 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using AutoMapper;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using AutoMapper;
-using Palaver.Data;
-using Palaver.Models;
-using Palaver.Services;
-using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.AspNetCore.HttpOverrides;
-using System;
+using PalaverCore.Data;
+using PalaverCore.Models;
+using PalaverCore.Services;
+using PalaverCore.SignalR;
 
-namespace Palaver
+namespace PalaverCore
 {
-    public class Startup
+	public class Startup
     {
         public static string SiteRoot = "";
 
@@ -57,39 +60,43 @@ namespace Palaver
         {
             services.AddMvc();
             services.AddAutoMapper();
-
-            services.AddSignalR(options => {
-                    options.Hubs.EnableDetailedErrors = true;
-                });
+            services.AddSignalR();
 
             // Add framework services.
             services.AddDbContext<PalaverDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("Palaver")));
 
             services.AddIdentity<User, Role>()
-                .AddEntityFrameworkStores<PalaverDbContext, int>()
-                .AddDefaultTokenProviders();
+                .AddEntityFrameworkStores<PalaverDbContext>();
+
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
+            // Add forced identity options.
+            services.ConfigureApplicationCookie(options => {
+                options.LoginPath = "/Account/LogIn";
+                options.LogoutPath = "/Account/LogOff";
+                //options.AuthenticationScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
+            });
+
+            // services.AddAuthentication()
+            //         .AddGoogle();
+            var googleConfig = Configuration.GetSection("GoogleOptions");
+            services.AddAuthentication()
+                    .AddGoogle(options => {
+                        options.ClientId = googleConfig["ClientId"];
+                        options.ClientSecret = googleConfig["ClientSecret"];
+                    });
+            
+            services.Configure<IdentityOptions>(options =>
+            {
+                // User settings
+                options.User.RequireUniqueEmail = true;
+            });
+            services.Configure<IdentityOptions>(Configuration.GetSection("IdentityOptions"));
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddSingleton<StubbleRendererService>(new StubbleRendererService(Configuration.GetValue<bool>("CacheTemplates")));
-
-            // Add primary config-file based options.
-            services.Configure<IdentityOptions>(Configuration.GetSection("IdentityOptions"));
-            // Add forced identity options.
-            services.Configure<IdentityOptions>(options =>
-            {
-                // Cookie settings.
-                options.Cookies.ApplicationCookie.LoginPath = "/Account/LogIn";
-                options.Cookies.ApplicationCookie.LogoutPath = "/Account/LogOff";
-                options.Cookies.ApplicationCookie.AutomaticAuthenticate = true;
-                options.Cookies.ApplicationCookie.AuthenticationScheme = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme;
-                options.Cookies.ApplicationCookie.ReturnUrlParameter = Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.ReturnUrlParameter;
-
-                // User settings
-                options.User.RequireUniqueEmail = true;
-            });
-
             services.Configure<SmtpOptions>(Configuration.GetSection(SmtpOptions.CONFIG_SECTION_NAME));
             services.Configure<GoogleOptions>(Configuration.GetSection("GoogleOptions"));
         }
@@ -135,8 +142,7 @@ namespace Palaver
                 ContentTypeProvider = provider
             });
 
-            app.UseIdentity();
-            app.UseGoogleAuthentication();
+            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {
@@ -146,7 +152,9 @@ namespace Palaver
             });
 
             app.UseWebSockets();
-            app.UseSignalR();
+            app.UseSignalR( routes => {
+                routes.MapHub<SignalrHub>("threads");
+            });
         }
     }
 }

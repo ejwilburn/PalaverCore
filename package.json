@@ -4,5 +4,8 @@
     "devDependencies": {
         "gulp": "3.9.1",
         "bower": "1.8.0"
+    },
+    "dependencies": {
+        "@aspnet/signalr-client": "^1.0.0-alpha1-final"
     }
 }

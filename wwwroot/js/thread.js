@@ -52,6 +52,7 @@ class Thread {
         this.editingOrigText = null;
 
         // SignalR related
+        this.srLogger = null;
         this.srConnection = null;
         this.initialSignalrConnectionDone = false;
 
@@ -182,68 +183,51 @@ class Thread {
     }
 
     startSignalr() {
-        this.srConnection = $.connection.signalrHub;
-        this.srConnection.client.addThread = (thread) => { this.addThread(thread); };
-        this.srConnection.client.showThread = (renderedThread) => { this.showThread(renderedThread); };
-        this.srConnection.client.addToThreadsList = (threads) => { this.addToThreadsList(threads); };
-        this.srConnection.client.addComment = (comment) => { this.addComment(comment); };
-        this.srConnection.client.updateComment = (comment) => { this.updateComment(comment); };
+        this.srLogger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
+        this.srConnection = new signalR.HubConnection('/threads', { logger: this.srLogger });
 
-        $.connection.hub.error(function(error) {
-            if (console) {
-                if (error)
-                    console.log(error);
-                else
-                    console.log('Unknown SignalR hub error.');
-            }
-        });
-
-        $.connection.hub.connectionSlow(() => {
-            if (console)
-                console.log('SignalR is currently experiencing difficulties with the connection.');
-        });
-
-        $.connection.hub.reconnecting(() => {
-            this.showDisconnected();
-            if (console)
-                console.log('SignalR connection lost, reconnecting.');
-        });
-
-        // Try to reconnect every 5 seconds if disconnected.
-        $.connection.hub.disconnected(() => {
-            this.showDisconnected();
-            if (console)
-                console.log('SignlR lost its connection, reconnecting in 5 seconds.');
-
-            setTimeout(() => {
+        this.srConnection.onClosed = e => {
+            if (e) {
+                this.showDisconnected();
                 if (console)
-                    console.log('SignalR delayed reconnection in progress.');
-                this.startSignalrHub();
-            }, 5000); // Restart connection after 5 seconds.
-        });
-
-        $.connection.hub.reconnected(() => {
-            if (console)
-                console.log('SignalR reconnected.');
-
-            this.hideDisconnected();
-        });
-
-        this.startSignalrHub();
-    }
-
-    startSignalrHub() {
-        $.connection.hub.logging = true;
-        $.connection.hub.start().done(() => {
-            this.hideDisconnected();
-            this.initialSignalrConnectionDone = true;
-            if (console)
-                console.log("Connected, transport = " + $.connection.hub.transport.name);
-            if (Util.isNumber(this.commentId)) {
-                this.markReadByCommentId(this.commentId);
-                this.commentId = null;
+                    console.error('Connection closed with error: ' + e);
+                setTimeout(() => {
+                    if (console)
+                        console.warn('SignalR delayed reconnection in progress.');
+                    this.startSignalrHub();
+                }, 5000); // Restart connection after 5 seconds.
+            } else {
+                if (console)
+                    console.info('Disconnected');
             }
-        });
+        };
+
+        this.srConnection.on('addThread', (thread) => { this.addThread(thread); });
+        this.srConnection.on('showThread', (renderedThread) => { this.showThread(renderedThread); });
+        this.srConnection.on('addToThreadsList', (threads) => { this.addToThreadsList(threads); });
+        this.srConnection.on('addComment', (comment) => { this.addComment(comment); });
+        this.srConnection.on('updateComment', (comment) => { this.updateComment(comment); });
+
+        this.srConnection.start()
+            .then(() => {
+                this.hideDisconnected();
+                this.initialSignalrConnectionDone = true;
+                if (console)
+                    console.info('SignalR connected.');
+                if (Util.isNumber(this.commentId)) {
+                    this.markReadByCommentId(this.commentId);
+                    this.commentId = null;
+                }
+            })
+            .catch((err) => {
+                if (console)
+                    console.error(err);
+                setTimeout(() => {
+                    if (console)
+                        console.warn('SignalR delayed reconnection in progress.');
+                    this.startSignalrHub();
+                }, 5000); // Restart connection after 5 seconds.
+            });
     }
 
     formatDateTimes(element) {
@@ -307,7 +291,7 @@ class Thread {
 
         let threadsList = this.$threads;
         let threadsCount = threadsList.children('.item').length;
-        this.srConnection.server.getPagedThreadsList(threadsCount).fail((error) => {
+        this.srConnection.invoke('getPagedThreadsList', threadsCount).catch((error) => {
             this.loadMoreThreadsFailed(error);
         });
     }
@@ -323,7 +307,7 @@ class Thread {
     loadMoreThreadsFailed(error) {
         if (console) {
             console.error(error);
-            console.info(`Retrying in ${HUB_ACTION_RETRY_DELAY / 1000} seconds...`);
+            console.warn(`Retrying in ${HUB_ACTION_RETRY_DELAY / 1000} seconds...`);
         }
 
         setTimeout(() => {
@@ -528,10 +512,10 @@ class Thread {
             let threadId = this.threadId;
 
             this.showBusy();
-            this.srConnection.server.markRead(threadId, commentId).done(() => {
+            this.srConnection.invoke('markRead', threadId, commentId).then(() => {
                 this.updateCurrentThreadUnread(threadId);
                 this.clearBusy();
-            }).fail((error) => {
+            }).catch((error) => {
                 if (console) {
                     console.error(`Error marking comment ${id} as read.`);
                     console.error(error);
@@ -623,7 +607,7 @@ class Thread {
             this.allowBack = true;
         }
 
-        this.srConnection.server.loadThread(threadId).fail((error, threadId, commentId) => {
+        this.srConnection.invoke('loadThread', threadId).catch((error, threadId, commentId) => {
             this.loadThreadFailed(error, threadId, commentId);
             this.clearBusy();
         });
@@ -749,10 +733,10 @@ class Thread {
         this.showBusy();
         if (!Util.isNumber(comment.ParentCommentId))
             comment.ParentCommentId = null;
-        this.srConnection.server.newComment(comment.Text, comment.ThreadId, comment.ParentCommentId).fail((error) => {
-            this.newCommentFailed(error, comment);
-            this.clearBusy();
-        });
+        this.srConnection.invoke('newComment', comment.Text, comment.ThreadId, comment.ParentCommentId).catch((error) => {
+                this.newCommentFailed(error, comment);
+                this.clearBusy();
+            });
     }
 
     newCommentFailed(error, comment) {
@@ -768,7 +752,7 @@ class Thread {
 
     saveUpdatedComment(comment) {
         this.showBusy();
-        this.srConnection.server.editComment(comment.Id, comment.Text).fail((error) => {
+        this.srConnection.invoke('editComment', comment.Id, comment.Text).catch((error) => {
             this.saveUpdatedCommentError(error, comment);
             this.clearBusy();
         });
@@ -793,10 +777,10 @@ class Thread {
         }
 
         this.showBusy();
-        this.srConnection.server.newThread(title).done(() => {
+        this.srConnection.invoke('newThread', title).then(() => {
             $('#newthread').val('');
             this.clearBusy();
-        }).fail((error) => {
+        }).catch((error) => {
             this.newThreadFailed(error, title);
             this.clearBusy();
         });

@@ -25,13 +25,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
-using Palaver.Data;
-using Palaver.Services;
-using Palaver.Models;
-using Palaver.Models.ThreadViewModels;
+using PalaverCore.Data;
+using PalaverCore.Services;
+using PalaverCore.Models;
+using PalaverCore.Models.ThreadViewModels;
 using Microsoft.Extensions.Logging;
 
-namespace Palaver.Controllers
+namespace PalaverCore.Controllers
 {
     [Authorize]
     public class ThreadController : Controller

@@ -21,7 +21,7 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Palaver.Models.CommentViewModels
+namespace PalaverCore.Models.CommentViewModels
 {
     public class SearchResultsViewModel
     {

@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Palaver.Data;
-using Palaver.Models;
-using Palaver.Models.AccountViewModels;
-using Palaver.Services;
+using PalaverCore.Data;
+using PalaverCore.Models;
+using PalaverCore.Models.AccountViewModels;
+using PalaverCore.Services;
 
-namespace Palaver.Controllers
+namespace PalaverCore.Controllers
 {
     [Authorize]
     public class AccountController : Controller

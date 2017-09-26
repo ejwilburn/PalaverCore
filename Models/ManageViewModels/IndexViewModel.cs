@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Identity;
 
-namespace Palaver.Models.ManageViewModels
+namespace PalaverCore.Models.ManageViewModels
 {
     public class IndexViewModel
     {

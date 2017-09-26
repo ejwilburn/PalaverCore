@@ -22,7 +22,7 @@ using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using EntityFrameworkCore.Triggers;
 
-namespace Palaver.Models
+namespace PalaverCore.Models
 {
     public abstract class TimeStamper
     {

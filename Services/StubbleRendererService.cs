@@ -21,18 +21,25 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 using System.Collections.Generic;
 using Stubble.Core;
+using Stubble.Core.Settings;
+using Stubble.Core.Builders;
 using Stubble.Extensions.Loaders;
+using PalaverCore.Models.ThreadViewModels;
 
-namespace Palaver.Services
+namespace PalaverCore.Services
 {
     public class StubbleRendererService
     {
-        private StubbleRenderer _stubble;
+        private StubbleVisitorRenderer _stubble;
+        private FileSystemLoader _templatesLoader;
+        private FileSystemLoader _partialsLoader;
         private bool _cacheTemplates;
 
         public StubbleRendererService(bool cacheTemplates)
         {
-            this._cacheTemplates = cacheTemplates;
+            _cacheTemplates = cacheTemplates;
+            _templatesLoader = new FileSystemLoader("./wwwroot/templates/");
+            _partialsLoader = new FileSystemLoader("./wwwroot/templates/partials/");
             LoadTemplates();
         }
 
@@ -41,7 +48,7 @@ namespace Palaver.Services
         /// </summary>
         /// <param name="thread"></param>
         /// <returns>HTML formatted view of the thread</returns>
-        public string RenderThreadFromTemplate(Palaver.Models.ThreadViewModels.SelectedViewModel thread)
+        public string RenderThreadFromTemplate(SelectedViewModel thread)
         {
             if (!_cacheTemplates)
                 LoadTemplates();
@@ -53,7 +60,7 @@ namespace Palaver.Services
         /// </summary>
         /// <param name="threads"></param>
         /// <returns>HTML formatted view of the list of threads</returns>
-        public string RenderThreadListFromTemplate(IEnumerable<Palaver.Models.ThreadViewModels.ListViewModel> threads)
+        public string RenderThreadListFromTemplate(IEnumerable<ListViewModel> threads)
         {
             if (!_cacheTemplates)
                 LoadTemplates();
@@ -66,11 +73,12 @@ namespace Palaver.Services
         private void LoadTemplates()
         {
             _stubble = new StubbleBuilder()
-                .SetPartialTemplateLoader(new FileSystemLoader("./wwwroot/templates/partials/"))
-                .SetTemplateLoader(new FileSystemLoader("./wwwroot/templates/"))
+                .SetPartialTemplateLoader(_partialsLoader)
+                .SetTemplateLoader(_templatesLoader)
                 .SetMaxRecursionDepth(5000)
                 .Build();
-            CacheTemplates();
+            if (_cacheTemplates)
+                CacheTemplates();
         }
 
         /// <summary>
@@ -79,8 +87,7 @@ namespace Palaver.Services
         /// </summary>
         private void CacheTemplates()
         {
-            _stubble.CacheTemplate("thread");
-            _stubble.CacheTemplate("threadList");
+            // Fix later.
         }
     }
 }

@@ -18,9 +18,10 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
-namespace Palaver.Models
+namespace PalaverCore.Models
 {
     // Add profile data for application users by adding properties to the Role class
     public class Role : IdentityRole<int>

@@ -20,6 +20,7 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using EntityFrameworkCore.Triggers;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -27,7 +28,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 
-namespace Palaver.Models
+namespace PalaverCore.Models
 {
     public class User : IdentityUser<int>
     {

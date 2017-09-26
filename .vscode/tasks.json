@@ -5,7 +5,8 @@
         "command": "dotnet",
         "isShellCommand": true,
         "args": [
-            "build"
+            "build",
+            "--no-restore"
         ],
         "isBuildCommand": true,
         "problemMatcher": "$msCompile"
@@ -15,6 +16,7 @@
         "isShellCommand": true,
         "args": [
             "build",
+            "--no-restore",
             "--configuration",
             "Release"
         ],

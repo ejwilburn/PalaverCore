@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Kestrel Server - Debug",
             "preLaunchTask": "build",
-            "program": "${workspaceRoot}/bin/x64/Debug/netcoreapp1.1/PalaverCore.dll",
+            "program": "${workspaceRoot}/bin/x64/Debug/netcoreapp2.0/PalaverCore.dll",
             "args": [],
             "cwd": "${workspaceRoot}",
             "stopAtEntry": false,
@@ -26,7 +26,7 @@
             "request": "launch",
             "name": "Kestrel Server - Release",
             "preLaunchTask": "build-release",
-            "program": "${workspaceRoot}/bin/x64/Release/netcoreapp1.1/PalaverCore.dll",
+            "program": "${workspaceRoot}/bin/x64/Release/netcoreapp2.0/PalaverCore.dll",
             "args": [
                 "--configuration",
                 "Release"

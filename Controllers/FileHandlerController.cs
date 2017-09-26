@@ -30,10 +30,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Palaver.Data;
-using Palaver.Models;
+using PalaverCore.Data;
+using PalaverCore.Models;
 
-namespace Palaver.Controllers
+namespace PalaverCore.Controllers
 {
     [Authorize]
     [Route("api/[controller]/[action]")]

@@ -28,9 +28,9 @@ using System.Threading.Tasks;
 using EntityFrameworkCore.Triggers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Palaver.Data;
+using PalaverCore.Data;
 
-namespace Palaver.Models
+namespace PalaverCore.Models
 {
     public class Comment : TimeStamper
     {
