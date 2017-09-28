@@ -18,6 +18,4 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// jshint esversion:6
-
 // TODO: Move editor related code here from thread.js

@@ -142,8 +142,11 @@ namespace PalaverCore.Models
         }
 
         // Regexes for modifying images to lazy load.
-        private static readonly Regex TWITTER_URL_REGEX = new Regex(@"(<a [^>]*?href=[""'](?:https?://|//)(?:www\.)?twitter\.com[^""'>]+[""'][^>]*?>)", RegexOptions.IgnoreCase);
-        private static readonly string TWITTER_URL_REPLACEMENT = "<blockquote class=\"twitter-tweet\">$1</blockquote>";
+        // private static readonly Regex TWITTER_URL_REGEX = new Regex(@"(<a [^>]*?href=[""'](?:https?://|//)(?:www\.)?twitter\.com[^""'>]+[""'][^>]*?>)", RegexOptions.IgnoreCase);
+        // private static readonly string TWITTER_URL_REPLACEMENT = "<blockquote class=\"twitter-tweet\">$1</blockquote>";
+        // private static readonly Regex TWITTER_URL_REGEX = new Regex(@"<a [^>]*?href=[""'](?:https?://|//)(?:www\.)?twitter\.com/[^""'>/]+/status/(\d+)[^""'>]*[""'][^>]*?>.*</a>", RegexOptions.IgnoreCase);
+        private static readonly Regex TWITTER_URL_REGEX = new Regex(@"(<a [^>]*?href=[""'](?:https?://|//)(?:www\.)?twitter\.com[^""'>]+[""'][^>]*?>.*?</a>)", RegexOptions.IgnoreCase);
+        private static readonly string TWITTER_URL_REPLACEMENT = "<blockquote class=\"twitter-tweet\" data-theme=\"dark\">$1</blockquote>";
 
         private string EnableTwitterEmbedding(string commentText)
         {
@@ -165,9 +168,9 @@ namespace PalaverCore.Models
 
         // Find URLs within text outside of HTML tag properties.
         private static readonly Regex URL_REGEX_WITH_PROTOCOL = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
-            @"\b((?:https?://)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
+            @"\b((?:https?://)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.()])*[A-Z0-9+&@#/%=~_|$()])", RegexOptions.IgnoreCase);
         private static readonly Regex URL_REGEX_WITHOUT_PROTOCOL = new Regex(@"(?<!(?:href=[""']?|src=['""]?|<a[^>]*>)[^.'""]*[\s]*)" +
-            @"\b((?:www\.)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.])*[A-Z0-9+&@#/%=~_|$])", RegexOptions.IgnoreCase);
+            @"\b((?:www\.)(?:&amp;|[-A-Z0-9+&@#/%=~_|$?!:,.()])*[A-Z0-9+&@#/%=~_|$()])", RegexOptions.IgnoreCase);
         private static readonly string URL_REPLACE_BASIC = "<a href=\"$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
         private static readonly string URL_REPLACE_ADD_PROTOCOL = "<a href=\"http://$1\" class=\"autolinked\" target=\"_blank\">$1</a>";
         private static readonly Regex URL_ESCAPED_AMPERSAND = new Regex(@"(?<=href=""https?://[^/]+[^""]?)&amp;(?="" class=""autolinked"")", RegexOptions.IgnoreCase);

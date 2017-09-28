@@ -18,8 +18,6 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// jshint esversion:6
-
 const MAX_MOBILE_WIDTH = 767; // in pixels
 
 class Util {

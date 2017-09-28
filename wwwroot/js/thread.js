@@ -18,8 +18,6 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// jshint esversion:6
-
 /*  Functionality just for the Thread.cshtml page */
 
 const PAGE_TITLE = 'Palaver';
@@ -52,9 +50,11 @@ class Thread {
         this.editingOrigText = null;
 
         // SignalR related
-        this.srLogger = null;
-        this.srConnection = null;
-        this.initialSignalrConnectionDone = false;
+        this.signalr = {
+            logger: null,
+            conn: null,
+            dcTime: null
+        };
 
         // Mobile related
         this.isMobile = Util.isMobileDisplay();
@@ -63,7 +63,7 @@ class Thread {
         $(document).ready(() => this.initPage());
     }
 
-    initPage() {
+    async initPage() {
         this.$thread = $('#thread');
         this.$threadList = $('#threadList');
         this.$threads = $('#threads');
@@ -73,8 +73,6 @@ class Thread {
             keyboard: false,
             show: false
         });
-
-        this.startSignalr();
 
         window.onpopstate = (event) => {
             if (Util.isNumber(event.state.threadId))
@@ -114,13 +112,17 @@ class Thread {
                 this.focusCommentId(this.commentId);
         }
 
+        this.requestNotificationPermission();
+
+        await this.startSignalr();
+
         // Enable infinite scrolling of the thread list.
         this.$threads.visibility({
             once: false,
             initialCheck: true,
             continuous: true,
             checkOnRefresh: true,
-            //includeMargin: true,
+            includeMargin: true,
             context: this.$threadList,
             // update size when new content loads
             observeChanges: true,
@@ -134,8 +136,9 @@ class Thread {
                     this.loadMoreThreads();
             }
         });
+    }
 
-        this.requestNotificationPermission();
+    enableInfiniteThreadList() {
     }
 
     openEditor(openAt, initialValue) {
@@ -182,52 +185,47 @@ class Thread {
         $('#reconnectingModal').modal('hide');
     }
 
-    startSignalr() {
-        this.srLogger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
-        this.srConnection = new signalR.HubConnection('/threads', { logger: this.srLogger });
+    async startSignalr() {
+        if (console)
+            console.info('Connecting to SignalR hub...');
 
-        this.srConnection.onClosed = e => {
+        let sr = this.signalr;
+        sr.logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
+        sr.conn = new signalR.HubConnection('/threads', { transport: signalR.TransportType.WebSockets, logger: sr.logger });
+
+        sr.conn.onClosed = (e) => {
             if (e) {
                 this.showDisconnected();
                 if (console)
                     console.error('Connection closed with error: ' + e);
-                setTimeout(() => {
-                    if (console)
-                        console.warn('SignalR delayed reconnection in progress.');
-                    this.startSignalrHub();
-                }, 5000); // Restart connection after 5 seconds.
+                setTimeout(() => { this.startSignalr(); }, 5000); // Restart connection after 5 seconds.
             } else {
                 if (console)
                     console.info('Disconnected');
             }
         };
 
-        this.srConnection.on('addThread', (thread) => { this.addThread(thread); });
-        this.srConnection.on('showThread', (renderedThread) => { this.showThread(renderedThread); });
-        this.srConnection.on('addToThreadsList', (threads) => { this.addToThreadsList(threads); });
-        this.srConnection.on('addComment', (comment) => { this.addComment(comment); });
-        this.srConnection.on('updateComment', (comment) => { this.updateComment(comment); });
+        sr.conn.on('addThread', (thread) => { this.addThread(thread); });
+        sr.conn.on('showThread', (renderedThread) => { this.showThread(renderedThread); });
+        sr.conn.on('addToThreadsList', (threads) => { this.addToThreadsList(threads); });
+        sr.conn.on('addComment', (comment) => { this.addComment(comment); });
+        sr.conn.on('updateComment', (comment) => { this.updateComment(comment); });
 
-        this.srConnection.start()
-            .then(() => {
-                this.hideDisconnected();
-                this.initialSignalrConnectionDone = true;
-                if (console)
-                    console.info('SignalR connected.');
-                if (Util.isNumber(this.commentId)) {
-                    this.markReadByCommentId(this.commentId);
-                    this.commentId = null;
-                }
-            })
-            .catch((err) => {
-                if (console)
-                    console.error(err);
-                setTimeout(() => {
-                    if (console)
-                        console.warn('SignalR delayed reconnection in progress.');
-                    this.startSignalrHub();
-                }, 5000); // Restart connection after 5 seconds.
-            });
+        try
+        {
+            await sr.conn.start();
+            if (console)
+                console.info('SignalR connected.');
+            this.hideDisconnected();
+            if (Util.isNumber(this.commentId)) {
+                this.markReadByCommentId(this.commentId);
+                this.commentId = null;
+            }
+        } catch (ex) {
+            if (console)
+                console.error(ex);
+            setTimeout(() => { this.startSignalr(); }, 5000); // Restart connection after 5 seconds.
+        }
     }
 
     formatDateTimes(element) {
@@ -262,38 +260,16 @@ class Thread {
         });
     }
 
-    /*
-    enableLazyImageLoading(element) {
-        let enableFor = null;
-        if (element)
-            enableFor = $(element).find('img.lazy');
-        else
-            enableFor = this.$thread.find('img.lazy');
-
-        enableFor.visibility({
-            context: '#thread',
-            type: 'image',
-            transition: 'fade in',
-            duration: IMAGE_LOADING_TRANSITION_DURATION
-        });
-    }
-    */
-
-    loadMoreThreads() {
+    async loadMoreThreads() {
         $('#threadsLoader').addClass('active');
 
-        if (!this.initialSignalrConnectionDone) {
-            setTimeout(() => {
-                this.loadMoreThreads();
-            }, INITIAL_SIGNALR_CONNECTION_RETRY_DELAY);
-            return;
-        }
+        let threadsCount = this.$threads.children('.item').length;
 
-        let threadsList = this.$threads;
-        let threadsCount = threadsList.children('.item').length;
-        this.srConnection.invoke('getPagedThreadsList', threadsCount).catch((error) => {
+        try {
+            await this.signalr.conn.invoke('getPagedThreadsList', threadsCount);
+        } catch (ex) {
             this.loadMoreThreadsFailed(error);
-        });
+        }
     }
 
     addToThreadsList(threads) {
@@ -301,6 +277,7 @@ class Thread {
             if (this.$threads.children(`.item[data-id="${element.Id}"]`).length === 0)
                 this.$threads.append(TemplateRenderer.render('threadListItem', element));
         });
+        this.formatDateTimes(this.$threads);
         $('#threadsLoader').removeClass('active');
     }
 
@@ -512,7 +489,7 @@ class Thread {
             let threadId = this.threadId;
 
             this.showBusy();
-            this.srConnection.invoke('markRead', threadId, commentId).then(() => {
+            this.signalr.conn.invoke('markRead', threadId, commentId).then(() => {
                 this.updateCurrentThreadUnread(threadId);
                 this.clearBusy();
             }).catch((error) => {
@@ -607,7 +584,7 @@ class Thread {
             this.allowBack = true;
         }
 
-        this.srConnection.invoke('loadThread', threadId).catch((error, threadId, commentId) => {
+        this.signalr.conn.invoke('loadThread', threadId).catch((error, threadId, commentId) => {
             this.loadThreadFailed(error, threadId, commentId);
             this.clearBusy();
         });
@@ -733,7 +710,7 @@ class Thread {
         this.showBusy();
         if (!Util.isNumber(comment.ParentCommentId))
             comment.ParentCommentId = null;
-        this.srConnection.invoke('newComment', comment.Text, comment.ThreadId, comment.ParentCommentId).catch((error) => {
+        this.signalr.conn.invoke('newComment', comment.Text, comment.ThreadId, comment.ParentCommentId).catch((error) => {
                 this.newCommentFailed(error, comment);
                 this.clearBusy();
             });
@@ -752,7 +729,7 @@ class Thread {
 
     saveUpdatedComment(comment) {
         this.showBusy();
-        this.srConnection.invoke('editComment', comment.Id, comment.Text).catch((error) => {
+        this.signalr.conn.invoke('editComment', comment.Id, comment.Text).catch((error) => {
             this.saveUpdatedCommentError(error, comment);
             this.clearBusy();
         });
@@ -777,7 +754,7 @@ class Thread {
         }
 
         this.showBusy();
-        this.srConnection.invoke('newThread', title).then(() => {
+        this.signalr.conn.invoke('newThread', title).then(() => {
             $('#newthread').val('');
             this.clearBusy();
         }).catch((error) => {

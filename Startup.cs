@@ -67,14 +67,14 @@ namespace PalaverCore
                 options.UseNpgsql(Configuration.GetConnectionString("Palaver")));
 
             services.AddIdentity<User, Role>()
-                .AddEntityFrameworkStores<PalaverDbContext>();
+                .AddEntityFrameworkStores<PalaverDbContext>()
+                .AddDefaultTokenProviders();
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
             // Add forced identity options.
             services.ConfigureApplicationCookie(options => {
                 options.LoginPath = "/Account/LogIn";
                 options.LogoutPath = "/Account/LogOff";
-                //options.AuthenticationScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
             });
 
