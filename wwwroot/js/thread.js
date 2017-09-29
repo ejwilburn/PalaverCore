@@ -191,7 +191,7 @@ class Thread {
 
         let sr = this.signalr;
         sr.logger = new signalR.ConsoleLogger(signalR.LogLevel.Information);
-        sr.conn = new signalR.HubConnection('/threads', { transport: signalR.TransportType.WebSockets, logger: sr.logger });
+        sr.conn = new signalR.HubConnection(BASE_URL + 'threads', { transport: signalR.TransportType.WebSockets, logger: sr.logger });
 
         sr.conn.onClosed = (e) => {
             if (e) {

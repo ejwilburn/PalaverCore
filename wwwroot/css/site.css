@@ -43,7 +43,7 @@ body,
 }
 
 #thread {
-    top: 0px;
+    top: -20px;
     padding: 10px 20px 5px 20px;
     height: 100%;
     overflow-y: auto;
@@ -195,6 +195,13 @@ body,
     padding: 10px 10px 0 10px;
 }
 
+#thread blockquote.twitter-tweet {
+    min-height: 400px;
+}
+
+#thread blockquote.twitter-tweet.twitter-tweet-rendered {
+    min-height: 0px;
+}
 
 /*
  *

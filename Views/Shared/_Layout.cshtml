@@ -8,23 +8,11 @@
 
     @RenderSection("asyncScripts", required: false)
 
-    <environment names="Development">
-        <link rel="stylesheet" href="~/lib/semantic/dist/semantic.css" />
-    </environment>
-    <environment names="Staging,Production">
-        <link rel="stylesheet" href="//oss.maxcdn.com/semantic-ui/2.2.10/semantic.min.css"
-              asp-fallback-href="~/lib/semantic/dist/semantic.min.css"
-              asp-fallback-test-class="ui button" asp-fallback-test-property="cursor" asp-fallback-test-value="pointer" />
-    </environment>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css"/>
 
     @RenderSection("styles", required: false)
 
-    <environment names="Development">
-        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    </environment>
-    <environment names="Staging,Production">;
-        <link rel="stylesheet" href="~/css/site.min.css" />
-    </environment>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body class="pushable">
     <div id="topMenu" class="ui top fixed inverted menu">
@@ -52,23 +40,10 @@
         const BASE_URL = "@Url.Content("~/")";
         const NOTIFICATION_ENABLED = true;
     </script>
-    <environment names="Development">
-        <script src="~/lib/jquery/dist/jquery.js"></script>
-        <script src="~/lib/semantic/dist/semantic.js"></script>
-        <script src="~/js/util.js" asp-append-version="true"></script>
-        <script src="~/js/site.js" asp-append-version="true"></script>
-    </environment>
-    <environment names="Staging,Production">
-        <script src="//ajax.aspnetcdn.com/ajax/jquery/jquery-3.2.1.min.js"
-                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
-                asp-fallback-test="window.jQuery">
-        </script>
-        <script src="//oss.maxcdn.com/semantic-ui/2.2.10/semantic.min.js"
-                asp-fallback-src="~/lib/semantic/dist/semantic.min.js"
-                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
-        </script>
-        <script src="~/js/site.min.js" asp-append-version="true"></script>
-    </environment>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.2.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
+    <script src="~/js/util.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
 
     @RenderSection("scripts", required: false)
 </body>
