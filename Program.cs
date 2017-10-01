@@ -9,14 +9,7 @@ namespace PalaverCore
     {
         public static void Main(string[] args)
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddCommandLine(args)
-                .AddEnvironmentVariables(prefix: "ASPNETCORE_")
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                .Build();
-
-            var host = BuildWebHost(args, config);
+            var host = BuildWebHost(args);
 
             /*
             using (var scope = host.Services.CreateScope())
@@ -38,8 +31,16 @@ namespace PalaverCore
             host.Run();            
         }
 
-        public static IWebHost BuildWebHost(string[] args, IConfigurationRoot config) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IWebHost BuildWebHost(string[] args)
+        {
+            var config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddCommandLine(args)
+                .AddEnvironmentVariables(prefix: "ASPNETCORE_")
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .Build();
+
+            return WebHost.CreateDefaultBuilder(args)
                 .UseConfiguration(config)
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
@@ -47,6 +48,8 @@ namespace PalaverCore
                 .UseSetting("detailedErrors", "true")
                 .CaptureStartupErrors(true)
                 .Build();
+        }
+
         /*
         public static void Main(string[] args)
         {

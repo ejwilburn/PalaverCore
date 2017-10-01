@@ -50,8 +50,8 @@ namespace PalaverCore.Services
         /// <returns>HTML formatted view of the thread</returns>
         public string RenderThreadFromTemplate(SelectedViewModel thread)
         {
-            if (!_cacheTemplates)
-                LoadTemplates();
+            // if (!_cacheTemplates)
+            //     LoadTemplates();
             return _stubble.Render("thread", thread);
         }
 
@@ -62,8 +62,8 @@ namespace PalaverCore.Services
         /// <returns>HTML formatted view of the list of threads</returns>
         public string RenderThreadListFromTemplate(IEnumerable<ListViewModel> threads)
         {
-            if (!_cacheTemplates)
-                LoadTemplates();
+            // if (!_cacheTemplates)
+            //     LoadTemplates();
             return _stubble.Render("threadList", threads);
         }
 
@@ -77,8 +77,8 @@ namespace PalaverCore.Services
                 .SetTemplateLoader(_templatesLoader)
                 .SetMaxRecursionDepth(5000)
                 .Build();
-            if (_cacheTemplates)
-                CacheTemplates();
+            // if (_cacheTemplates)
+            //     CacheTemplates();
         }
 
         /// <summary>
