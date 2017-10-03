@@ -16,6 +16,9 @@ body.pushable {
     padding-top: 48px;
 }
 
+.validation-summary-errors {
+    display: block !important;
+}
 
 /*
  *
