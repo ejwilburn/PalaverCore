@@ -7,23 +7,20 @@
     <title>Palaver</title>
 
     @RenderSection("asyncScripts", required: false)
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.css"/>
-
     @RenderSection("styles", required: false)
 
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-<body class="pushable">
-    <div id="topMenu" class="ui top fixed inverted menu">
-        <a class="item tablet mobile only" onclick="$('#threadList').sidebar('toggle');">
-            <i class="content icon"></i>
+<body>
+    <header id="topMenu" class="top fixed inverted">
+        <a class="tablet mobile only" onclick="$('#threadList').sidebar('toggle');">
+            Hamburger<i class="content icon"></i>
         </a>
-        <div id="mobileUnread" class="ui secondary button tablet mobile only" onclick="thread.goToNextUnread();"></div>
-        <a class="header item tablet or lower media-query-hidden" href="~/">Palaver</a>
+        <div id="mobileUnread" class="secondary button tablet mobile only" onclick="thread.goToNextUnread();"></div>
+        <a class="tablet or lower media-query-hidden" href="~/">Palaver</a>
         <div class="right menu">
-            <div class="ui right aligned category search item">
-                <div class="ui icon input">
+            <div class="right aligned category search item">
+                <div class="icon input">
                     <input class="prompt" type="text" placeholder="Search...">
                     <i class="search icon"></i>
                 </div>
@@ -31,7 +28,7 @@
             </div>
             @await Html.PartialAsync("_LoginPartial")
         </div>
-    </div>
+    </header>
 
     @RenderBody()
 
@@ -41,7 +38,6 @@
         const NOTIFICATION_ENABLED = true;
     </script>
     <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-3.2.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.13/semantic.min.js"></script>
     <script src="~/js/util.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 

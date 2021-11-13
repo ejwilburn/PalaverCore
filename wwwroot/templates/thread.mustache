@@ -1,19 +1,19 @@
-<div id="thread" class="pusher">
-    {{#Id}}
-    <div id="threadInner" class="ui white container fluid minimal threaded comments" data-id="{{Id}}">
-        <div id="threadTitle" class="ui fixed dividing header">
-            <h3>
-                {{Title}}
-                <div class="sub header">
-                    {{UserName}}&nbsp;-&nbsp;<time class="timeago" datetime="{{CreatedIsoTime}}">{{CreatedDisplay}}</time>
-                </div>
-            </h3>
-        </div>
-{{#Comments}}{{>comment}}{{/Comments}}
-    </div>
-    <div class="ui blue labeled submit icon button" onclick="thread.replyTo();">
-        <i class="icon plus"></i> Add Comment
-    </div>
-    {{/Id}}
-    <div id="threadLoader" class="ui inverted dimmer"><div class="ui text loader">Loading...</div></div>
+{{#Id}}
+<header id="threadInner" class="white container fluid minimal threaded comments" data-id="{{Id}}">
+    <hgroup id="threadTitle" class="ui fixed dividing header">
+        <h3>
+            {{Title}}
+            <h4 class="sub header">
+                {{UserName}}&nbsp;-&nbsp;<time class="timeago" datetime="{{CreatedIsoTime}}">{{CreatedDisplay}}</time>
+            </h4>
+        </h3>
+    </hgroup>
+</header>
+<div id="comments">
+    {{#Comments}}{{>comment}}{{/Comments}}
 </div>
+<div class="blue labeled submit icon button" onclick="thread.replyTo();">
+    <i class="icon plus"></i> Add Comment
+</div>
+{{/Id}}
+<div id="threadLoader" class="inverted dimmer"><div class="text loader">Loading...</div></div>

@@ -1,17 +1,17 @@
-<div tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}" data-authorid="{{UserId}}" {{#IsUnread}}class="comment unread" onclick="thread.markRead(this)"{{/IsUnread}}{{^IsUnread}}class="comment"{{/IsUnread}}>
+<article tabindex="-1" data-id="{{Id}}" data-parentid="{{ParentCommentId}}" data-authorid="{{UserId}}" {{#IsUnread}}class="comment unread" onclick="thread.markRead(this)"{{/IsUnread}}{{^IsUnread}}class="comment"{{/IsUnread}}>
     <a class="avatar"><img class="rounded" src="https://seccdn.libravatar.org/avatar/{{EmailHash}}?s=40&d=retro"></a>
-    <div class="content">
+    <header class="content">
         <a class="author">{{UserName}}</a>
         <div class="metadata">
             <time class="timeago timeago-new" datetime="{{CreatedIsoTime}}">{{CreatedDisplay}}</time>
-            <a class="ui icon disabled" href="{{Url}}"><i class="linkify icon"></i></a>
+            <a class="icon disabled" href="{{Url}}"><i class="linkify icon"></i></a>
         </div>
-        <div class="text">{{{DisplayText}}}</div>
         <div class="actions">
             {{#IsAuthor}}<a class="edit" onclick="thread.editComment({{Id}})">Edit</a>{{/IsAuthor}}
             <a class="reply" onclick="thread.replyTo({{ParentCommentId}})">Reply</a>
             <a class="reply" onclick="thread.replyTo({{Id}})">Nested Reply</a>
         </div>
-    </div>
-    <div class="minimal comments">{{#Comments}}{{>comment}}{{/Comments}}</div>
-</div>
+    </header>
+    <section class="text">{{{DisplayText}}}</section>
+    <section class="minimal comments">{{#Comments}}{{>comment}}{{/Comments}}</section>
+</article>

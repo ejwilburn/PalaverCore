@@ -48,14 +48,18 @@ var thread = new Thread(@(threadId != null ? threadId.ToString() : "null"),
     </script>
 }
 
-@Html.Raw(ViewData["ThreadListViewHtml"])
-@Html.Raw(ViewData["ThreadViewHtml"])
+<aside id="threadList" class="visible left wide vertical sidebar">
+    @Html.Raw(ViewData["ThreadListViewHtml"])
+</aside>
+<div id="thread">
+    @Html.Raw(ViewData["ThreadViewHtml"])
+</div>
 
-<div id="reconnectingModal" class="ui modal" role="dialog">
+<div id="reconnectingModal" class="modal" role="dialog">
     <div class="content">
         Connection lost, reconnecting...
     </div>
     <div class="actions">
-        <div class="ui cancel button" onclick="location.reload()">Reload</div>
+        <div class="cancel button" onclick="location.reload()">Reload</div>
     </div>
 </div>
