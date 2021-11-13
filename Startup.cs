@@ -29,9 +29,11 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using PalaverCore.Data;
 using PalaverCore.Models;
+using PalaverCore.Models.MappingProfiles;
 using PalaverCore.Services;
 using PalaverCore.SignalR;
 
@@ -41,7 +43,7 @@ namespace PalaverCore
     {
         public static string SiteRoot = "";
 
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -59,7 +61,7 @@ namespace PalaverCore
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.AddAutoMapper();
+            services.AddAutoMapper(typeof(CommentMappingProfile), typeof(ThreadMappingProfile));
             services.AddSignalR();
 
             // Add framework services.
@@ -102,7 +104,7 @@ namespace PalaverCore
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
 
@@ -152,7 +154,7 @@ namespace PalaverCore
             });
 
             app.UseWebSockets();
-            app.UseSignalR( routes => {
+            app.UseSignalR(routes => {
                 routes.MapHub<SignalrHub>("threads");
             });
         }

@@ -73,9 +73,12 @@ namespace PalaverCore.Services
         private void LoadTemplates()
         {
             _stubble = new StubbleBuilder()
-                .SetPartialTemplateLoader(_partialsLoader)
-                .SetTemplateLoader(_templatesLoader)
-                .SetMaxRecursionDepth(5000)
+                .Configure(b =>
+                {
+                    b.SetPartialTemplateLoader(_partialsLoader);
+                    b.SetTemplateLoader(_templatesLoader);
+                    b.SetMaxRecursionDepth(5000);
+                })
                 .Build();
             // if (_cacheTemplates)
             //     CacheTemplates();

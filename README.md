@@ -9,7 +9,7 @@
 ## Publishing
 
 1) Modify the publish task in .vscode/tasks.json to fit your environment.
-2) Open the command pallete and choose Tasks: Run Task then choose publish.  The output will be placed in the release dir, deploy as needed.
+2) Open the command pallette and choose Tasks: Run Task then choose publish.  The output will be placed in the release dir, deploy as needed.
 
 ## Semantic UI Tasks - Ignore Currently
 
@@ -17,6 +17,6 @@
 **gulp clean-sui** - clean shit
 **gulp watch-sui** - watch for changes in wwwroot/lib/semantic/src and rebuild on the fly
 
-All of those build tasks can also be run from the command pallette (Ctrl+Shift+P) via Tasks Run Task.  I'd recommend not runing watch-sui that way though as the built-in task runner in VSCode can only run one task at a time so you'd have to kill the watch to build or debug Palaver.
+All of those build tasks can also be run from the command pallette (Ctrl+Shift+P) via Tasks Run Task.  I'd recommend not running watch-sui that way though as the built-in task runner in VSCode can only run one task at a time so you'd have to kill the watch to build or debug Palaver.
 
 ~/semantic.json is the base config file for semantic that tells gulp where to find it and which components to include.  The rest of semantic customization is done under wwwroot/lib/semantic/src.

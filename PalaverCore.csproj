@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp6.0</TargetFramework>
     <AssemblyName>PalaverCore</AssemblyName>
     <PackageId>PalaverCore</PackageId>
     <Authors/>
@@ -12,19 +12,14 @@
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <OutputType>Exe</OutputType>
-    <RuntimeIdentifiers>win10-x64;ubuntu.16.10-x64;</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;linux-x64;</RuntimeIdentifiers>
     <SuppressDockerTargets>True</SuppressDockerTargets>
-    <RuntimeFrameworkVersion>*</RuntimeFrameworkVersion>
-    <AssetTargetFallback>portable-net45+win8</AssetTargetFallback>
+    <RuntimeFrameworkVersion>6.0.0</RuntimeFrameworkVersion>
     <GeneratedItemPatterns>wwwroot\js\**;wwwroot\css\**</GeneratedItemPatterns>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedItemPatterns);**\node_modules\**;node_modules\**;**\wwwroot\lib\**;wwwroot\lib\**;**\jspm_packages\**;jspm_packages\**;**\bower_components\**;bower_components\**;**\release\**;release\**;obj\**;bin\**</DefaultItemExcludes>
-    <!-- <DefaultItemExcludes>$(DefaultItemExcludes);**\node_modules\**;node_modules\**</DefaultItemExcludes>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\wwwroot\lib\**;wwwroot\lib\**</DefaultItemExcludes>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\jspm_packages\**;jspm_packages\**</DefaultItemExcludes>
-    <DefaultItemExcludes>$(DefaultItemExcludes);**\bower_components\**;bower_components\**</DefaultItemExcludes> -->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <DefineConstants>RELEASE;NETCOREAPP2_0</DefineConstants>
+    <DefineConstants>RELEASE;NETCOREAPP6_0</DefineConstants>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
@@ -46,34 +41,39 @@
     <None Update="appsettings*;bundleconfig.json;release\**;wwwroot\lib\**" Visible="true" CopyToOutputDirectory="Never"/>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="*"/>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.0.0-alpha1-final" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="*" PrivateAssets="All"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="*"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="*"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="*"/>
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="*"/>
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="*"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="*"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="*"/>
-    <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="*"/>
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="*"/>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="*"/>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="*"/>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="*" PrivateAssets="All"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="*"/>
-    <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="*"/>
-    <PackageReference Include="MailKit" Version="*"/>
-    <PackageReference Include="EntityFrameworkCore.Triggers" Version="*"/>
-    <PackageReference Include="AutoMapper" Version="*"/>
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="*"/>
-    <PackageReference Include="Stubble.Core" Version="1.0.27-alpha16"/>
-    <PackageReference Include="Stubble.Extensions.Loaders" Version="1.0.16-alpha4"/>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.0" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2"/>
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0"/>
+    <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="2.2.0"/>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.0"/>
+
+    <PackageReference Include="AutoMapper" Version="10.1.1"/>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="8.1.1"/>
+    <PackageReference Include="EntityFrameworkCore.Triggers" Version="1.2.3"/>
+    <PackageReference Include="MailKit" Version="3.0.0-preview1"/>
+    <PackageReference Include="NETStandard.Library" Version="2.0.3"/>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0"/>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="2.0.0-preview1" PrivateAssets="All"/>
+    <PackageReference Include="Stubble.Core" Version="1.9.3"/>
+    <PackageReference Include="Stubble.Extensions.Loaders" Version="1.0.29"/>
   </ItemGroup>
   <ItemGroup>
     <!-- <DotNetCliToolReference Include="BundlerMinifier.Core" Version="*"/> -->
-    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="*"/>
-    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="*"/>
+    <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="2.0.3"/>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.4"/>
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <!-- <Exec Command="dotnet bundle"/> -->

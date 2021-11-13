@@ -1,74 +1,64 @@
 {
-    "version": "0.1.0",
-    "tasks": [{
-        "taskName": "build",
-        "command": "dotnet",
-        "isShellCommand": true,
-        "args": [
-            "build",
-            "--no-restore"
-        ],
-        "isBuildCommand": true,
-        "problemMatcher": "$msCompile"
-    }, {
-        "taskName": "build-release",
-        "command": "dotnet",
-        "isShellCommand": true,
-        "args": [
-            "build",
-            "--no-restore",
-            "--configuration",
-            "Release"
-        ],
-        "isBuildCommand": false,
-        "problemMatcher": "$msCompile"
-    }, {
-        "taskName": "publish",
-        "command": "dotnet",
-        "isShellCommand": true,
-        "args": [
-            "publish",
-            "--configuration",
-            "Release",
-            "--runtime",
-            "ubuntu.16.10-x64",
-            "--output",
-            "./release"
-        ],
-        "isBuildCommand": false,
-        "problemMatcher": "$msCompile"
-    }, {
-        "taskName": "clean Semantic UI",
-        "command": "gulp",
-        "isShellCommand": true,
-        "options": {
-            "cwd": "${workspaceRoot}/wwwroot/lib/semantic"
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "--no-restore"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "_id": "build",
+                "isDefault": false
+            }
         },
-        "args": [
-            "clean"
-        ],
-        "isBuildCommand": false
-    }, {
-        "taskName": "build Semantic UI",
-        "command": "gulp",
-        "isShellCommand": true,
-        "options": {
-            "cwd": "${workspaceRoot}/wwwroot/lib/semantic"
+        {
+            "label": "build-release",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "--no-restore",
+                "--configuration",
+                "Release"
+            ],
+            "problemMatcher": "$msCompile"
         },
-        "args": [
-            "build"
-        ],
-        "isBuildCommand": false
-    }, {
-        "taskName": "watch Semantic UI",
-        "command": "gulp",
-        "isShellCommand": true,
-        "options": {
-            "cwd": "${workspaceRoot}/wwwroot/lib/semantic"
+        {
+            "label": "publish",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "publish",
+                "--configuration",
+                "Release",
+                "--runtime",
+                "ubuntu.16.10-x64",
+                "--output",
+                "./release"
+            ],
+            "problemMatcher": "$msCompile"
         },
-        "args": [
-            "watch"
-        ],
-        "isBuildCommand": false
-    }]
+        {
+            "label": "clean Semantic UI",
+            "type": "gulp",
+            "task": "clean",
+            "problemMatcher": []
+        },
+        {
+            "label": "build Semantic UI",
+            "type": "gulp",
+            "task": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "watch Semantic UI",
+            "type": "gulp",
+            "task": "watch",
+            "problemMatcher": []
+        }
+    ]
 }
