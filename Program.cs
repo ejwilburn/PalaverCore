@@ -2,6 +2,8 @@ using System.IO;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace PalaverCore
 {
@@ -9,7 +11,7 @@ namespace PalaverCore
     {
         public static void Main(string[] args)
         {
-            var host = BuildWebHost(args);
+            var hostBuilder = CreateHostBuilder(args);
 
             /*
             using (var scope = host.Services.CreateScope())
@@ -28,10 +30,10 @@ namespace PalaverCore
             }
             */
 
-            host.Run();            
+            hostBuilder.Build().Run();            
         }
 
-        public static IWebHost BuildWebHost(string[] args)
+        public static IHostBuilder CreateHostBuilder(string[] args)
         {
             var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -40,14 +42,23 @@ namespace PalaverCore
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .Build();
 
-            return WebHost.CreateDefaultBuilder(args)
-                .UseConfiguration(config)
-                .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseStartup<Startup>()
-                .UseSetting("detailedErrors", "true")
-                .CaptureStartupErrors(true)
-                .Build();
+            return Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder => {
+                    webBuilder.UseConfiguration(config)
+                        .ConfigureLogging((hostingContext, logging) => {
+                            logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                            logging.AddConsole();
+                            if (hostingContext.HostingEnvironment.IsDevelopment())
+                            {
+                                logging.AddDebug();
+                            }
+                        })
+                        .UseKestrel()
+                        .UseContentRoot(Directory.GetCurrentDirectory())
+                        .UseStartup<Startup>()
+                        .UseSetting("detailedErrors", "true")
+                        .CaptureStartupErrors(true);
+                });
         }
 
         /*

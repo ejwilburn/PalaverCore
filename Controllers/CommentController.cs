@@ -28,6 +28,7 @@ using AutoMapper;
 using PalaverCore.Data;
 using PalaverCore.Models;
 using PalaverCore.Models.CommentViewModels;
+using PalaverCore.Services;
 using System.Collections.Generic;
 
 namespace PalaverCore.Controllers

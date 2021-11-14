@@ -19,6 +19,7 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace PalaverCore.Models
 {

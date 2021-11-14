@@ -30,7 +30,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using PalaverCore.Data;
 using PalaverCore.Models;
 using PalaverCore.Models.MappingProfiles;
@@ -60,13 +59,15 @@ namespace PalaverCore
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddControllersWithViews();
+            services.AddRazorPages();
             services.AddAutoMapper(typeof(CommentMappingProfile), typeof(ThreadMappingProfile));
             services.AddSignalR();
 
             // Add framework services.
             services.AddDbContext<PalaverDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("Palaver")));
+            services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<PalaverDbContext>()
@@ -104,18 +105,12 @@ namespace PalaverCore
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-
             if (env.IsDevelopment())
             {
-    			loggerFactory.WithFilter(new FilterLoggerSettings{
-                        { "Default", LogLevel.Warning },
-                        { "Microsoft.EntityFrameworkCore", LogLevel.Information }
-                    }).AddDebug();
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
+                app.UseMigrationsEndPoint();
                 app.UseBrowserLink();
             }
             else
@@ -144,18 +139,16 @@ namespace PalaverCore
                 ContentTypeProvider = provider
             });
 
-            app.UseAuthentication();
-
-            app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Thread}/{action=Index}/{id?}");
-            });
-
             app.UseWebSockets();
-            app.UseSignalR(routes => {
-                routes.MapHub<SignalrHub>("threads");
+            app.UseRouting();
+            app.UseAuthentication();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHub<SignalrHub>("/threads");
+                endpoints.MapControllerRoute("default", "{controller=Thread}/{action=Index}/{id?}");
+                endpoints.MapHealthChecks("/health");
+                endpoints.MapRazorPages();
             });
         }
     }
