@@ -31,6 +31,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NuGet.Protocol.Core.Types;
 using PalaverCore.Data;
 using PalaverCore.Models;
 using PalaverCore.Models.MappingProfiles;
@@ -74,20 +75,19 @@ namespace PalaverCore
                 .AddEntityFrameworkStores<PalaverDbContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
             // Add forced identity options.
             services.ConfigureApplicationCookie(options => {
                 options.LoginPath = "/Account/LogIn";
                 options.LogoutPath = "/Account/LogOff";
                 options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
             var googleConfig = Configuration.GetSection("GoogleOptions");
-            services.AddAuthentication()
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                     .AddGoogle(options => {
                         options.ClientId = googleConfig["ClientId"];
                         options.ClientSecret = googleConfig["ClientSecret"];
+                        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
                     });
             
             services.Configure<IdentityOptions>(options =>
@@ -142,10 +142,10 @@ namespace PalaverCore
 
             app.UseWebSockets();
             app.UseRouting();
-            app.UseAuthorization();
             app.UseAuthentication();
+            app.UseAuthorization();
 
-            app.UseCookiePolicy(new CookiePolicyOptions()
+            app.UseCookiePolicy(new CookiePolicyOptions
             {
                 MinimumSameSitePolicy = SameSiteMode.Lax
             });
