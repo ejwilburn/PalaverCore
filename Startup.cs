@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.StaticFiles;
@@ -79,10 +80,9 @@ namespace PalaverCore
                 options.LoginPath = "/Account/LogIn";
                 options.LogoutPath = "/Account/LogOff";
                 options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
-            // services.AddAuthentication()
-            //         .AddGoogle();
             var googleConfig = Configuration.GetSection("GoogleOptions");
             services.AddAuthentication()
                     .AddGoogle(options => {
@@ -102,6 +102,7 @@ namespace PalaverCore
             services.AddSingleton<StubbleRendererService>(new StubbleRendererService(Configuration.GetValue<bool>("CacheTemplates")));
             services.Configure<SmtpOptions>(Configuration.GetSection(SmtpOptions.CONFIG_SECTION_NAME));
             services.Configure<GoogleOptions>(Configuration.GetSection("GoogleOptions"));
+            services.AddHealthChecks();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -141,7 +142,14 @@ namespace PalaverCore
 
             app.UseWebSockets();
             app.UseRouting();
+            app.UseAuthorization();
             app.UseAuthentication();
+
+            app.UseCookiePolicy(new CookiePolicyOptions()
+            {
+                MinimumSameSitePolicy = SameSiteMode.Lax
+            });
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
