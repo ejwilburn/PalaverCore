@@ -5,7 +5,9 @@ namespace PalaverCore.Models.AccountViewModels
     public class ResetPasswordViewModel
     {
         [Required]
-        public string Username { get; set; }
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; }
 
         // TODO: Make min length config-file based.
         [Required]

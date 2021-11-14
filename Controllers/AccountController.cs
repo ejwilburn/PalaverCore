@@ -322,7 +322,7 @@ namespace PalaverCore.Controllers
             {
                 return View(model);
             }
-            var user = await _userManager.FindByNameAsync(model.Username);
+            var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {
                 // Don't reveal that the user does not exist
