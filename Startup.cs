@@ -64,7 +64,12 @@ namespace PalaverCore
             services.AddControllersWithViews();
             services.AddRazorPages();
             services.AddAutoMapper(typeof(CommentMappingProfile), typeof(ThreadMappingProfile));
-            services.AddSignalR();
+            services.AddSignalR()
+                .AddJsonProtocol(options =>
+                {
+                    // Keep properties PascalCase so the same renderer can be used server and client side.
+                    options.PayloadSerializerOptions.PropertyNamingPolicy = null;
+                });
 
             // Add framework services.
             services.AddDbContext<PalaverDbContext>(options =>

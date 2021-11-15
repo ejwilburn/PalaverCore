@@ -1,11 +1,11 @@
 ## Initial Setup
 
-1) run **npm install**
-2) run **bower install**
+1) run `npm install`
+2) install libman CLI with `dotnet tool install -g Microsoft.Web.LibraryManager.Cli` and the install libraries with `libman install`
 3) copy example.appsettings.json to appsettings.json and customize
 4) copy example.appsettings.Environment.json to appsettings.Development.json (or whatever environment name you need) and customize.
 5) install dotnet-ef: `dotnet tool install --global dotnet-ef`
-6) build (command line: dotnet build) then create the database with `dotnet-ef database update`
+6) build (command line: `dotnet build`) then create the database with `dotnet-ef database update`
 
 ## Publishing
 
