@@ -23,15 +23,18 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
+using NuGet.Protocol.Core.Types;
 using PalaverCore.Data;
 using PalaverCore.Models;
+using PalaverCore.Models.MappingProfiles;
 using PalaverCore.Services;
 using PalaverCore.SignalR;
 
@@ -41,7 +44,7 @@ namespace PalaverCore
     {
         public static string SiteRoot = "";
 
-        public Startup(IHostingEnvironment env)
+        public Startup(IWebHostEnvironment env)
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
@@ -58,19 +61,25 @@ namespace PalaverCore
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
-            services.AddAutoMapper();
-            services.AddSignalR();
+            services.AddControllersWithViews();
+            services.AddRazorPages();
+            services.AddAutoMapper(typeof(CommentMappingProfile), typeof(ThreadMappingProfile));
+            services.AddSignalR()
+                .AddJsonProtocol(options =>
+                {
+                    // Keep properties PascalCase so the same renderer can be used server and client side.
+                    options.PayloadSerializerOptions.PropertyNamingPolicy = null;
+                });
 
             // Add framework services.
             services.AddDbContext<PalaverDbContext>(options =>
                 options.UseNpgsql(Configuration.GetConnectionString("Palaver")));
+            services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddIdentity<User, Role>()
                 .AddEntityFrameworkStores<PalaverDbContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
             // Add forced identity options.
             services.ConfigureApplicationCookie(options => {
                 options.LoginPath = "/Account/LogIn";
@@ -78,13 +87,12 @@ namespace PalaverCore
                 options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
             });
 
-            // services.AddAuthentication()
-            //         .AddGoogle();
             var googleConfig = Configuration.GetSection("GoogleOptions");
-            services.AddAuthentication()
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                     .AddGoogle(options => {
                         options.ClientId = googleConfig["ClientId"];
                         options.ClientSecret = googleConfig["ClientSecret"];
+                        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
                     });
             
             services.Configure<IdentityOptions>(options =>
@@ -99,21 +107,16 @@ namespace PalaverCore
             services.AddSingleton<StubbleRendererService>(new StubbleRendererService(Configuration.GetValue<bool>("CacheTemplates")));
             services.Configure<SmtpOptions>(Configuration.GetSection(SmtpOptions.CONFIG_SECTION_NAME));
             services.Configure<GoogleOptions>(Configuration.GetSection("GoogleOptions"));
+            services.AddHealthChecks();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-
             if (env.IsDevelopment())
             {
-    			loggerFactory.WithFilter(new FilterLoggerSettings{
-                        { "Default", LogLevel.Warning },
-                        { "Microsoft.EntityFrameworkCore", LogLevel.Information }
-                    }).AddDebug();
                 app.UseDeveloperExceptionPage();
-                app.UseDatabaseErrorPage();
+                app.UseMigrationsEndPoint();
                 app.UseBrowserLink();
             }
             else
@@ -142,18 +145,23 @@ namespace PalaverCore
                 ContentTypeProvider = provider
             });
 
+            app.UseWebSockets();
+            app.UseRouting();
             app.UseAuthentication();
+            app.UseAuthorization();
 
-            app.UseMvc(routes =>
+            app.UseCookiePolicy(new CookiePolicyOptions
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Thread}/{action=Index}/{id?}");
+                MinimumSameSitePolicy = SameSiteMode.Lax
             });
 
-            app.UseWebSockets();
-            app.UseSignalR( routes => {
-                routes.MapHub<SignalrHub>("threads");
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHub<SignalrHub>("/threads");
+                endpoints.MapControllerRoute("default", "{controller=Thread}/{action=Index}/{id?}");
+                endpoints.MapHealthChecks("/health");
+                endpoints.MapRazorPages();
             });
         }
     }

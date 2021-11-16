@@ -1,5 +1,5 @@
 @model ManageLoginsViewModel
-@using Microsoft.AspNetCore.Http.Authentication
+@using Microsoft.AspNetCore.Authentication
 @{
     ViewData["Title"] = "Manage your external logins";
 }
@@ -46,7 +46,7 @@
                 <p>
                     @foreach (var provider in Model.OtherLogins)
                     {
-                        <button type="submit" class="ui @provider.AuthenticationScheme.ToLower() button" name="provider" value="@provider.AuthenticationScheme" title="Log in using your @provider.DisplayName account"><i class="@provider.AuthenticationScheme.ToLower() icon"></i> @provider.AuthenticationScheme</button>
+                        <button type="submit" class="ui @provider.ToString().ToLower() button" name="provider" value="@provider" title="Log in using your @provider.DisplayName account"><i class="@provider.ToString().ToLower() icon"></i> @provider</button>
                     }
                 </p>
             </div>

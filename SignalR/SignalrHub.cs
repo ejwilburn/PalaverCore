@@ -28,6 +28,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PalaverCore.Data;
@@ -84,7 +85,7 @@ namespace PalaverCore.SignalR
 
         public async Task SubscribeToGroup(string group)
         {
-            await Groups.AddAsync(Context.ConnectionId, group);
+            await Groups.AddToGroupAsync(Context.ConnectionId, group);
             lock (_threadWatchedByConnection)
             {
                 _threadWatchedByConnection[Context.ConnectionId] = group;
@@ -105,13 +106,13 @@ namespace PalaverCore.SignalR
                 }
             }
             if (isSubscribed)
-                await Groups.RemoveAsync(Context.ConnectionId, group);
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
         }
 
         public async Task GetPagedThreadsList(int startIndex)
         {
             List<Thread> threads = await _dbContext.GetPagedThreadsListAsync(GetUserId(), startIndex);
-            await Clients.Client(Context.ConnectionId).InvokeAsync("addToThreadsList", _mapper.Map<List<Thread>, List<ListViewModel>>(threads));
+            await Clients.Client(Context.ConnectionId).SendAsync("addToThreadsList", _mapper.Map<List<Thread>, List<ListViewModel>>(threads));
         }
 
         /// <summary>
@@ -123,7 +124,7 @@ namespace PalaverCore.SignalR
             Thread selectedThread = await _dbContext.GetThreadAsync(threadId, GetUserId());
             await WatchThread(threadId);
             string output = _stubble.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread));
-            await Clients.Client(Context.ConnectionId).InvokeAsync("showThread", output);
+            await Clients.Client(Context.ConnectionId).SendAsync("showThread", output);
         }
 
         /// <summary>
@@ -141,7 +142,7 @@ namespace PalaverCore.SignalR
             Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
             PalaverCore.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, PalaverCore.Models.ThreadViewModels.CreateResultViewModel>(newThread);
             await WatchThread(newThread.Id);
-            await Clients.All.InvokeAsync("addThread", resultView);
+            await Clients.All.SendAsync("addThread", resultView);
         }
 
         /// <summary>
@@ -160,10 +161,10 @@ namespace PalaverCore.SignalR
             User curUser = await GetUserAsync();
             Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
 			Models.CommentViewModels.DetailViewModel resultView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
-            await Clients.Client(Context.ConnectionId).InvokeAsync("addComment", resultView);
+            await Clients.Client(Context.ConnectionId).SendAsync("addComment", resultView);
             Models.CommentViewModels.DetailViewModel othersView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
             othersView.IsAuthor = false;
-            await Clients.AllExcept(new List<String>{ Context.ConnectionId }).InvokeAsync("addComment", othersView);
+            await Clients.AllExcept(new List<String>{ Context.ConnectionId }).SendAsync("addComment", othersView);
         }
 
         /// <summary>
@@ -197,7 +198,7 @@ namespace PalaverCore.SignalR
             await _dbContext.SaveChangesAsync();
 
             EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);
-            await Clients.All.InvokeAsync("updateComment", resultView);
+            await Clients.All.SendAsync("updateComment", resultView);
         }
 
         public async Task MarkRead(int threadId, int commentId)

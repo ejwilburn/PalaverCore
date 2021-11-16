@@ -1,10 +1,8 @@
 ﻿using System;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
-using PalaverCore.Data;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace PalaverCore.Data.Migrations
 {
@@ -205,7 +203,7 @@ namespace PalaverCore.Data.Migrations
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasName("RoleNameIndex");
+                        .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("role");
                 });
@@ -331,11 +329,11 @@ namespace PalaverCore.Data.Migrations
                     b.HasIndex("Email");
 
                     b.HasIndex("NormalizedEmail")
-                        .HasName("EmailIndex");
+                        .HasDatabaseName("EmailIndex");
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasName("UserNameIndex");
+                        .HasDatabaseName("UserNameIndex");
 
                     b.HasIndex("UserName");
 

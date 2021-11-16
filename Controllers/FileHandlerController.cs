@@ -46,7 +46,7 @@ namespace PalaverCore.Controllers
         private string FULL_UPLOADS_USER_BASE;
         private string RELATIVE_UPLOADS_USER_BASE;
         private List<string> ALLOWED_EXTENSIONS = new List<string>{ ".jpg", ".jpeg", ".gif", ".png", ".svg" };
-        private readonly IHostingEnvironment _environment;
+        private readonly IWebHostEnvironment _environment;
 
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly PalaverDbContext _context;
@@ -55,7 +55,7 @@ namespace PalaverCore.Controllers
         private readonly ILogger _logger;
         private readonly int _userId;
 
-        public FileHandlerController(IHostingEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
+        public FileHandlerController(IWebHostEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
             IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
         {
             this._environment = environment;
