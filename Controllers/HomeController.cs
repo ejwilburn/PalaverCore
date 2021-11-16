@@ -32,14 +32,14 @@ namespace PalaverCore.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly IHostingEnvironment _environment;
+        private readonly IWebHostEnvironment _environment;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly PalaverDbContext _context;
         private readonly UserManager<User> _userManager;
         private readonly IMapper _mapper;
         private readonly ILogger _logger;
 
-        public HomeController(IHostingEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
+        public HomeController(IWebHostEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
             IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
         {
             this._environment = environment;

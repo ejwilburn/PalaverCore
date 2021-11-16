@@ -215,7 +215,7 @@ namespace PalaverCore.Data
         }
 
         public async Task<List<Comment>> Search(string searchText) {
-            return await Comments.FromSql("SELECT * FROM search_comments(@searchText)", new NpgsqlParameter("@searchText", searchText))
+            return await Comments.FromSqlRaw("SELECT * FROM search_comments({0})", new NpgsqlParameter("@searchText", searchText))
                 .Include(c => c.User)
                 .Include(c => c.Thread)
                 .ToListAsync();
@@ -248,10 +248,10 @@ namespace PalaverCore.Data
                 if (entityType.ClrType == null)
                     continue;
 
-                entityType.Relational().TableName = entityType.ClrType.Name.ToLower();
+                entityType.SetTableName(entityType.ClrType.Name.ToLower());
                 foreach (var property in entityType.GetProperties())
                 {
-                    property.Relational().ColumnName = property.Name.ToLower();
+                    property.SetColumnName(property.Name.ToLower());
                 }
             }
 
