@@ -24,14 +24,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="release\**" />
-    <Compile Remove="wwwroot\uploads\**" />
     <Content Remove="release\**" />
     <Content Remove="appsettings*" />
-    <Content Remove="wwwroot\uploads\**" />
     <EmbeddedResource Remove="release\**" />
-    <EmbeddedResource Remove="wwwroot\uploads\**" />
     <None Remove="release\**" />
-    <None Remove="wwwroot\uploads\**" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="wwwroot\css\site.css" />
@@ -83,6 +79,10 @@
     <None Include="wwwroot\js\templateRenderer.js" />
     <None Include="wwwroot\js\thread.js" />
     <None Include="wwwroot\js\util.js" />
+    <None Include="wwwroot\uploads\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\1\auto\" />
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <!-- <Exec Command="dotnet bundle"/> -->

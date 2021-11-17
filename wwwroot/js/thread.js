@@ -51,7 +51,6 @@ class Thread {
 
         // SignalR related
         this.signalr = {
-            logger: null,
             conn: null,
             dcTime: null
         };
@@ -145,11 +144,17 @@ class Thread {
         this.cancelReply();
         $(openAt).append(TemplateRenderer.render('editor'));
         this.editorForm = $('#editorForm');
-        this.editor = CKEDITOR.replace('editor');
-        this.editor.on('key', (e) => { return this.replyKeyPressed(e); });
-        if (initialValue)
-            this.editor.setData(initialValue);
-        return this.editor;
+        CKSource.Editor.create(document.querySelector('#editor'))
+            .then(editor => {
+                this.editor = editor;
+                if (initialValue)
+                    editor.setData(initialValue);
+                editor.focus();
+                editor.editing.view.document.on('keydown', (event, data) => { return this.handleEditorKeyPressed(event, data); });
+            })
+            .catch(e => {
+                console.error(e);
+            });
     }
 
     cancelReply() {
@@ -165,7 +170,6 @@ class Thread {
 
     closeEditor() {
         if (this.editor) {
-            this.editor.focusManager.blur(true);
             this.editor.destroy();
             this.editor = null;
             this.editing = null;
@@ -662,13 +666,15 @@ class Thread {
         this.openEditor(this.editing, this.editingOrigText);
     }
 
-    replyKeyPressed(e) {
+    handleEditorKeyPressed(event, data) {
         // Save if shift+enter is pressed.
-        if (e.data.keyCode == 2228237) {
+        if (data.keyCode == 13 && data.shiftKey) {
             this.sendReply();
+            event.stop();
             return false;
-        } else if (e.data.keyCode == 27) {
+        } else if (data.keyCode == 27) {
             this.cancelReply();
+            event.stop();
             return false;
         }
         return true;
