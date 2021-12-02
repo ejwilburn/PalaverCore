@@ -48,6 +48,11 @@ class Thread {
         this.editing = null;
         this.editingCommentId = null;
         this.editingOrigText = null;
+        if (typeof BASE_URL !== 'undefined')
+            this.uploadUrl = BASE_URL + 'api/FileHandler/AutoUpload';
+        else
+            this.uploadUrl = '/api/FileHandler/AutoUpload';
+
 
         // SignalR related
         this.signalr = {
@@ -144,17 +149,43 @@ class Thread {
         this.cancelReply();
         $(openAt).append(TemplateRenderer.render('editor'));
         this.editorForm = $('#editorForm');
-        CKSource.Editor.create(document.querySelector('#editor'))
-            .then(editor => {
-                this.editor = editor;
-                if (initialValue)
-                    editor.setData(initialValue);
-                editor.focus();
-                editor.editing.view.document.on('keydown', (event, data) => { return this.handleEditorKeyPressed(event, data); });
-            })
-            .catch(e => {
-                console.error(e);
-            });
+        CKSource.Editor.create(document.querySelector('#editor'), {
+            initialData: initialValue,
+            removePlugins: ['about', 'imageblock'],
+            simpleUpload: {
+                uploadUrl: this.uploadUrl
+            },
+            codeBlock: {
+                indentSequence: '    '
+            },
+            image: {
+                upload: {
+                    types: ['jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg']
+                },
+                resizeUnit: 'px',
+                styles: {
+                    options: ['inline']
+                },
+                insert: {
+                    type: 'inline'
+                }
+            },
+            htmlSupport: {
+                allow: {
+                    name: 'img',
+                    styles: true,
+                    classes: true,
+                    attributes: true
+                }
+            }
+        }).then(editor => {
+            this.editor = editor;
+            editor.editing.view.focus();
+            document.querySelector('#editorForm').scrollIntoViewIfNeeded();
+            editor.editing.view.document.on('keydown', (event, data) => { return this.handleEditorKeyPressed(event, data); });
+        }).catch(e => {
+            console.error(e);
+        });
     }
 
     cancelReply() {

@@ -230,6 +230,10 @@ body,
     background: #1E1E1E url('../images/loading.gif') center center no-repeat;
 }
 
+#thread figure > img {
+    width: 100%;
+}
+
 
 /*
  *
