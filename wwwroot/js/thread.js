@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -33,6 +33,7 @@ const { Editor } = toastui;
 const { codeSyntaxHighlight } = Editor.plugin;
 
 class Thread {
+
     constructor(threadId, commentId, userId) {
         // Thread-centric properties.
         this.$thread = null;
@@ -148,22 +149,70 @@ class Thread {
         this.cancelReply();
         $(openAt).append(TemplateRenderer.render('editor'));
         this.editorForm = $('#editorForm');
+        this.editorLoaded = false;
         this.editor = new Editor({
             el: document.querySelector('#editor'),
             height: 'auto',
-            initialEditType: 'markdown',
+            initialEditType: 'wysiwyg',
             previewStyle: 'tab',
             usingStatistics: false,
             theme: 'dark',
+            hideModeSwitch: true,
+            placeholder: 'Enter comment...',
             plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
             initialValue: initialValue,
             events: {
-                load: (editor) => {
-                    document.querySelector('#editorForm').scrollIntoViewIfNeeded(true);
+                focus: (editorMode, event) => {
+                    // The load event below fires before the editor's UI is fully displayed, handle the load
+                    // event on focus instead.
+                    if (!this.editorLoaded) {
+                        this.editor.changeMode('markdown');
+                        document.querySelector('#editorCancel').scrollIntoViewIfNeeded();
+                        this.editorLoaded = true;
+                    }
                 },
-                keydown: (editorMode, event) => { return this.replyKeyPressed(editorMode, event); }
-            }
+                keydown: (editorMode, event) => { return this.replyKeyPressed(editorMode, event); },
+            },
+            hooks: {
+                addImageBlobHook: (blob, callback) => {
+                    const uploadUrl = (BASE_URL ?? '/') + 'api/FileHandler/AutoUpload';
+                    let formData = new FormData();
+                    formData.append('file', blob);
+                    $.ajax({
+                        method: 'POST',
+                        url: uploadUrl,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: (data) => {
+                            callback(data.url);
+                            document.querySelector('#editorCancel').scrollIntoViewIfNeeded();
+                        }
+                    });
+                    return false
+                },
+            },
         });
+    }
+
+    dataURItoBlob(dataURI) {
+        // convert base64/URLEncoded data component to raw binary data held in a string
+        var byteString;
+        if (dataURI.split(',')[0].indexOf('base64') >= 0)
+            byteString = atob(dataURI.split(',')[1]);
+        else
+            byteString = unescape(dataURI.split(',')[1]);
+
+        // separate out the mime component
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+
+        // write the bytes of the string to a typed array
+        var ia = new Uint8Array(byteString.length);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+
+        return new Blob([ia], { type: mimeString });
     }
 
     cancelReply() {
@@ -678,9 +727,11 @@ class Thread {
     replyKeyPressed(editorMode, event) {
         // Save if shift+enter is pressed.
         if (event.keyCode == 13 && event.shiftKey) {
+            event.preventDefault();
             this.sendReply();
             return false;
         } else if (event.keyCode == 27) {
+            event.preventDefault();
             this.cancelReply();
             return false;
         }
@@ -689,7 +740,7 @@ class Thread {
 
     sendReply() {
         let text = this.editor.getHTML();
-        if (Util.isNullOrEmpty(text)) {
+        if (Util.isNullOrEmpty(text) || text === '<p><br></p>') {
             alert("Replies cannot be empty.");
             return;
         }
