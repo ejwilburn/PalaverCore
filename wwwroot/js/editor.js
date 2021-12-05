@@ -25,14 +25,12 @@ class Editor {
 
     editor = null;
     editorForm = null;
-    editingParentId = null;
-    editingParentId = null;
     editing = null;
+    editingParentId = null;
     editingCommentId = null;
     editingOrigText = null;
     editorLoaded = false;
     thread = null;
-    isMobile = Util.isMobileDisplay();
 
     constructor(thread) {
         this.thread = thread;
