@@ -29,40 +29,31 @@ const IMAGE_LOADING_TRANSITION_DURATION = 300; // in ms
 
 const wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
 
-const { Editor } = toastui;
-const { codeSyntaxHighlight } = Editor.plugin;
-
 class Thread {
+
+    $thread = null;
+    $threadList = null;
+    $threads = null;
+    threadId = null;
+    commentId = null;
+    totalUnread = 0;
+    userId = null;
+    allowBack = false;
+    isMobile = Util.isMobileDisplay();
+    loadToFirstUnread = false;
+    signalr = {
+        logger: null,
+        conn: null,
+        dcTime: null
+    };
 
     constructor(threadId, commentId, userId) {
         // Thread-centric properties.
-        this.$thread = null;
-        this.$threadList = null;
-        this.$threads = null;
         this.threadId = threadId;
         this.commentId = commentId;
-        this.totalUnread = 0;
         this.userId = userId;
-        this.allowBack = false;
 
-        // Editor related
-        this.editor = null;
-        this.editorForm = null;
-        this.editingParentId = null;
-        this.editing = null;
-        this.editingCommentId = null;
-        this.editingOrigText = null;
-
-        // SignalR related
-        this.signalr = {
-            logger: null,
-            conn: null,
-            dcTime: null
-        };
-
-        // Mobile related
-        this.isMobile = Util.isMobileDisplay();
-        this.loadToFirstUnread = false;
+        this.editor = new Editor(this);
 
         $(document).ready(() => this.initPage());
     }
@@ -143,100 +134,6 @@ class Thread {
     }
 
     enableInfiniteThreadList() {
-    }
-
-    openEditor(openAt, initialValue) {
-        this.cancelReply();
-        $(openAt).append(TemplateRenderer.render('editor'));
-        this.editorForm = $('#editorForm');
-        this.editorLoaded = false;
-        this.editor = new Editor({
-            el: document.querySelector('#editor'),
-            height: 'auto',
-            initialEditType: 'wysiwyg',
-            previewStyle: 'tab',
-            usingStatistics: false,
-            theme: 'dark',
-            hideModeSwitch: true,
-            placeholder: 'Enter comment...',
-            plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
-            initialValue: initialValue,
-            events: {
-                focus: (editorMode, event) => {
-                    // The load event below fires before the editor's UI is fully displayed, handle the load
-                    // event on focus instead.
-                    if (!this.editorLoaded) {
-                        this.editor.changeMode('markdown');
-                        document.querySelector('#editorCancel').scrollIntoViewIfNeeded();
-                        this.editorLoaded = true;
-                    }
-                },
-                keydown: (editorMode, event) => { return this.replyKeyPressed(editorMode, event); },
-            },
-            hooks: {
-                addImageBlobHook: (blob, callback) => {
-                    const uploadUrl = (BASE_URL ?? '/') + 'api/FileHandler/AutoUpload';
-                    let formData = new FormData();
-                    formData.append('file', blob);
-                    $.ajax({
-                        method: 'POST',
-                        url: uploadUrl,
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        success: (data) => {
-                            callback(data.url);
-                            document.querySelector('#editorCancel').scrollIntoViewIfNeeded();
-                        }
-                    });
-                    return false
-                },
-            },
-        });
-    }
-
-    dataURItoBlob(dataURI) {
-        // convert base64/URLEncoded data component to raw binary data held in a string
-        var byteString;
-        if (dataURI.split(',')[0].indexOf('base64') >= 0)
-            byteString = atob(dataURI.split(',')[1]);
-        else
-            byteString = unescape(dataURI.split(',')[1]);
-
-        // separate out the mime component
-        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
-
-        // write the bytes of the string to a typed array
-        var ia = new Uint8Array(byteString.length);
-        for (var i = 0; i < byteString.length; i++) {
-            ia[i] = byteString.charCodeAt(i);
-        }
-
-        return new Blob([ia], { type: mimeString });
-    }
-
-    cancelReply() {
-        let wasEditing = this.editing,
-            origText = this.editingOrigText;
-
-        this.closeEditor();
-
-        if (wasEditing) {
-            wasEditing.html(origText);
-        }
-    }
-
-    closeEditor() {
-        if (this.editor) {
-            this.editor.destroy();
-            this.editor = null;
-            this.editing = null;
-            this.editingParentId = null;
-            this.editingCommentId = null;
-            this.editingOrigText = null;
-            $(this.editorForm).remove();
-            this.editorForm = null;
-        }
     }
 
     showDisconnected() {
@@ -397,7 +294,7 @@ class Thread {
         this.popThread(comment.ThreadId);
 
         if (comment.IsAuthor) {
-            this.closeEditor();
+            this.editor.closeEditor();
             this.focusCommentId(comment.Id);
             this.clearBusy();
         } else {
@@ -416,7 +313,7 @@ class Thread {
         let isAuthor = comment.UserId === this.userId;
 
         if (isAuthor) {
-            this.closeEditor();
+            this.editor.closeEditor();
             this.focusCommentId(comment.Id);
             this.clearBusy();
         }
@@ -621,13 +518,13 @@ class Thread {
         history.pushState({ threadId: thread.Id }, document.title, `${BASE_URL}Thread/${thread.Id}`);
         this.allowBack = true;
 
-        this.closeEditor();
+        this.editor.closeEditor();
         this.$thread.replaceWith(TemplateRenderer.render('thread', thread));
         this.$thread = $('#thread');
         this.selectThread(thread.Id);
         this.$thread.scrollTop(0);
         this.formatDateTimes(this.$thread);
-        this.openEditor(this.$thread.children('.comments'));
+        this.editor.openEditor(this.$thread.children('.comments'));
     }
 
     loadThread(threadId, commentId = null, isBack = false) {
@@ -659,7 +556,7 @@ class Thread {
         this.$threads.visibility('disable callbacks');
         let newContent = $(renderedThread);
 
-        this.closeEditor();
+        this.editor.closeEditor();
         this.$thread.replaceWith(newContent);
         this.$thread = $('#thread');
         if (haveCommentId) {
@@ -704,72 +601,6 @@ class Thread {
         this.$threads.find(`[data-id="${threadId}"]`).addClass('active');
         if (this.isMobile)
             this.$threadList.sidebar('hide');
-    }
-
-    replyTo(parentId) {
-        if (!Util.isNumber(parentId)) {
-            // They're replying to the thread or a direct reply to a top level comment.
-            this.openEditor(this.$thread.children('.comments'));
-            return;
-        }
-        this.editingParentId = parentId;
-        this.openEditor(this.$thread.find(`.comment[data-id="${parentId}"]>.comments`));
-    }
-
-    editComment(id) {
-        this.editingCommentId = id;
-        this.editing = this.$thread.find(`.comment[data-id="${id}"]>.content>.text`);
-        this.editingOrigText = this.editing.html();
-        this.editing.empty();
-        this.openEditor(this.editing, this.editingOrigText);
-    }
-
-    replyKeyPressed(editorMode, event) {
-        // Save if shift+enter is pressed.
-        if (event.keyCode == 13 && event.shiftKey) {
-            event.preventDefault();
-            this.sendReply();
-            return false;
-        } else if (event.keyCode == 27) {
-            event.preventDefault();
-            this.cancelReply();
-            return false;
-        }
-        return true;
-    }
-
-    sendReply() {
-        let text = this.editor.getHTML();
-        if (Util.isNullOrEmpty(text) || text === '<p><br></p>') {
-            alert("Replies cannot be empty.");
-            return;
-        }
-
-        let parentCommentId = this.editingParentId;
-
-        this.showBusy();
-
-        // Make sure all URLs in the reply have a target.  If not, set it to _blank.
-        // We're doing this by using a fake DIV with jquery to find the links.
-        let tempDiv = document.createElement('DIV');
-        tempDiv.innerHTML = text;
-        let links = $(tempDiv).find('a').each(function(index) {
-            if (!$(this).attr('target'))
-                $(this).attr('target', '_blank');
-        });
-
-        if (!this.editing) {
-            this.newComment({
-                "Text": tempDiv.innerHTML,
-                "ThreadId": this.threadId,
-                "ParentCommentId": (!Util.isNumber(parentCommentId) ? null : parentCommentId)
-            });
-        } else {
-            this.saveUpdatedComment({
-                "Id": this.editingCommentId,
-                "Text": tempDiv.innerHTML
-            });
-        }
     }
 
     newComment(comment) {
@@ -848,15 +679,9 @@ class Thread {
         }, HUB_ACTION_RETRY_DELAY);
     }
 
-    isEditorInUse() {
-        if (this.editor || $('input:focus').length > 0 || $('textarea:focus').length > 0)
-            return true;
-        return false;
-    }
-
     pageKeyDown(e) {
         // Only handle these key events if not in an editor or the new thread box.
-        if (!this.isEditorInUse()) {
+        if (!this.editor.isEditorInUse()) {
             if (e.keyCode == 32) { // space
                 this.goToNextUnread();
                 return false;
@@ -880,7 +705,7 @@ class Thread {
                     replyToId = comment.data('id');
                 }
 
-                this.replyTo(replyToId);
+                this.editor.replyTo(replyToId);
                 return false;
             } else if (e.keyCode == 39 || e.keyCode == 40 || e.keyCode == 78) { // right, down, 'n'
                 this.focusNext();
