@@ -51,7 +51,7 @@ class Editor {
             previewStyle: 'tab',
             usingStatistics: false,
             theme: 'dark',
-            hideModeSwitch: true,
+            // hideModeSwitch: true,
             placeholder: 'Enter comment...',
             plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
             events: {
