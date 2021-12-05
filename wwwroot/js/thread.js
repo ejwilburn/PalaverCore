@@ -319,7 +319,7 @@ class Thread {
         }
 
         let commentElement = this.$thread.find(`.comment[data-id="${comment.Id}"]`);
-        let commentBody = commentElement.find('.content>.text');
+        let commentBody = commentElement.find('>.content>.text');
         commentBody.html(comment.DisplayText);
         this.prepImages();
         twttr.widgets.load(commentBody.get());
