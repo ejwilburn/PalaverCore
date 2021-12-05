@@ -29,6 +29,9 @@ const IMAGE_LOADING_TRANSITION_DURATION = 300; // in ms
 
 const wowhead_tooltips = { "colorlinks": true, "iconizelinks": true, "renamelinks": true };
 
+const { Editor } = toastui;
+const { codeSyntaxHighlight } = Editor.plugin;
+
 class Thread {
     constructor(threadId, commentId, userId) {
         // Thread-centric properties.
@@ -145,11 +148,22 @@ class Thread {
         this.cancelReply();
         $(openAt).append(TemplateRenderer.render('editor'));
         this.editorForm = $('#editorForm');
-        this.editor = CKEDITOR.replace('editor');
-        this.editor.on('key', (e) => { return this.replyKeyPressed(e); });
-        if (initialValue)
-            this.editor.setData(initialValue);
-        return this.editor;
+        this.editor = new Editor({
+            el: document.querySelector('#editor'),
+            height: 'auto',
+            initialEditType: 'markdown',
+            previewStyle: 'tab',
+            usingStatistics: false,
+            theme: 'dark',
+            plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
+            initialValue: initialValue,
+            events: {
+                load: (editor) => {
+                    document.querySelector('#editorForm').scrollIntoViewIfNeeded(true);
+                },
+                keydown: (editorMode, event) => { return this.replyKeyPressed(editorMode, event); }
+            }
+        });
     }
 
     cancelReply() {
@@ -165,7 +179,6 @@ class Thread {
 
     closeEditor() {
         if (this.editor) {
-            this.editor.focusManager.blur(true);
             this.editor.destroy();
             this.editor = null;
             this.editing = null;
@@ -662,12 +675,12 @@ class Thread {
         this.openEditor(this.editing, this.editingOrigText);
     }
 
-    replyKeyPressed(e) {
+    replyKeyPressed(editorMode, event) {
         // Save if shift+enter is pressed.
-        if (e.data.keyCode == 2228237) {
+        if (event.keyCode == 13 && event.shiftKey) {
             this.sendReply();
             return false;
-        } else if (e.data.keyCode == 27) {
+        } else if (event.keyCode == 27) {
             this.cancelReply();
             return false;
         }
@@ -675,7 +688,7 @@ class Thread {
     }
 
     sendReply() {
-        let text = this.editor.getData();
+        let text = this.editor.getHTML();
         if (Util.isNullOrEmpty(text)) {
             alert("Replies cannot be empty.");
             return;
