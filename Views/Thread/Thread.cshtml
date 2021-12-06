@@ -11,13 +11,14 @@
 
 @section styles
 {
-    <link rel="stylesheet" href="~/js/ckeditor/plugins/prism/lib/prism/prism_patched.min.css" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/theme/toastui-editor-dark.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism.min.css" />
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor-plugin-code-syntax-highlight/latest/toastui-editor-plugin-code-syntax-highlight.min.css" />
 }
 
 @section asyncScripts
 {
-    <script async src="~/js/ckeditor/ckeditor.js"></script>
-    <script async src="~/js/ckeditor/plugins/prism/lib/prism/prism_patched.min.js"></script>
     <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
     <script async src="//wow.zamimg.com/widgets/power.js" charset="utf-8"></script>
 
@@ -33,13 +34,17 @@
 
 @section scripts
 {
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/components/prism-java.min.js"></script>
+    <script src="https://uicdn.toast.com/editor-plugin-code-syntax-highlight/latest/toastui-editor-plugin-code-syntax-highlight.min.js"></script>
     <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
     <script src="~/lib/mustache.js/mustache.min.js"></script>
     <script src="~/lib/gifffer/build/gifffer.min.js"></script>
     <script src="~/lib/jquery-timeago/jquery.timeago.min.js"></script>
     <script src="~/lib/blazy/blazy.min.js"></script>
-    <script src="~/js/thread.js" asp-append-version="true"></script>
     <script src="~/js/editor.js" asp-append-version="true"></script>
+    <script src="~/js/thread.js" asp-append-version="true"></script>
     <script src="~/js/templateRenderer.js" asp-append-version="true"></script>
     <script type="text/javascript">
 var thread = new Thread(@(threadId != null ? threadId.ToString() : "null"),
