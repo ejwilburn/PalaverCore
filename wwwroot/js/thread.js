@@ -172,6 +172,7 @@ class Thread {
         sr.conn.on('addToThreadsList', (threads) => { this.addToThreadsList(threads); });
         sr.conn.on('addComment', (comment) => { this.addComment(comment); });
         sr.conn.on('updateComment', (comment) => { this.updateComment(comment); });
+        sr.conn.on('setEditorComment'), (comment) => { this.setEditorComment(comment); };
 
         try
         {
@@ -324,6 +325,11 @@ class Thread {
         commentBody.html(comment.DisplayText);
         this.prepImages();
         twttr.widgets.load(commentBody.get());
+    }
+
+    setEditorComment(comment) {
+        this.clearBusy();
+        this.editor.setComment(comment);
     }
 
     // Move the new comment's thread to the top of the thread list.
@@ -604,11 +610,30 @@ class Thread {
             this.$threadList.sidebar('hide');
     }
 
+    getCommentForEdit(commentId) {
+        this.showBusy();
+        this.signalr.conn.invoke('getCommentForEdit', commentId).catch((error) => {
+            this.getCommentForEditFailed(error, commentId);
+            this.clearBusy();
+        });
+    }
+
+    getCommentForEditFailed(error, commentId) {
+        if (console) {
+            console.error(error);
+            console.info(`Retrying in ${HUB_ACTION_RETRY_DELAY / 1000} seconds...`);
+        }
+
+        setTimeout(() => {
+            this.getCommentForEdit(commentId);
+        }, HUB_ACTION_RETRY_DELAY);
+    }
+
     newComment(comment) {
         this.showBusy();
         if (!Util.isNumber(comment.ParentCommentId))
             comment.ParentCommentId = null;
-        this.signalr.conn.invoke('newComment', comment.Text, comment.ThreadId, comment.ParentCommentId).catch((error) => {
+        this.signalr.conn.invoke('newComment', comment.Text, comment.Format, comment.ThreadId, comment.ParentCommentId).catch((error) => {
                 this.newCommentFailed(error, comment);
                 this.clearBusy();
             });
@@ -627,7 +652,7 @@ class Thread {
 
     saveUpdatedComment(comment) {
         this.showBusy();
-        this.signalr.conn.invoke('editComment', comment.Id, comment.Text).catch((error) => {
+        this.signalr.conn.invoke('editComment', comment.Id, comment.Text, comment.Format).catch((error) => {
             this.saveUpdatedCommentError(error, comment);
             this.clearBusy();
         });

@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+const COMMENT_FORMAT = 'Markdown';
+
 const tuiEditor = toastui.Editor;
 const { codeSyntaxHighlight } = toastui.Editor.plugin;
 
@@ -36,32 +38,35 @@ class Editor {
         this.thread = thread;
     }
 
-    openEditor(openAt, initialValue) {
+    openEditor(openAt, commentId) {
         this.cancelReply();
         $(openAt).append(TemplateRenderer.render('editor'));
         this.editorForm = $('#editorForm');
-        this.editorLoaded = false;
+        // this.editorLoaded = false;
         this.editor = new tuiEditor({
             el: document.querySelector('#editor'),
             height: 'auto',
-            initialValue: initialValue,
-            initialEditType: 'wysiwyg', // Load as WYSIWYG to process HTML input properly.
+            initialEditType: 'markdown',
             previewStyle: 'tab',
             usingStatistics: false,
             theme: 'dark',
-            // hideModeSwitch: true,
+            hideModeSwitch: true,
             placeholder: 'Enter comment...',
             plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
             events: {
+                load: () => {
+                    if (Util.isNumber(commentId)) {
+                        this.thread.getCommentForEdit(commentId);
+                    }
+                },
                 focus: (editorMode, event) => {
                     // The load event below fires before the editor's UI is fully displayed, handle the load
                     // event on focus instead.
-                    if (!this.editorLoaded) {
-                        // Switch from WYSIWYG to markdown to convert existing HTML to markdown.
-                        this.editor.changeMode('markdown');
+                    // if (!this.editorLoaded) {
                         document.querySelector('#editorCancel').scrollIntoViewIfNeeded();
-                        this.editorLoaded = true;
-                    }
+                        // this.editorLoaded = true;
+                    // }
+                    this.editor.off('focus');
                 },
                 keydown: (editorMode, event) => { return this.replyKeyPressed(editorMode, event); },
             },
@@ -122,12 +127,20 @@ class Editor {
         this.openEditor(this.thread.$thread.find(`.comment[data-id="${parentId}"]>.comments`));
     }
 
-    editComment(id) {
-        this.editingCommentId = id;
-        this.editing = this.thread.$thread.find(`.comment[data-id="${id}"]>.content>.text`);
+    setComment(comment) {
+        if (comment?.Text) {
+            this.editor?.setMarkdown(comment.Text);
+        } else {
+            console.warn('Comment has no text to pass to the editor.');
+        }
+    }
+
+    editComment(commentId) {
+        this.editingCommentId = commentId;
+        this.editing = this.thread.$thread.find(`.comment[data-id="${commentId}"]>.content>.text`);
         this.editingOrigText = this.editing.html();
         this.editing.empty();
-        this.openEditor(this.editing, this.editingOrigText);
+        this.openEditor(this.editing, commentId);
     }
 
     replyKeyPressed(editorMode, event) {
@@ -145,7 +158,7 @@ class Editor {
     }
 
     sendReply() {
-        let text = this.editor.getHTML();
+        let text = this.editor.getMarkdown();
         if (Util.isNullOrEmpty(text) || text === '<p><br></p>') {
             alert("Replies cannot be empty.");
             return;
@@ -167,13 +180,15 @@ class Editor {
         if (!this.editing) {
             this.thread.newComment({
                 "Text": tempDiv.innerHTML,
+                "Format": COMMENT_FORMAT,
                 "ThreadId": this.thread.threadId,
                 "ParentCommentId": (!Util.isNumber(parentCommentId) ? null : parentCommentId)
             });
         } else {
             this.thread.saveUpdatedComment({
                 "Id": this.editingCommentId,
-                "Text": tempDiv.innerHTML
+                "Text": tempDiv.innerHTML,
+                "Format": COMMENT_FORMAT
             });
         }
     }

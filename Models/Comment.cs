@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -34,10 +34,18 @@ namespace PalaverCore.Models
 {
     public class Comment : TimeStamper
     {
+        public enum TextFormat
+        {
+            HTML = 0,
+            Markdown = 1
+        }
+
         [Key]
         public int Id { get; set; }
         [Required]
         public string Text { get { return _text; } set { _text = FilterComment(value); } }
+        [Required]
+        public TextFormat Format { get; set; }
         [NotMapped]
         public string DisplayText { get { return DisplayFilterComment(_text); } }
         [Required]
@@ -67,10 +75,11 @@ namespace PalaverCore.Models
             Triggers<Comment>.Updating += entry => entry.Entity.Thread.Updated = DateTime.UtcNow;
         }
 
-        public static async Task<Comment> CreateComment(string text, Thread thread, int? parentId, User user, PalaverDbContext db)
+        public static async Task<Comment> CreateComment(string text, TextFormat format, Thread thread, int? parentId, User user, PalaverDbContext db)
         {
             Comment newComment = new Comment {
                 Text = text,
+                Format = format,
                 ThreadId = thread.Id,
                 Thread = thread,
                 UserId = user.Id,
