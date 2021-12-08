@@ -172,7 +172,7 @@ class Thread {
         sr.conn.on('addToThreadsList', (threads) => { this.addToThreadsList(threads); });
         sr.conn.on('addComment', (comment) => { this.addComment(comment); });
         sr.conn.on('updateComment', (comment) => { this.updateComment(comment); });
-        sr.conn.on('setEditorComment'), (comment) => { this.setEditorComment(comment); };
+        sr.conn.on('setEditorComment', (comment) => { this.setEditorComment(comment); });
 
         try
         {

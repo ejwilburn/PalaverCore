@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -37,6 +37,7 @@ using PalaverCore.Models;
 using PalaverCore.Models.MappingProfiles;
 using PalaverCore.Services;
 using PalaverCore.SignalR;
+using System.Text.Json.Serialization;
 
 namespace PalaverCore
 {
@@ -67,6 +68,7 @@ namespace PalaverCore
             services.AddSignalR()
                 .AddJsonProtocol(options =>
                 {
+                    options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     // Keep properties PascalCase so the same renderer can be used server and client side.
                     options.PayloadSerializerOptions.PropertyNamingPolicy = null;
                 });
