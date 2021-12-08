@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using AutoMapper;
+using AutoMapperBuilder.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Builder;
@@ -64,7 +64,15 @@ namespace PalaverCore
         {
             services.AddControllersWithViews();
             services.AddRazorPages();
-            services.AddAutoMapper(typeof(CommentMappingProfile), typeof(ThreadMappingProfile));
+
+            var commentRenderer = new CommentRenderService();
+            services.AddSingleton<CommentRenderService>(commentRenderer);
+            services.AddAutoMapperBuilder(builder =>
+            {
+                builder.Profiles.Add(new CommentMappingProfile(commentRenderer));
+                builder.Profiles.Add(new ThreadMappingProfile());
+            });
+
             services.AddSignalR()
                 .AddJsonProtocol(options =>
                 {
@@ -107,7 +115,6 @@ namespace PalaverCore
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddSingleton<StubbleRendererService>(new StubbleRendererService(Configuration.GetValue<bool>("CacheTemplates")));
-            services.AddSingleton<MarkdownRendererService>(new MarkdownRendererService());
             services.Configure<SmtpOptions>(Configuration.GetSection(SmtpOptions.CONFIG_SECTION_NAME));
             services.Configure<GoogleOptions>(Configuration.GetSection("GoogleOptions"));
             services.AddHealthChecks();

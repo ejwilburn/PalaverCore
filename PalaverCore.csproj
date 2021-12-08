@@ -43,6 +43,7 @@
     <None Update="appsettings*;bundleconfig.json;release\**" Visible="true" CopyToOutputDirectory="Never" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AutoMapperBuilder" Version="1.1.0" />
     <PackageReference Include="Markdig" Version="0.26.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="6.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.0" />
