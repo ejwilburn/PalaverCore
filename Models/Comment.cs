@@ -76,8 +76,7 @@ namespace PalaverCore.Models
 
         public static async Task<Comment> CreateComment(string text, TextFormat format, Thread thread, int? parentId, User user, PalaverDbContext db)
         {
-            Comment newComment = new Comment
-            {
+            Comment newComment = new Comment {
                 Text = text,
                 Format = format,
                 ThreadId = thread.Id,
