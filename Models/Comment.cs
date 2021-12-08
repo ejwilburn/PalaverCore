@@ -47,8 +47,6 @@ namespace PalaverCore.Models
         public string Text { get; set; }
         [Required]
         public TextFormat Format { get; set; }
-        [NotMapped]
-        public string DisplayText { get; set; }
         [Required]
         public int UserId { get; set; }
         [Required]
