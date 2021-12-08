@@ -100,6 +100,7 @@ class Thread {
 
         this.prepImages();
         this.formatDateTimes();
+        Prism.highlightAll();
 
         // Select the current thread if one is loaded.
         if (Util.isNumber(this.threadId)) {
@@ -307,6 +308,7 @@ class Thread {
         if (comment.ThreadId === this.threadId) {
             this.prepImages();
             this.formatDateTimes(renderedComment);
+            Prism.highlightAll();
             twttr.widgets.load(renderedComment.get());
         }
     }
@@ -324,6 +326,7 @@ class Thread {
         let commentBody = commentElement.find('.content>.text');
         commentBody.html(comment.DisplayText);
         this.prepImages();
+        Prism.highlightAll();
         twttr.widgets.load(commentBody.get());
     }
 
@@ -599,6 +602,7 @@ class Thread {
         this.initBlazy();
         this.prepImages();
         this.formatDateTimes(this.$thread);
+        Prism.highlightAll();
         setTimeout(() => { twttr.widgets.load(this.$thread); }, 100);
         this.$threads.visibility('enable callbacks');
     }

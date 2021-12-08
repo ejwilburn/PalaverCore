@@ -29,6 +29,7 @@ using EntityFrameworkCore.Triggers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using PalaverCore.Data;
+using PalaverCore.Services;
 
 namespace PalaverCore.Models
 {
@@ -47,7 +48,7 @@ namespace PalaverCore.Models
         [Required]
         public TextFormat Format { get; set; }
         [NotMapped]
-        public string DisplayText { get { return DisplayFilterComment(_text); } }
+        public string DisplayText { get { return DisplayFilterComment(_text, Format); } }
         [Required]
         public int UserId { get; set; }
         [Required]
@@ -68,6 +69,7 @@ namespace PalaverCore.Models
         public List<FavoriteComment> FavoriteComments { get; set; }
 
         private string _text;
+        private static MarkdownRendererService _markdownRendererService = new MarkdownRendererService();
 
         public Comment()
         {
@@ -116,12 +118,21 @@ namespace PalaverCore.Models
         /// </summary>
         /// <param name="commentText"></param>
         /// <returns></returns>
-        private string DisplayFilterComment(string commentText)
+        private string DisplayFilterComment(string commentText, TextFormat format)
         {
             if (String.IsNullOrWhiteSpace(commentText))
                 return commentText;
 
-            string output = EnableGifPlayOnHover(commentText);
+            string output = commentText;
+            output = _markdownRendererService.ToHtml(output);
+            //switch(format)
+            //{
+            //    case TextFormat.Markdown:
+            //        output = _markdownRendererService.ToHtml(output);
+            //        break;
+            //}
+
+            output = EnableGifPlayOnHover(output);
             output = EnableLazyLoadingImages(output);
             output = EnableTwitterEmbedding(output);
             return output;

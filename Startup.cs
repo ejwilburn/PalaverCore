@@ -107,6 +107,7 @@ namespace PalaverCore
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddSingleton<StubbleRendererService>(new StubbleRendererService(Configuration.GetValue<bool>("CacheTemplates")));
+            services.AddSingleton<MarkdownRendererService>(new MarkdownRendererService());
             services.Configure<SmtpOptions>(Configuration.GetSection(SmtpOptions.CONFIG_SECTION_NAME));
             services.Configure<GoogleOptions>(Configuration.GetSection("GoogleOptions"));
             services.AddHealthChecks();
