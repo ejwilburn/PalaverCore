@@ -126,6 +126,7 @@ namespace PalaverCore.SignalR
             await WatchThread(threadId);
             string output = _stubble.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread));
             await Clients.Client(Context.ConnectionId).SendAsync("showThread", output);
+            GC.Collect();
         }
 
         /// <summary>
