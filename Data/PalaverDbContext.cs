@@ -54,6 +54,7 @@ namespace PalaverCore.Data
                 .Include(t => t.User)
                 .Skip(startIndex)
                 .Take(maxResults)
+                .AsNoTrackingWithIdentityResolution()
                 .ToListAsync();
 
             // Get unread counts for each thread for the current user.
@@ -61,7 +62,9 @@ namespace PalaverCore.Data
             var countTotals = await Comments.Where(c => threadIds.Contains(c.ThreadId))
                 .Join(UnreadComments.Where(uc => uc.UserId == userId), c => c.Id, uc => uc.CommentId, (c, uc) => new { Comment = c, UnreadComment = uc })
                 .GroupBy(cuc => cuc.Comment.ThreadId)
-                .Select(g => new { ThreadId = g.Key, Count = g.Count() }).ToListAsync();
+                .Select(g => new { ThreadId = g.Key, Count = g.Count() })
+                .AsNoTrackingWithIdentityResolution()
+                .ToListAsync();
 
             // Unread counts
             foreach (var count in countTotals)
@@ -84,7 +87,9 @@ namespace PalaverCore.Data
                 .Include(c => c.User)
                 //.Include(c => c.Parent)
                 .Include(c => c.Comments)
-                .OrderBy(c => c.Created).ToListAsync();
+                .OrderBy(c => c.Created)
+                .AsNoTrackingWithIdentityResolution()
+                .ToListAsync();
 
             // If there are comments, get the thread from there, otherwise load the thread and return it.
             if (comments.Count > 0)
@@ -111,6 +116,7 @@ namespace PalaverCore.Data
             {
                 thread = await Threads.Where(t => t.Id == threadId)
                     .Include(t => t.User)
+                    .AsNoTrackingWithIdentityResolution()
                     .SingleOrDefaultAsync();
             }
 
@@ -219,6 +225,7 @@ namespace PalaverCore.Data
             return await Comments.FromSqlRaw("SELECT * FROM search_comments({0})", new NpgsqlParameter("@searchText", searchText))
                 .Include(c => c.User)
                 .Include(c => c.Thread)
+                .AsNoTrackingWithIdentityResolution()
                 .ToListAsync();
         }
 
