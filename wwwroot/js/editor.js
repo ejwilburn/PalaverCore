@@ -105,10 +105,7 @@ class Editor {
     }
 
     closeEditor() {
-        if (this.editor) {
-            this.editor.destroy();
-        }
-
+        this.editor?.destroy();
         this.editorLoaded = false;
         this.editor = null;
         this.editing = null;
