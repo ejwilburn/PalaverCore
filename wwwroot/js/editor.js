@@ -123,8 +123,8 @@ class Editor {
             this.openEditor(this.thread.$thread.children('.comments'));
             return;
         }
-        this.editingParentId = parentId;
         this.openEditor(this.thread.$thread.find(`.comment[data-id="${parentId}"]>.comments`));
+        this.editingParentId = parentId;
     }
 
     setComment(comment) {
@@ -189,7 +189,7 @@ class Editor {
                 "Text": tempDiv.innerHTML,
                 "Format": COMMENT_FORMAT,
                 "ThreadId": this.thread.threadId,
-                "ParentCommentId": (!Util.isNumber(parentCommentId) ? null : parentCommentId)
+                "ParentCommentId": !Util.isNumber(parentCommentId) ? null : parentCommentId
             });
         } else {
             this.thread.saveUpdatedComment({
