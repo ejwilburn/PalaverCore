@@ -33,6 +33,7 @@ class Editor {
     editingOrigText = null;
     editorLoaded = false;
     thread = null;
+    sendingReply = false;
 
     constructor(thread) {
         this.thread = thread;
@@ -106,15 +107,17 @@ class Editor {
     closeEditor() {
         if (this.editor) {
             this.editor.destroy();
-            this.editorLoaded = false;
-            this.editor = null;
-            this.editing = null;
-            this.editingParentId = null;
-            this.editingCommentId = null;
-            this.editingOrigText = null;
-            $(this.editorForm).remove();
-            this.editorForm = null;
         }
+
+        this.editorLoaded = false;
+        this.editor = null;
+        this.editing = null;
+        this.editingParentId = null;
+        this.editingCommentId = null;
+        this.editingOrigText = null;
+        this.sendingReply = false;
+        $(this.editorForm)?.remove();
+        this.editorForm = null;
     }
 
     replyTo(parentId) {
@@ -158,6 +161,13 @@ class Editor {
     }
 
     sendReply() {
+        // Don't post if in the middle of posting, prevents double/triple posting by hitting shift+enter quickly and repeatedly
+        // Gets cleared every time the editor is closed.
+        if (this.sendingReply) {
+            return;
+        }
+        this.sendingReply = true;
+
         let text = this.editor.getMarkdown();
         if (Util.isNullOrEmpty(text) || text === '<p><br></p>') {
             alert("Replies cannot be empty.");
