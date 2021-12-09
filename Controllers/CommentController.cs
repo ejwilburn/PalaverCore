@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -90,7 +90,7 @@ namespace PalaverCore.Controllers
             {
                 return BadRequest();
             }
-            Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
+            Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.Format, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
             return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, DetailViewModel>(newComment));
         }
 

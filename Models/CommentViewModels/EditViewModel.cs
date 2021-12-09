@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
@@ -23,14 +23,13 @@ using static PalaverCore.Models.Comment;
 
 namespace PalaverCore.Models.CommentViewModels
 {
-    public class CreateViewModel
+    public class EditViewModel
     {
+        [Required]
+        public int Id { get; set; }
         [Required]
         public string Text { get; set; }
         [Required]
         public TextFormat Format { get; set; }
-        [Required]
-        public int ThreadId { get; set; }
-        public int? ParentCommentId { get; set; }
     }
 }

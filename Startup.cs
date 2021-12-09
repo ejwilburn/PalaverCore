@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using AutoMapper;
+using AutoMapperBuilder.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Builder;
@@ -37,6 +37,7 @@ using PalaverCore.Models;
 using PalaverCore.Models.MappingProfiles;
 using PalaverCore.Services;
 using PalaverCore.SignalR;
+using System.Text.Json.Serialization;
 
 namespace PalaverCore
 {
@@ -63,10 +64,19 @@ namespace PalaverCore
         {
             services.AddControllersWithViews();
             services.AddRazorPages();
-            services.AddAutoMapper(typeof(CommentMappingProfile), typeof(ThreadMappingProfile));
+
+            var commentRenderer = new CommentRenderService();
+            services.AddSingleton<CommentRenderService>(commentRenderer);
+            services.AddAutoMapperBuilder(builder =>
+            {
+                builder.Profiles.Add(new CommentMappingProfile(commentRenderer));
+                builder.Profiles.Add(new ThreadMappingProfile());
+            });
+
             services.AddSignalR()
                 .AddJsonProtocol(options =>
                 {
+                    options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                     // Keep properties PascalCase so the same renderer can be used server and client side.
                     options.PayloadSerializerOptions.PropertyNamingPolicy = null;
                 });

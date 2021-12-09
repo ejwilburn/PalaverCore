@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -30,6 +30,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using EntityFrameworkCore.Triggers;
 using PalaverCore.Models;
 using Npgsql;
+using static PalaverCore.Models.Comment;
 
 namespace PalaverCore.Data
 {
@@ -165,7 +166,7 @@ namespace PalaverCore.Data
             return newThread;
         }
 
-        public async Task<Comment> CreateCommentAsync(string text, int threadId, int? parentId, User user)
+        public async Task<Comment> CreateCommentAsync(string text, TextFormat format, int threadId, int? parentId, User user)
         {
             // If the comment has a parent, make sure the comment's thread id is the same as the parent's.
             int useThreadId = threadId;
@@ -176,7 +177,7 @@ namespace PalaverCore.Data
                     useThreadId = parent.ThreadId;
             }
             Models.Thread thread = await Threads.Where(t => t.Id == useThreadId).Include(t => t.Subscriptions).SingleAsync();
-            Comment newComment = await Comment.CreateComment(text, thread, parentId, user, this);
+            Comment newComment = await Comment.CreateComment(text, format, thread, parentId, user, this);
             Comments.Add(newComment);
 
             // Add unread comments for subscribed users other than the current user.

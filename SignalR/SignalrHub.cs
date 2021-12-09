@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -36,6 +36,7 @@ using PalaverCore.Models;
 using PalaverCore.Models.CommentViewModels;
 using PalaverCore.Models.ThreadViewModels;
 using PalaverCore.Services;
+using static PalaverCore.Models.Comment;
 
 namespace PalaverCore.SignalR
 {
@@ -151,7 +152,7 @@ namespace PalaverCore.SignalR
         /// </summary>
         /// <param name="parentId">Id of the parent comment.</param>
         /// <param name="replyText">Text of the reply.</param>
-        public async Task NewComment(string commentText, int threadId, int? parentId)
+        public async Task NewComment(string commentText, TextFormat format, int threadId, int? parentId)
         {
             if (String.IsNullOrWhiteSpace(commentText))
             {
@@ -159,7 +160,7 @@ namespace PalaverCore.SignalR
             }
 
             User curUser = await GetUserAsync();
-            Comment newComment = await _dbContext.CreateCommentAsync(commentText, threadId, parentId, curUser);
+            Comment newComment = await _dbContext.CreateCommentAsync(commentText, format, threadId, parentId, curUser);
 			Models.CommentViewModels.DetailViewModel resultView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
             await Clients.Client(Context.ConnectionId).SendAsync("addComment", resultView);
             Models.CommentViewModels.DetailViewModel othersView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
@@ -168,12 +169,34 @@ namespace PalaverCore.SignalR
         }
 
         /// <summary>
+        /// Get the unprocessed text of the comment for use in the editor.
+        /// </summary>
+        /// <param name="commentId">id of the comment being edited</param>
+        public async Task GetCommentForEdit(int commentId)
+        {
+            Comment existingComment = await _dbContext.Comments.Where(c => c.Id == commentId)
+                .SingleOrDefaultAsync();
+            if (existingComment == null)
+            {
+                throw new Exception($"Unable to find comment id {commentId}.");
+            }
+
+            if (existingComment.UserId != GetUserId())
+            {
+                throw new Exception("Ony the comment creator may edit a comment.");
+            }
+
+            var editView = _mapper.Map<Comment, EditViewModel>(existingComment);
+            await Clients.Client(Context.ConnectionId).SendAsync("setEditorComment", editView);
+        }
+
+        /// <summary>
         /// Edit an existing comment.  The editor must be the creator of the comment or an exception is thrown.
         /// Subscribers will get an updated comment but the unread flag will not be changed.
         /// </summary>
         /// <param name="parentId">Id of the parent comment.</param>
         /// <param name="replyText">Text of the reply.</param>
-        public async Task EditComment(int commentId, string commentText)
+        public async Task EditComment(int commentId, string commentText, TextFormat format)
         {
             if (String.IsNullOrWhiteSpace(commentText))
             {
@@ -195,6 +218,7 @@ namespace PalaverCore.SignalR
             }
 
             existingComment.Text = commentText;
+            existingComment.Format = format;
             await _dbContext.SaveChangesAsync();
 
             EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);

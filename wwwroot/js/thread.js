@@ -100,6 +100,7 @@ class Thread {
 
         this.prepImages();
         this.formatDateTimes();
+        Prism.highlightAll();
 
         // Select the current thread if one is loaded.
         if (Util.isNumber(this.threadId)) {
@@ -172,6 +173,7 @@ class Thread {
         sr.conn.on('addToThreadsList', (threads) => { this.addToThreadsList(threads); });
         sr.conn.on('addComment', (comment) => { this.addComment(comment); });
         sr.conn.on('updateComment', (comment) => { this.updateComment(comment); });
+        sr.conn.on('setEditorComment', (comment) => { this.setEditorComment(comment); });
 
         try
         {
@@ -306,6 +308,7 @@ class Thread {
         if (comment.ThreadId === this.threadId) {
             this.prepImages();
             this.formatDateTimes(renderedComment);
+            Prism.highlightAll();
             twttr.widgets.load(renderedComment.get());
         }
     }
@@ -323,7 +326,13 @@ class Thread {
         let commentBody = commentElement.find('.content>.text');
         commentBody.html(comment.DisplayText);
         this.prepImages();
+        Prism.highlightAll();
         twttr.widgets.load(commentBody.get());
+    }
+
+    setEditorComment(comment) {
+        this.clearBusy();
+        this.editor.setComment(comment);
     }
 
     // Move the new comment's thread to the top of the thread list.
@@ -593,6 +602,7 @@ class Thread {
         this.initBlazy();
         this.prepImages();
         this.formatDateTimes(this.$thread);
+        Prism.highlightAll();
         setTimeout(() => { twttr.widgets.load(this.$thread); }, 100);
         this.$threads.visibility('enable callbacks');
     }
@@ -604,11 +614,30 @@ class Thread {
             this.$threadList.sidebar('hide');
     }
 
+    getCommentForEdit(commentId) {
+        this.showBusy();
+        this.signalr.conn.invoke('getCommentForEdit', commentId).catch((error) => {
+            this.getCommentForEditFailed(error, commentId);
+            this.clearBusy();
+        });
+    }
+
+    getCommentForEditFailed(error, commentId) {
+        if (console) {
+            console.error(error);
+            console.info(`Retrying in ${HUB_ACTION_RETRY_DELAY / 1000} seconds...`);
+        }
+
+        setTimeout(() => {
+            this.getCommentForEdit(commentId);
+        }, HUB_ACTION_RETRY_DELAY);
+    }
+
     newComment(comment) {
         this.showBusy();
         if (!Util.isNumber(comment.ParentCommentId))
             comment.ParentCommentId = null;
-        this.signalr.conn.invoke('newComment', comment.Text, comment.ThreadId, comment.ParentCommentId).catch((error) => {
+        this.signalr.conn.invoke('newComment', comment.Text, comment.Format, comment.ThreadId, comment.ParentCommentId).catch((error) => {
                 this.newCommentFailed(error, comment);
                 this.clearBusy();
             });
@@ -627,7 +656,7 @@ class Thread {
 
     saveUpdatedComment(comment) {
         this.showBusy();
-        this.signalr.conn.invoke('editComment', comment.Id, comment.Text).catch((error) => {
+        this.signalr.conn.invoke('editComment', comment.Id, comment.Text, comment.Format).catch((error) => {
             this.saveUpdatedCommentError(error, comment);
             this.clearBusy();
         });

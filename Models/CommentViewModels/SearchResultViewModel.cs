@@ -31,7 +31,7 @@ namespace PalaverCore.Models.CommentViewModels
         [Required]
         public string CreatedIsoTime { get; set; }
         [Required]
-        public string Text { get; set; }
+        public string DisplayText { get; set; }
         [Required]
         public string Url { get; set; }
     }
