@@ -33,20 +33,19 @@ public class CommentMappingProfile : Profile
     public CommentMappingProfile(CommentRenderService commentRenderer)
     {
         this._commentRenderer = commentRenderer;
-        var urlStart = Startup.SiteRoot.EndsWith("/") ? Startup.SiteRoot : Startup.SiteRoot + "/";
 
         CreateMap<Comment, CreateViewModel>();
         CreateMap<Comment, DetailViewModel>()
             .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))
             .ForMember(d => d.EmailHash, opt => opt.MapFrom(s => s.User.EmailHash))
-            .ForMember(d => d.Url, opt => opt.MapFrom(s => $"{urlStart}Thread/{s.ThreadId}/{s.Id}"))
+            .ForMember(d => d.Url, opt => opt.MapFrom(s => $"{Startup.SiteRoot}Thread/{s.ThreadId}/{s.Id}"))
             .ForMember(d => d.DisplayText, opt => opt.MapFrom(s => _commentRenderer.ToHtml(s.Text, s.Format)));
         CreateMap<Comment, EditViewModel>();
         CreateMap<Comment, EditResultViewModel>()
             .ForMember(d => d.DisplayText, opt => opt.MapFrom(s => _commentRenderer.ToHtml(s.Text, s.Format)));
         CreateMap<Comment, SearchResultViewModel>()
             .ForMember(d => d.Title, opt => opt.MapFrom(s => $"[{s.CreatedDisplay}] {s.User.UserName} - {s.Thread.Title}"))
-            .ForMember(d => d.Url, opt => opt.MapFrom(s => $"{urlStart}Thread/{s.ThreadId}/{s.Id}"))
+            .ForMember(d => d.Url, opt => opt.MapFrom(s => $"{Startup.SiteRoot}Thread/{s.ThreadId}/{s.Id}"))
             .ForMember(d => d.DisplayText, opt => opt.MapFrom(s => _commentRenderer.ToHtml(s.Text, s.Format)));
     }
 }
