@@ -50,7 +50,6 @@ class Editor {
             initialEditType: 'markdown',
             previewStyle: 'tab',
             usingStatistics: false,
-            theme: 'dark',
             hideModeSwitch: true,
             placeholder: 'Enter comment...',
             plugins: [[codeSyntaxHighlight, { highlighter: Prism }]],
