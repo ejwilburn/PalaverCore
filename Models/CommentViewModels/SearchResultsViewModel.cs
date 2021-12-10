@@ -26,7 +26,8 @@ namespace PalaverCore.Models.CommentViewModels;
 public class SearchResultsViewModel
 {
     [Required]
-    public List<SearchResultViewModel> results;
+    public List<SearchResultViewModel> results { get; set; }
     [Required]
-    public bool success = true;
+    public bool success { get; set; } = true;
+
 }

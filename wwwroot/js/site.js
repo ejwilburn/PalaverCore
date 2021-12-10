@@ -27,7 +27,7 @@ $(document).ready(function() {
         fields: {
             categoryResults: false,
             title: 'title',
-            description: 'displaytext'
+            description: 'displayText'
         },
         minCharacters: 3,
         maxResults: 5

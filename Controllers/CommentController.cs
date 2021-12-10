@@ -71,7 +71,7 @@ public class CommentController : Controller
     {
         SearchResultsViewModel results = new SearchResultsViewModel();
         List<Comment> comments = await _dbContext.Search(searchText);
-        if (comments != null && comments.Count > 0)
+        if (comments?.Count > 0)
         {
             results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments);
             results.success = true;
