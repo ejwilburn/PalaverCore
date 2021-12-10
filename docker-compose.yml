@@ -14,7 +14,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "5001:80"
+      - "5001:5001"
     environment:
       DB_CONNECTION_STRING: host=db;port=5432;database=palavercore_dev;username=palavercore_dev;password=palavercore_pass
     networks:
@@ -24,7 +24,7 @@ services:
     image: postgres
     container_name: PalaverCoreDB
     ports:
-      - "5432"
+      - "5432:5432"
     restart: always
     environment:
       POSTGRES_HOST_AUTH_METHOD: md5
