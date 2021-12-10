@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -28,37 +28,36 @@ using Microsoft.Extensions.Logging;
 using PalaverCore.Data;
 using PalaverCore.Models;
 
-namespace PalaverCore.Controllers
+namespace PalaverCore.Controllers;
+
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    private readonly IWebHostEnvironment _environment;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly PalaverDbContext _context;
+    private readonly UserManager<User> _userManager;
+    private readonly IMapper _mapper;
+    private readonly ILogger _logger;
+
+    public HomeController(IWebHostEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
+        IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
     {
-        private readonly IWebHostEnvironment _environment;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly PalaverDbContext _context;
-        private readonly UserManager<User> _userManager;
-        private readonly IMapper _mapper;
-        private readonly ILogger _logger;
+        this._environment = environment;
+        this._context = context;
+        this._userManager = userManager;
+        this._mapper = mapper;
+        this._httpContextAccessor = httpContextAccessor;
+        this._logger = loggerFactory.CreateLogger<HomeController>();
+    }
 
-        public HomeController(IWebHostEnvironment environment, PalaverDbContext context, UserManager<User> userManager, IMapper mapper,
-            IHttpContextAccessor httpContextAccessor, ILoggerFactory loggerFactory)
-        {
-            this._environment = environment;
-            this._context = context;
-            this._userManager = userManager;
-            this._mapper = mapper;
-            this._httpContextAccessor = httpContextAccessor;
-            this._logger = loggerFactory.CreateLogger<HomeController>();
-        }
+    [Authorize]
+    public IActionResult Index()
+    {
+        return View();
+    }
 
-        [Authorize]
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Error()
-        {
-            return View();
-        }
+    public IActionResult Error()
+    {
+        return View();
     }
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -26,71 +26,70 @@ using Stubble.Core.Builders;
 using Stubble.Extensions.Loaders;
 using PalaverCore.Models.ThreadViewModels;
 
-namespace PalaverCore.Services
+namespace PalaverCore.Services;
+
+public class StubbleRendererService
 {
-    public class StubbleRendererService
+    private StubbleVisitorRenderer _stubble;
+    private FileSystemLoader _templatesLoader;
+    private FileSystemLoader _partialsLoader;
+    private bool _cacheTemplates;
+
+    public StubbleRendererService(bool cacheTemplates)
     {
-        private StubbleVisitorRenderer _stubble;
-        private FileSystemLoader _templatesLoader;
-        private FileSystemLoader _partialsLoader;
-        private bool _cacheTemplates;
+        _cacheTemplates = cacheTemplates;
+        _templatesLoader = new FileSystemLoader("./wwwroot/templates/");
+        _partialsLoader = new FileSystemLoader("./wwwroot/templates/partials/");
+        LoadTemplates();
+    }
 
-        public StubbleRendererService(bool cacheTemplates)
-        {
-            _cacheTemplates = cacheTemplates;
-            _templatesLoader = new FileSystemLoader("./wwwroot/templates/");
-            _partialsLoader = new FileSystemLoader("./wwwroot/templates/partials/");
-            LoadTemplates();
-        }
+    /// <summary>
+    /// Render an HTML formatted view of a given thread based on the thread mustache template file in wwwroot\templates.
+    /// </summary>
+    /// <param name="thread"></param>
+    /// <returns>HTML formatted view of the thread</returns>
+    public string RenderThreadFromTemplate(SelectedViewModel thread)
+    {
+        // if (!_cacheTemplates)
+        //     LoadTemplates();
+        return _stubble.Render("thread", thread);
+    }
 
-        /// <summary>
-        /// Render an HTML formatted view of a given thread based on the thread mustache template file in wwwroot\templates.
-        /// </summary>
-        /// <param name="thread"></param>
-        /// <returns>HTML formatted view of the thread</returns>
-        public string RenderThreadFromTemplate(SelectedViewModel thread)
-        {
-            // if (!_cacheTemplates)
-            //     LoadTemplates();
-            return _stubble.Render("thread", thread);
-        }
+    /// <summary>
+    /// Render an HTML formatted view of the list of threads based on the threadList mustache template file in wwwroot\templates.
+    /// </summary>
+    /// <param name="threads"></param>
+    /// <returns>HTML formatted view of the list of threads</returns>
+    public string RenderThreadListFromTemplate(IEnumerable<ListViewModel> threads)
+    {
+        // if (!_cacheTemplates)
+        //     LoadTemplates();
+        return _stubble.Render("threadList", threads);
+    }
 
-        /// <summary>
-        /// Render an HTML formatted view of the list of threads based on the threadList mustache template file in wwwroot\templates.
-        /// </summary>
-        /// <param name="threads"></param>
-        /// <returns>HTML formatted view of the list of threads</returns>
-        public string RenderThreadListFromTemplate(IEnumerable<ListViewModel> threads)
-        {
-            // if (!_cacheTemplates)
-            //     LoadTemplates();
-            return _stubble.Render("threadList", threads);
-        }
+    /// <summary>
+    /// Load mustache templates for rendering content with Stubble, pre-compiling and caching them for speed.
+    /// </summary>
+    private void LoadTemplates()
+    {
+        _stubble = new StubbleBuilder()
+            .Configure(config =>
+            {
+                config.SetPartialTemplateLoader(_partialsLoader);
+                config.SetTemplateLoader(_templatesLoader);
+                config.SetMaxRecursionDepth(5000);
+            })
+            .Build();
+        // if (_cacheTemplates)
+        //     CacheTemplates();
+    }
 
-        /// <summary>
-        /// Load mustache templates for rendering content with Stubble, pre-compiling and caching them for speed.
-        /// </summary>
-        private void LoadTemplates()
-        {
-            _stubble = new StubbleBuilder()
-                .Configure(config =>
-                {
-                    config.SetPartialTemplateLoader(_partialsLoader);
-                    config.SetTemplateLoader(_templatesLoader);
-                    config.SetMaxRecursionDepth(5000);
-                })
-                .Build();
-            // if (_cacheTemplates)
-            //     CacheTemplates();
-        }
-
-        /// <summary>
-        /// Load mustache templates, compile and cache them for faster rendering.
-        /// Partials can't be cached currently.
-        /// </summary>
-        private void CacheTemplates()
-        {
-            // Fix later.
-        }
+    /// <summary>
+    /// Load mustache templates, compile and cache them for faster rendering.
+    /// Partials can't be cached currently.
+    /// </summary>
+    private void CacheTemplates()
+    {
+        // Fix later.
     }
 }

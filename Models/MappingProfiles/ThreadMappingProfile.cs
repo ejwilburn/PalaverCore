@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -21,21 +21,20 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using AutoMapper;
 using PalaverCore.Models.ThreadViewModels;
 
-namespace PalaverCore.Models.MappingProfiles
+namespace PalaverCore.Models.MappingProfiles;
+
+public class ThreadMappingProfile : Profile
 {
-    public class ThreadMappingProfile : Profile
+    public ThreadMappingProfile()
     {
-        public ThreadMappingProfile()
-        {
-            CreateMap<Thread, CreateResultViewModel>()
-                .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName));
-            CreateMap<Thread, SelectedViewModel>()
-                .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))
-                .ForMember(d => d.Comments, opt => opt.MapFrom(s => s.ImmediateChildren));
-            CreateMap<Thread, ListViewModel>()
-                .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))
-                .ForMember(d => d.hasUnread, opt => opt.MapFrom(s => s.UnreadCount > 0));
-            CreateMap<Thread, StickyChangeViewModel>();
-        }
+        CreateMap<Thread, CreateResultViewModel>()
+            .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName));
+        CreateMap<Thread, SelectedViewModel>()
+            .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))
+            .ForMember(d => d.Comments, opt => opt.MapFrom(s => s.ImmediateChildren));
+        CreateMap<Thread, ListViewModel>()
+            .ForMember(d => d.UserName, opt => opt.MapFrom(s => s.User.UserName))
+            .ForMember(d => d.hasUnread, opt => opt.MapFrom(s => s.UnreadCount > 0));
+        CreateMap<Thread, StickyChangeViewModel>();
     }
 }

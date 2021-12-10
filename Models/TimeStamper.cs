@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -22,68 +22,67 @@ using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using EntityFrameworkCore.Triggers;
 
-namespace PalaverCore.Models
+namespace PalaverCore.Models;
+
+public abstract class TimeStamper
 {
-    public abstract class TimeStamper
+    [Column(TypeName="timestamptz")]
+    public virtual DateTime Created { get; set; }
+    [Column(TypeName="timestamptz")]
+    public virtual DateTime Updated { get; set; }
+    [NotMapped]
+    public virtual string CreatedDisplay {
+        get {
+            return DisplayFormatLocalDateTime(Created);
+        }
+    }
+    [NotMapped]
+    public virtual string CreatedIsoTime {
+        get {
+            return Iso8601FormatDateTime(Created);
+        }
+    }
+    [NotMapped]
+    public virtual string UpdatedDisplay {
+        get {
+            return DisplayFormatLocalDateTime(Updated);
+        }
+    }
+    [NotMapped]
+    public virtual string UpdatedIsoTime {
+        get {
+            return Iso8601FormatDateTime(Updated);
+        }
+    }
+
+    static TimeStamper()
     {
-        [Column(TypeName="timestamptz")]
-        public virtual DateTime Created { get; set; }
-        [Column(TypeName="timestamptz")]
-        public virtual DateTime Updated { get; set; }
-        [NotMapped]
-        public virtual string CreatedDisplay {
-            get {
-                return DisplayFormatLocalDateTime(Created);
-            }
-        }
-        [NotMapped]
-        public virtual string CreatedIsoTime {
-            get {
-                return Iso8601FormatDateTime(Created);
-            }
-        }
-        [NotMapped]
-        public virtual string UpdatedDisplay {
-            get {
-                return DisplayFormatLocalDateTime(Updated);
-            }
-        }
-        [NotMapped]
-        public virtual string UpdatedIsoTime {
-            get {
-                return Iso8601FormatDateTime(Updated);
-            }
-        }
+        Triggers<TimeStamper>.Updating += entry => entry.Entity.Updated = DateTime.UtcNow;
+    }
 
-        static TimeStamper()
-        {
-            Triggers<TimeStamper>.Updating += entry => entry.Entity.Updated = DateTime.UtcNow;
-        }
+    public TimeStamper()
+    {
+        Created = DateTime.UtcNow;
+        Updated = DateTime.UtcNow;
+    }
 
-        public TimeStamper()
-        {
-            Created = DateTime.UtcNow;
-            Updated = DateTime.UtcNow;
-        }
+    /// <summary>
+    /// Return a short-format local date and time string from the provided DateTime.
+    /// </summary>
+    /// <param name="dateTime"></param>
+    /// <returns>Short local date and time string.</returns>
+    private string DisplayFormatLocalDateTime(DateTime dateTime)
+    {
+        return dateTime.ToLocalTime().ToString("g");
+    }
 
-        /// <summary>
-        /// Return a short-format local date and time string from the provided DateTime.
-        /// </summary>
-        /// <param name="dateTime"></param>
-        /// <returns>Short local date and time string.</returns>
-        private string DisplayFormatLocalDateTime(DateTime dateTime)
-        {
-            return dateTime.ToLocalTime().ToString("g");
-        }
-
-        /// <summary>
-        /// Return an UTC Iso8601 date/time string from the given DateTime
-        /// </summary>
-        /// <param name="dateTime"></param>
-        /// <returns>UTC Iso8601 date/time string.</returns>
-        private string Iso8601FormatDateTime(DateTime dateTime)
-        {
-            return dateTime.ToString("o");
-        }
+    /// <summary>
+    /// Return an UTC Iso8601 date/time string from the given DateTime
+    /// </summary>
+    /// <param name="dateTime"></param>
+    /// <returns>UTC Iso8601 date/time string.</returns>
+    private string Iso8601FormatDateTime(DateTime dateTime)
+    {
+        return dateTime.ToString("o");
     }
 }

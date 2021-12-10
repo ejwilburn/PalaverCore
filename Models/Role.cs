@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -21,10 +21,9 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
-namespace PalaverCore.Models
+namespace PalaverCore.Models;
+
+// Add profile data for application users by adding properties to the Role class
+public class Role : IdentityRole<int>
 {
-    // Add profile data for application users by adding properties to the Role class
-    public class Role : IdentityRole<int>
-    {
-    }
 }

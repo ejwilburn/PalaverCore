@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -20,17 +20,16 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.ComponentModel.DataAnnotations;
 
-namespace PalaverCore.Models
+namespace PalaverCore.Models;
+
+public class FavoriteThread
 {
-    public class FavoriteThread
-    {
-        [Required]
-        public int ThreadId { get; set; }
-        [Required]
-        public Thread Thread { get; set; }
-        [Required]
-        public int UserId { get; set; }
-        [Required]
-        public User User { get; set; }
-    }
+    [Required]
+    public int ThreadId { get; set; }
+    [Required]
+    public Thread Thread { get; set; }
+    [Required]
+    public int UserId { get; set; }
+    [Required]
+    public User User { get; set; }
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -18,22 +18,21 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace PalaverCore.Services
+namespace PalaverCore.Services;
+
+public class SmtpOptions
 {
-    public class SmtpOptions
+    public static readonly string CONFIG_SECTION_NAME = "Smtp";
+
+    public string Server { get; set; } = "localhost";
+    public int Port { get; set; } = 25;
+    public bool RequireTls { get; set; } = false;
+    public string Username { get; set; } = null;
+    public string Password { get; set; } = null;
+    public string FromName { get; set; } = "Palaver";
+    public string FromAddress { get; set; } = "noreply@noreply.com";
+
+    public SmtpOptions()
     {
-        public static readonly string CONFIG_SECTION_NAME = "Smtp";
-
-        public string Server { get; set; } = "localhost";
-        public int Port { get; set; } = 25;
-        public bool RequireTls { get; set; } = false;
-        public string Username { get; set; } = null;
-        public string Password { get; set; } = null;
-        public string FromName { get; set; } = "Palaver";
-        public string FromAddress { get; set; } = "noreply@noreply.com";
-
-        public SmtpOptions()
-        {
-        }
     }
 }

@@ -18,13 +18,13 @@ You should have received a copy of the GNU General Public License
 along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace PalaverCore.Services;
-
 using Markdig;
 using Markdig.Prism;
 using System;
 using System.Text.RegularExpressions;
 using static PalaverCore.Models.Comment;
+
+namespace PalaverCore.Services;
 
 public class CommentRenderService
 {

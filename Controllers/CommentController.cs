@@ -31,80 +31,79 @@ using PalaverCore.Models.CommentViewModels;
 using PalaverCore.Services;
 using System.Collections.Generic;
 
-namespace PalaverCore.Controllers
+namespace PalaverCore.Controllers;
+
+[Authorize]
+[Route("api/[controller]")]
+public class CommentController : Controller
 {
-    [Authorize]
-    [Route("api/[controller]")]
-    public class CommentController : Controller
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly PalaverDbContext _dbContext;
+    private readonly UserManager<User> _userManager;
+    private readonly IMapper _mapper;
+    private readonly ILogger _logger;
+    private readonly int _userId;
+
+    public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor,
+        ILoggerFactory loggerFactory)
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly PalaverDbContext _dbContext;
-        private readonly UserManager<User> _userManager;
-        private readonly IMapper _mapper;
-        private readonly ILogger _logger;
-        private readonly int _userId;
+        this._dbContext = dbContext;
+        this._userManager = userManager;
+        this._mapper = mapper;
+        this._httpContextAccessor = httpContextAccessor;
+        this._logger = loggerFactory.CreateLogger<CommentController>();
+        this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
+    }
 
-        public CommentController(PalaverDbContext dbContext, UserManager<User> userManager, IMapper mapper, IHttpContextAccessor httpContextAccessor,
-            ILoggerFactory loggerFactory)
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        Comment comment = await _dbContext.GetCommentAsync(id, _userId);
+        if (comment == null)
         {
-            this._dbContext = dbContext;
-            this._userManager = userManager;
-            this._mapper = mapper;
-            this._httpContextAccessor = httpContextAccessor;
-            this._logger = loggerFactory.CreateLogger<CommentController>();
-            this._userId = int.Parse(_userManager.GetUserId(_httpContextAccessor.HttpContext.User));
+            return NotFound();
         }
+        return new ObjectResult(_mapper.Map<Comment, DetailViewModel>(comment));
+    }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+    [HttpGet("Search/{searchText}")]
+    public async Task<SearchResultsViewModel> Search(string searchText)
+    {
+        SearchResultsViewModel results = new SearchResultsViewModel();
+        List<Comment> comments = await _dbContext.Search(searchText);
+        if (comments != null && comments.Count > 0)
         {
-            Comment comment = await _dbContext.GetCommentAsync(id, _userId);
-            if (comment == null)
-            {
-                return NotFound();
-            }
-            return new ObjectResult(_mapper.Map<Comment, DetailViewModel>(comment));
+            results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments);
+            results.success = true;
         }
+        else
+        {
+            results.success = false;
+        }
+        return results;
+    }
 
-        [HttpGet("Search/{searchText}")]
-        public async Task<SearchResultsViewModel> Search(string searchText)
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateViewModel comment)
+    {
+        if (string.IsNullOrEmpty(comment.Text))
         {
-            SearchResultsViewModel results = new SearchResultsViewModel();
-            List<Comment> comments = await _dbContext.Search(searchText);
-            if (comments != null && comments.Count > 0)
-            {
-                results.results = _mapper.Map<List<Comment>, List<SearchResultViewModel>>(comments);
-                results.success = true;
-            }
-            else
-            {
-                results.success = false;
-            }
-            return results;
+            return BadRequest();
         }
+        Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.Format, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
+        return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, DetailViewModel>(newComment));
+    }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateViewModel comment)
-        {
-            if (string.IsNullOrEmpty(comment.Text))
-            {
-                return BadRequest();
-            }
-            Comment newComment = await _dbContext.CreateCommentAsync(comment.Text, comment.Format, comment.ThreadId, comment.ParentCommentId, await GetUserAsync());
-            return CreatedAtRoute(new { id = newComment.Id }, _mapper.Map<Comment, DetailViewModel>(newComment));
-        }
+    [HttpPut("{threadId}/{commentId}")]
+    [Route("MarkRead/{threadId}/{commentId}")]
+    public async Task<IActionResult> MarkRead(int threadId, int commentId)
+    {
+        await _dbContext.MarkCommentReadByUser(threadId, commentId, _userId);
+        return new NoContentResult();
+    }
 
-        [HttpPut("{threadId}/{commentId}")]
-        [Route("MarkRead/{threadId}/{commentId}")]
-        public async Task<IActionResult> MarkRead(int threadId, int commentId)
-        {
-            await _dbContext.MarkCommentReadByUser(threadId, commentId, _userId);
-            return new NoContentResult();
-        }
-
-        private async Task<User> GetUserAsync()
-        {
-            return await _userManager.GetUserAsync(_httpContextAccessor.HttpContext.User);
-        }
+    private async Task<User> GetUserAsync()
+    {
+        return await _userManager.GetUserAsync(_httpContextAccessor.HttpContext.User);
     }
 }
