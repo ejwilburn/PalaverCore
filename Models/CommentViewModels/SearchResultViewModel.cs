@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -20,19 +20,18 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.ComponentModel.DataAnnotations;
 
-namespace PalaverCore.Models.CommentViewModels
+namespace PalaverCore.Models.CommentViewModels;
+
+public class SearchResultViewModel
 {
-    public class SearchResultViewModel
-    {
-        [Required]
-        public int Id { get; set; }
-        [Required]
-        public string Title { get; set; }
-        [Required]
-        public string CreatedIsoTime { get; set; }
-        [Required]
-        public string DisplayText { get; set; }
-        [Required]
-        public string Url { get; set; }
-    }
+    [Required]
+    public int Id { get; set; }
+    [Required]
+    public string Title { get; set; }
+    [Required]
+    public string CreatedIsoTime { get; set; }
+    [Required]
+    public string DisplayText { get; set; }
+    [Required]
+    public string Url { get; set; }
 }

@@ -38,207 +38,206 @@ using PalaverCore.Models.ThreadViewModels;
 using PalaverCore.Services;
 using static PalaverCore.Models.Comment;
 
-namespace PalaverCore.SignalR
+namespace PalaverCore.SignalR;
+
+[Authorize]
+public class SignalrHub : Hub
 {
-    [Authorize]
-    public class SignalrHub : Hub
+    private static Dictionary<string, string> _threadWatchedByConnection = new Dictionary<string, string>();
+
+    private readonly PalaverDbContext _dbContext;
+    private readonly StubbleRendererService _stubble;
+    private readonly UserManager<User> _userManager;
+    private readonly IMapper _mapper;
+    private readonly ILogger _logger;
+
+    public SignalrHub(PalaverDbContext dbContext, StubbleRendererService stubble, UserManager<User> userManager,
+        IMapper mapper, ILoggerFactory loggerFactory)
     {
-        private static Dictionary<string, string> _threadWatchedByConnection = new Dictionary<string, string>();
+        this._dbContext = dbContext;
+        this._stubble = stubble;
+        this._userManager = userManager;
+        this._mapper = mapper;
+        this._logger = loggerFactory.CreateLogger<SignalrHub>();
+    }
 
-        private readonly PalaverDbContext _dbContext;
-        private readonly StubbleRendererService _stubble;
-        private readonly UserManager<User> _userManager;
-        private readonly IMapper _mapper;
-        private readonly ILogger _logger;
+    public override async Task OnConnectedAsync()
+    {
+        System.Diagnostics.Debug.WriteLine("Connected ConnectionId: " + Context.ConnectionId);
+        await base.OnConnectedAsync();
+    }
 
-        public SignalrHub(PalaverDbContext dbContext, StubbleRendererService stubble, UserManager<User> userManager,
-            IMapper mapper, ILoggerFactory loggerFactory)
+    public override async Task OnDisconnectedAsync(Exception exception)
+    {
+        if (exception != null)
+            System.Diagnostics.Debug.WriteLine("Disconnected ConnectionId: " + Context.ConnectionId);
+        else
+            System.Diagnostics.Debug.WriteLine("Lost Connection on ConnectionId: " + Context.ConnectionId);
+        await base.OnDisconnectedAsync(exception);
+    }
+
+    public async Task WatchThread(int threadId)
+    {
+        if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId) && _threadWatchedByConnection[Context.ConnectionId] != null)
+            await UnsubscribeFromGroup(_threadWatchedByConnection[Context.ConnectionId]);
+        string group = threadId.ToString();
+        await SubscribeToGroup(group);
+    }
+
+    public async Task SubscribeToGroup(string group)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, group);
+        lock (_threadWatchedByConnection)
         {
-            this._dbContext = dbContext;
-            this._stubble = stubble;
-            this._userManager = userManager;
-            this._mapper = mapper;
-            this._logger = loggerFactory.CreateLogger<SignalrHub>();
+            _threadWatchedByConnection[Context.ConnectionId] = group;
         }
+    }
 
-        public override async Task OnConnectedAsync()
+    public async Task UnsubscribeFromGroup(string group)
+    {
+        bool isSubscribed = false;
+        lock(_threadWatchedByConnection)
         {
-            System.Diagnostics.Debug.WriteLine("Connected ConnectionId: " + Context.ConnectionId);
-            await base.OnConnectedAsync();
-        }
-
-        public override async Task OnDisconnectedAsync(Exception exception)
-        {
-            if (exception != null)
-                System.Diagnostics.Debug.WriteLine("Disconnected ConnectionId: " + Context.ConnectionId);
-            else
-                System.Diagnostics.Debug.WriteLine("Lost Connection on ConnectionId: " + Context.ConnectionId);
-            await base.OnDisconnectedAsync(exception);
-        }
-
-        public async Task WatchThread(int threadId)
-        {
-            if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId) && _threadWatchedByConnection[Context.ConnectionId] != null)
-                await UnsubscribeFromGroup(_threadWatchedByConnection[Context.ConnectionId]);
-            string group = threadId.ToString();
-            await SubscribeToGroup(group);
-        }
-
-        public async Task SubscribeToGroup(string group)
-        {
-            await Groups.AddToGroupAsync(Context.ConnectionId, group);
-            lock (_threadWatchedByConnection)
+            if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId))
             {
-                _threadWatchedByConnection[Context.ConnectionId] = group;
+                if (_threadWatchedByConnection[Context.ConnectionId] != null)
+                    isSubscribed = true;
+
+                _threadWatchedByConnection.Remove(Context.ConnectionId);
             }
         }
+        if (isSubscribed)
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
+    }
 
-        public async Task UnsubscribeFromGroup(string group)
+    public async Task GetPagedThreadsList(int startIndex)
+    {
+        List<Thread> threads = await _dbContext.GetPagedThreadsListAsync(GetUserId(), startIndex);
+        await Clients.Client(Context.ConnectionId).SendAsync("addToThreadsList", _mapper.Map<List<Thread>, List<ListViewModel>>(threads));
+    }
+
+    /// <summary>
+    /// Request an HTML rendered thread.  The result is sent back to the client via a remote call.
+    /// </summary>
+    /// <param name="threadId">Thread Id</param>
+    public async Task LoadThread(int threadId)
+    {
+        Thread selectedThread = await _dbContext.GetThreadAsync(threadId, GetUserId());
+        await WatchThread(threadId);
+        string output = _stubble.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread));
+        await Clients.Client(Context.ConnectionId).SendAsync("showThread", output);
+        GC.Collect();
+    }
+
+    /// <summary>
+    /// Create a new thread.
+    /// Creating a thread will subscribe all users to it and notify any connected clients.
+    /// </summary>
+    /// <param name="threadTitle">Text of the thread subject.</param>
+    public async Task NewThread(string threadTitle)
+    {
+        if (String.IsNullOrWhiteSpace(threadTitle))
         {
-            bool isSubscribed = false;
-            lock(_threadWatchedByConnection)
-            {
-                if (_threadWatchedByConnection.ContainsKey(Context.ConnectionId))
-                {
-                    if (_threadWatchedByConnection[Context.ConnectionId] != null)
-                        isSubscribed = true;
-
-                    _threadWatchedByConnection.Remove(Context.ConnectionId);
-                }
-            }
-            if (isSubscribed)
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, group);
+            throw new Exception("The thread title cannot be empty.");
         }
 
-        public async Task GetPagedThreadsList(int startIndex)
+        Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
+        PalaverCore.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, PalaverCore.Models.ThreadViewModels.CreateResultViewModel>(newThread);
+        await WatchThread(newThread.Id);
+        await Clients.All.SendAsync("addThread", resultView);
+    }
+
+    /// <summary>
+    /// Create a new reply in an existing thread.
+    /// Adding a reply to an existing thread will notify all subscribed and connected clients.
+    /// </summary>
+    /// <param name="parentId">Id of the parent comment.</param>
+    /// <param name="replyText">Text of the reply.</param>
+    public async Task NewComment(string commentText, TextFormat format, int threadId, int? parentId)
+    {
+        if (String.IsNullOrWhiteSpace(commentText))
         {
-            List<Thread> threads = await _dbContext.GetPagedThreadsListAsync(GetUserId(), startIndex);
-            await Clients.Client(Context.ConnectionId).SendAsync("addToThreadsList", _mapper.Map<List<Thread>, List<ListViewModel>>(threads));
+            throw new Exception("The comment text cannot be empty.");
         }
 
-        /// <summary>
-        /// Request an HTML rendered thread.  The result is sent back to the client via a remote call.
-        /// </summary>
-        /// <param name="threadId">Thread Id</param>
-        public async Task LoadThread(int threadId)
+        User curUser = await GetUserAsync();
+        Comment newComment = await _dbContext.CreateCommentAsync(commentText, format, threadId, parentId, curUser);
+		Models.CommentViewModels.DetailViewModel resultView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
+        await Clients.Client(Context.ConnectionId).SendAsync("addComment", resultView);
+        Models.CommentViewModels.DetailViewModel othersView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
+        othersView.IsAuthor = false;
+        await Clients.AllExcept(new List<String>{ Context.ConnectionId }).SendAsync("addComment", othersView);
+    }
+
+    /// <summary>
+    /// Get the unprocessed text of the comment for use in the editor.
+    /// </summary>
+    /// <param name="commentId">id of the comment being edited</param>
+    public async Task GetCommentForEdit(int commentId)
+    {
+        Comment existingComment = await _dbContext.Comments.Where(c => c.Id == commentId)
+            .SingleOrDefaultAsync();
+        if (existingComment == null)
         {
-            Thread selectedThread = await _dbContext.GetThreadAsync(threadId, GetUserId());
-            await WatchThread(threadId);
-            string output = _stubble.RenderThreadFromTemplate(_mapper.Map<Thread, SelectedViewModel>(selectedThread));
-            await Clients.Client(Context.ConnectionId).SendAsync("showThread", output);
-            GC.Collect();
+            throw new Exception($"Unable to find comment id {commentId}.");
         }
 
-        /// <summary>
-        /// Create a new thread.
-        /// Creating a thread will subscribe all users to it and notify any connected clients.
-        /// </summary>
-        /// <param name="threadTitle">Text of the thread subject.</param>
-        public async Task NewThread(string threadTitle)
+        if (existingComment.UserId != GetUserId())
         {
-            if (String.IsNullOrWhiteSpace(threadTitle))
-            {
-                throw new Exception("The thread title cannot be empty.");
-            }
-
-            Thread newThread = await _dbContext.CreateThreadAsync(threadTitle, GetUserId());
-            PalaverCore.Models.ThreadViewModels.CreateResultViewModel resultView = _mapper.Map<Thread, PalaverCore.Models.ThreadViewModels.CreateResultViewModel>(newThread);
-            await WatchThread(newThread.Id);
-            await Clients.All.SendAsync("addThread", resultView);
+            throw new Exception("Ony the comment creator may edit a comment.");
         }
 
-        /// <summary>
-        /// Create a new reply in an existing thread.
-        /// Adding a reply to an existing thread will notify all subscribed and connected clients.
-        /// </summary>
-        /// <param name="parentId">Id of the parent comment.</param>
-        /// <param name="replyText">Text of the reply.</param>
-        public async Task NewComment(string commentText, TextFormat format, int threadId, int? parentId)
-        {
-            if (String.IsNullOrWhiteSpace(commentText))
-            {
-                throw new Exception("The comment text cannot be empty.");
-            }
+        var editView = _mapper.Map<Comment, EditViewModel>(existingComment);
+        await Clients.Client(Context.ConnectionId).SendAsync("setEditorComment", editView);
+    }
 
-            User curUser = await GetUserAsync();
-            Comment newComment = await _dbContext.CreateCommentAsync(commentText, format, threadId, parentId, curUser);
-			Models.CommentViewModels.DetailViewModel resultView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
-            await Clients.Client(Context.ConnectionId).SendAsync("addComment", resultView);
-            Models.CommentViewModels.DetailViewModel othersView = _mapper.Map<Comment, Models.CommentViewModels.DetailViewModel>(newComment);
-            othersView.IsAuthor = false;
-            await Clients.AllExcept(new List<String>{ Context.ConnectionId }).SendAsync("addComment", othersView);
+    /// <summary>
+    /// Edit an existing comment.  The editor must be the creator of the comment or an exception is thrown.
+    /// Subscribers will get an updated comment but the unread flag will not be changed.
+    /// </summary>
+    /// <param name="parentId">Id of the parent comment.</param>
+    /// <param name="replyText">Text of the reply.</param>
+    public async Task EditComment(int commentId, string commentText, TextFormat format)
+    {
+        if (String.IsNullOrWhiteSpace(commentText))
+        {
+            throw new Exception("The comment text cannot be empty.");
         }
 
-        /// <summary>
-        /// Get the unprocessed text of the comment for use in the editor.
-        /// </summary>
-        /// <param name="commentId">id of the comment being edited</param>
-        public async Task GetCommentForEdit(int commentId)
+        Comment existingComment = await _dbContext.Comments.Where(c => c.Id == commentId)
+            .Include(c => c.Thread)
+            .Include(c => c.User)
+            .SingleOrDefaultAsync();
+        if (existingComment == null)
         {
-            Comment existingComment = await _dbContext.Comments.Where(c => c.Id == commentId)
-                .SingleOrDefaultAsync();
-            if (existingComment == null)
-            {
-                throw new Exception($"Unable to find comment id {commentId}.");
-            }
-
-            if (existingComment.UserId != GetUserId())
-            {
-                throw new Exception("Ony the comment creator may edit a comment.");
-            }
-
-            var editView = _mapper.Map<Comment, EditViewModel>(existingComment);
-            await Clients.Client(Context.ConnectionId).SendAsync("setEditorComment", editView);
+            throw new Exception($"Unable to find comment id {commentId}.");
         }
 
-        /// <summary>
-        /// Edit an existing comment.  The editor must be the creator of the comment or an exception is thrown.
-        /// Subscribers will get an updated comment but the unread flag will not be changed.
-        /// </summary>
-        /// <param name="parentId">Id of the parent comment.</param>
-        /// <param name="replyText">Text of the reply.</param>
-        public async Task EditComment(int commentId, string commentText, TextFormat format)
+        if (existingComment.UserId != GetUserId())
         {
-            if (String.IsNullOrWhiteSpace(commentText))
-            {
-                throw new Exception("The comment text cannot be empty.");
-            }
-
-            Comment existingComment = await _dbContext.Comments.Where(c => c.Id == commentId)
-                .Include(c => c.Thread)
-                .Include(c => c.User)
-                .SingleOrDefaultAsync();
-            if (existingComment == null)
-            {
-                throw new Exception($"Unable to find comment id {commentId}.");
-            }
-
-            if (existingComment.UserId != GetUserId())
-            {
-                throw new Exception("Ony the comment creator may edit a comment.");
-            }
-
-            existingComment.Text = commentText;
-            existingComment.Format = format;
-            await _dbContext.SaveChangesAsync();
-
-            EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);
-            await Clients.All.SendAsync("updateComment", resultView);
+            throw new Exception("Ony the comment creator may edit a comment.");
         }
 
-        public async Task MarkRead(int threadId, int commentId)
-        {
-            await _dbContext.MarkCommentReadByUser(threadId, commentId, GetUserId());
-        }
+        existingComment.Text = commentText;
+        existingComment.Format = format;
+        await _dbContext.SaveChangesAsync();
 
-        private int GetUserId()
-        {
-            return int.Parse(_userManager.GetUserId((ClaimsPrincipal)Context.User));
-        }
+        EditResultViewModel resultView = _mapper.Map<Comment, EditResultViewModel>(existingComment);
+        await Clients.All.SendAsync("updateComment", resultView);
+    }
 
-        private async Task<User> GetUserAsync()
-        {
-            return await _userManager.GetUserAsync((ClaimsPrincipal)Context.User);
-        }
+    public async Task MarkRead(int threadId, int commentId)
+    {
+        await _dbContext.MarkCommentReadByUser(threadId, commentId, GetUserId());
+    }
+
+    private int GetUserId()
+    {
+        return int.Parse(_userManager.GetUserId((ClaimsPrincipal)Context.User));
+    }
+
+    private async Task<User> GetUserAsync()
+    {
+        return await _userManager.GetUserAsync((ClaimsPrincipal)Context.User);
     }
 }

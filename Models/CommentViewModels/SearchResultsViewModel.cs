@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -21,13 +21,12 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace PalaverCore.Models.CommentViewModels
+namespace PalaverCore.Models.CommentViewModels;
+
+public class SearchResultsViewModel
 {
-    public class SearchResultsViewModel
-    {
-        [Required]
-        public List<SearchResultViewModel> results;
-        [Required]
-        public bool success = true;
-    }
+    [Required]
+    public List<SearchResultViewModel> results;
+    [Required]
+    public bool success = true;
 }

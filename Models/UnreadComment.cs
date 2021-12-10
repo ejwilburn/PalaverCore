@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -20,18 +20,17 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 
 using System.ComponentModel.DataAnnotations;
 
-namespace PalaverCore.Models
-{
-    public class UnreadComment
-    {
-        [Required]
-        public int UserId { get; set; }
-        [Required]
-        public User User { get; set; }
+namespace PalaverCore.Models;
 
-        [Required]
-        public int CommentId { get; set; }
-        [Required]
-        public Comment Comment { get; set; }
-    }
+public class UnreadComment
+{
+    [Required]
+    public int UserId { get; set; }
+    [Required]
+    public User User { get; set; }
+
+    [Required]
+    public int CommentId { get; set; }
+    [Required]
+    public Comment Comment { get; set; }
 }

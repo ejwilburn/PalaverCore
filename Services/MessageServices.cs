@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -24,39 +24,38 @@ using MailKit.Net.Smtp;
 using MimeKit;
 using MailKit.Security;
 
-namespace PalaverCore.Services
+namespace PalaverCore.Services;
+
+// This class is used by the application to send Email and SMS
+// when you turn on two-factor authentication in ASP.NET Identity.
+public class AuthMessageSender : IEmailSender
 {
-    // This class is used by the application to send Email and SMS
-    // when you turn on two-factor authentication in ASP.NET Identity.
-    public class AuthMessageSender : IEmailSender
+    private readonly SmtpOptions _options;
+
+    public AuthMessageSender(IOptions<SmtpOptions> options)
     {
-        private readonly SmtpOptions _options;
+        _options = options.Value;
+    }
 
-        public AuthMessageSender(IOptions<SmtpOptions> options)
+    public async Task SendEmailAsync(string emailAddress, string subject, string message)
+    {
+        // Plug in your email service here to send an email.
+        MimeMessage email = new MimeMessage();
+        email.From.Add(new MailboxAddress(_options.FromName, _options.FromAddress));
+        email.To.Add(new MailboxAddress("", emailAddress));
+        email.Subject = subject;
+        BodyBuilder bodyBulder = new BodyBuilder();
+        bodyBulder.HtmlBody = message;
+        email.Body = bodyBulder.ToMessageBody();
+
+        using (SmtpClient client = new SmtpClient())
         {
-            _options = options.Value;
-        }
-
-        public async Task SendEmailAsync(string emailAddress, string subject, string message)
-        {
-            // Plug in your email service here to send an email.
-            MimeMessage email = new MimeMessage();
-            email.From.Add(new MailboxAddress(_options.FromName, _options.FromAddress));
-            email.To.Add(new MailboxAddress("", emailAddress));
-            email.Subject = subject;
-            BodyBuilder bodyBulder = new BodyBuilder();
-            bodyBulder.HtmlBody = message;
-            email.Body = bodyBulder.ToMessageBody();
-
-            using (SmtpClient client = new SmtpClient())
-            {
-                await client.ConnectAsync(_options.Server,
-                    _options.Port,
-                    (_options.RequireTls ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.Auto)).ConfigureAwait(false);
-                await client.AuthenticateAsync(_options.Username, _options.Password);
-                await client.SendAsync(email).ConfigureAwait(false);
-                await client.DisconnectAsync(true).ConfigureAwait(false);
-            }
+            await client.ConnectAsync(_options.Server,
+                _options.Port,
+                (_options.RequireTls ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.Auto)).ConfigureAwait(false);
+            await client.AuthenticateAsync(_options.Username, _options.Password);
+            await client.SendAsync(email).ConfigureAwait(false);
+            await client.DisconnectAsync(true).ConfigureAwait(false);
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -21,20 +21,19 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace PalaverCore.Models.ThreadViewModels
+namespace PalaverCore.Models.ThreadViewModels;
+
+public class SelectedViewModel
 {
-    public class SelectedViewModel
-    {
-        [Required]
-        public int Id { get; set; }
-        [Required]
-        public string Title { get; set; }
-        [Required]
-        public string UserName { get; set; }
-        [Required]
-        public string CreatedDisplay { get; set; }
-        [Required]
-        public string CreatedIsoTime { get; set; }
-        public IEnumerable<CommentViewModels.DetailViewModel> Comments { get; set; }
-    }
+    [Required]
+    public int Id { get; set; }
+    [Required]
+    public string Title { get; set; }
+    [Required]
+    public string UserName { get; set; }
+    [Required]
+    public string CreatedDisplay { get; set; }
+    [Required]
+    public string CreatedIsoTime { get; set; }
+    public IEnumerable<CommentViewModels.DetailViewModel> Comments { get; set; }
 }

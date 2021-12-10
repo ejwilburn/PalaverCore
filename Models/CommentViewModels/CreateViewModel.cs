@@ -21,16 +21,15 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using System.ComponentModel.DataAnnotations;
 using static PalaverCore.Models.Comment;
 
-namespace PalaverCore.Models.CommentViewModels
+namespace PalaverCore.Models.CommentViewModels;
+
+public class CreateViewModel
 {
-    public class CreateViewModel
-    {
-        [Required]
-        public string Text { get; set; }
-        [Required]
-        public TextFormat Format { get; set; }
-        [Required]
-        public int ThreadId { get; set; }
-        public int? ParentCommentId { get; set; }
-    }
+    [Required]
+    public string Text { get; set; }
+    [Required]
+    public TextFormat Format { get; set; }
+    [Required]
+    public int ThreadId { get; set; }
+    public int? ParentCommentId { get; set; }
 }

@@ -1,5 +1,5 @@
 /*
-Copyright 2017, E.J. Wilburn, Marcus McKinnon, Kevin Williams
+Copyright 2021, E.J. Wilburn, Marcus McKinnon, Kevin Williams
 This program is distributed under the terms of the GNU General Public License.
 
 This file is part of Palaver.
@@ -28,41 +28,40 @@ using System.Security.Cryptography;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 
-namespace PalaverCore.Models
+namespace PalaverCore.Models;
+
+public class User : IdentityUser<int>
 {
-    public class User : IdentityUser<int>
+    [Required]
+    public bool NotificationEnabled { get; set; } = true;
+    [Column(TypeName="timestamptz")]
+    public DateTime Created { get; set; }
+    public List<Thread> Threads { get; set; }
+    public List<Comment> Comments { get; set; }
+    public List<FavoriteThread> FavoriteThreads { get; set; }
+    public List<FavoriteComment> FavoriteComments { get; set; }
+    public List<Subscription> Subscriptions { get; set; }
+    public List<UnreadComment> UnreadComments { get; set; }
+
+    [NotMapped]
+    public string EmailHash {
+        get {
+            if (!String.IsNullOrWhiteSpace(Email))
+                return MD5Hash(Email.Trim().ToLower());
+            else
+                return "";
+        }
+    }
+
+    static User()
     {
-        [Required]
-        public bool NotificationEnabled { get; set; } = true;
-        [Column(TypeName="timestamptz")]
-        public DateTime Created { get; set; }
-        public List<Thread> Threads { get; set; }
-        public List<Comment> Comments { get; set; }
-        public List<FavoriteThread> FavoriteThreads { get; set; }
-        public List<FavoriteComment> FavoriteComments { get; set; }
-        public List<Subscription> Subscriptions { get; set; }
-        public List<UnreadComment> UnreadComments { get; set; }
+        Triggers<User>.Inserting += entry => entry.Entity.Created = DateTime.UtcNow;
+    }
 
-        [NotMapped]
-        public string EmailHash {
-            get {
-                if (!String.IsNullOrWhiteSpace(Email))
-                    return MD5Hash(Email.Trim().ToLower());
-                else
-                    return "";
-            }
-        }
-
-        static User()
-        {
-            Triggers<User>.Inserting += entry => entry.Entity.Created = DateTime.UtcNow;
-        }
-
-        private static string MD5Hash(string input)
-        {
-            var md5 = MD5.Create();
-            var result = md5.ComputeHash(Encoding.ASCII.GetBytes(input));
-            return BitConverter.ToString(result).Replace("-","").ToLower();
-        }
+    private static string MD5Hash(string input)
+    {
+        var md5 = MD5.Create();
+        var result = md5.ComputeHash(Encoding.ASCII.GetBytes(input));
+        return BitConverter.ToString(result).Replace("-","").ToLower();
     }
 }
