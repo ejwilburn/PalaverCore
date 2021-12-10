@@ -5,37 +5,37 @@
  * Availble settings are the same as in appsettings.json, with environment specific settings taking precedent.
  */
 {
-    "urls": "http://*:5001/",
-    "SiteRoot": "/Palaver",
-    "CacheTemplates": false,
-    "ConnectionStrings": {
-        "Palaver": "User ID=<user>;Password=<password>;Host=<postgres server>;Port=<postgres port>;Database=<palaver db>;Pooling=true;"
-    },
-    "IdentityOptions": {
-        "Cookies": {
-            "ApplicationCookie": {
-                "CookieName": "PalaverCore-<Env>"
-            }
-        }
-    },
-    "GoogleOptions": {
-        "ClientId": "<Google oAuth clientid>",
-        "ClientSecret": "<Google oAuth ClientSecret>"
-    },
-    "Smtp": {
-        "Server": "localhost",
-        "Port": 25,
-        "Username": "",
-        "Password": "",
-        "RequireTls": false,
-        "FromName": "Palaver",
-        "FromAddress": "noreply@noreply.com"
-    },
-    "Logging": {
-        "IncludeScopes": true,
-        "LogLevel": {
-            "Default": "Warning",
-            "System": "Information"
-        }
+  "urls": "http://*:5001/",
+  "SiteRoot": "/Palaver",
+  "CacheTemplates": false,
+  "ConnectionStrings": {
+    "Palaver": "User ID=<user>;Password=<password>;Host=<postgres server>;Port=<postgres port>;Database=<palaver db>;Pooling=true;"
+  },
+  "IdentityOptions": {
+    "Cookies": {
+      "ApplicationCookie": {
+        "CookieName": "PalaverCore-<Env>"
+      }
     }
+  },
+  "GoogleOptions": {
+    "ClientId": "<Google oAuth clientid>",
+    "ClientSecret": "<Google oAuth ClientSecret>"
+  },
+  "Smtp": {
+    "Server": "localhost",
+    "Port": 25,
+    "Username": "",
+    "Password": "",
+    "RequireTls": false,
+    "FromName": "Palaver",
+    "FromAddress": "noreply@noreply.com"
+  },
+  "Logging": {
+    "IncludeScopes": true,
+    "LogLevel": {
+      "Default": "Warning",
+      "System": "Information"
+    }
+  }
 }

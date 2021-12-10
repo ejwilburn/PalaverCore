@@ -17,6 +17,12 @@
     <RuntimeFrameworkVersion>6.0.0</RuntimeFrameworkVersion>
     <GeneratedItemPatterns>wwwroot\js\**;wwwroot\css\**</GeneratedItemPatterns>
     <DefaultItemExcludes>$(DefaultItemExcludes);$(GeneratedItemPatterns);**\node_modules\**;node_modules\**;**\wwwroot\lib\**;wwwroot\lib\**;**\jspm_packages\**;jspm_packages\**;**\bower_components\**;bower_components\**;**\release\**;release\**;obj\**;bin\**</DefaultItemExcludes>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>.</DockerfileContext>
+    <DockerComposeProjectPath>docker-compose.dcproj</DockerComposeProjectPath>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <AssemblyVersion>1.1</AssemblyVersion>
+    <FileVersion>1.1</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DefineConstants>RELEASE;NET6_0</DefineConstants>
@@ -60,6 +66,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Filter" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="2.2.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.0" />
 
@@ -86,6 +93,12 @@
     <None Include="wwwroot\js\templateRenderer.js" />
     <None Include="wwwroot\js\thread.js" />
     <None Include="wwwroot\js\util.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <!-- <Exec Command="dotnet bundle"/> -->

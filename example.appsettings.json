@@ -5,58 +5,58 @@
  * values specified in this file.
  */
 {
-    "urls": "http://*:5001/",
-    "SiteRoot": "/Palaver",
-    "CacheTemplates": true,
-    "ConnectionStrings": {
-        "Palaver": "User ID=<user>;Password=<password>;Host=<postgres server>;Port=<postgres port>;Database=<palaver db>;Pooling=true;"
+  "urls": "http://*:5001/",
+  "SiteRoot": "/Palaver",
+  "CacheTemplates": true,
+  "ConnectionStrings": {
+    "Palaver": "User ID=<user>;Password=<password>;Host=<postgres server>;Port=<postgres port>;Database=<palaver db>;Pooling=true;"
+  },
+  "IdentityOptions": {
+    "Cookies": {
+      "ApplicationCookie": {
+        "CookieName": "PalaverCore",
+        "ExpireTimeSpan": "150.0:00:00"
+      }
     },
-    "IdentityOptions": {
-        "Cookies": {
-            "ApplicationCookie": {
-                "CookieName": "PalaverCore",
-                "ExpireTimeSpan": "150.0:00:00"
-            }
-        },
-        "SignIn": {
-            "RequireConfirmedEmail": true
-        },
-        "Password": {
-            "RequiredLength": 12,
-            "RequireDigit": true,
-            "RequireUppercase": true,
-            "RequireLowercase": true,
-            "RequireNonAlphanumeric": true
-        },
-        "Lockout": {
-            "DefaultLockoutTimeSpan": "00:00:15",
-            "MaxFailedAccessAttempts": 5,
-            "AllowedForNewUsers": false
-        }
+    "SignIn": {
+      "RequireConfirmedEmail": true
     },
-    "GoogleOptions": {
-        "ClientId": "<Google oAuth clientid>",
-        "ClientSecret": "<Google oAuth ClientSecret>"
+    "Password": {
+      "RequiredLength": 12,
+      "RequireDigit": true,
+      "RequireUppercase": true,
+      "RequireLowercase": true,
+      "RequireNonAlphanumeric": true
     },
-    "FaceBookOptions": {
-        "AppId": "<FaceBook oAuth AppId>",
-        "AppSecret": "<FaceBook oAuth AppSecret",
-        "Fields": ["<list of fields to retrieve from FaceBook>"],
-        "SendAppSecretProof": "<FaceBook oAuth AppSecretProof>"
-    },
-    "Smtp": {
-        "Server": "localhost",
-        "Port": 25,
-        "Username": "",
-        "Password": "",
-        "RequireTls": false,
-        "FromName": "Palaver",
-        "FromAddress": "noreply@noreply.com"
-    },
-    "Logging": {
-        "IncludeScopes": true,
-        "LogLevel": {
-            "Default": "Error"
-        }
+    "Lockout": {
+      "DefaultLockoutTimeSpan": "00:00:15",
+      "MaxFailedAccessAttempts": 5,
+      "AllowedForNewUsers": false
     }
+  },
+  "GoogleOptions": {
+    "ClientId": "<Google oAuth clientid>",
+    "ClientSecret": "<Google oAuth ClientSecret>"
+  },
+  "FaceBookOptions": {
+    "AppId": "<FaceBook oAuth AppId>",
+    "AppSecret": "<FaceBook oAuth AppSecret",
+    "Fields": [ "<list of fields to retrieve from FaceBook>" ],
+    "SendAppSecretProof": "<FaceBook oAuth AppSecretProof>"
+  },
+  "Smtp": {
+    "Server": "localhost",
+    "Port": 25,
+    "Username": "",
+    "Password": "",
+    "RequireTls": false,
+    "FromName": "Palaver",
+    "FromAddress": "noreply@noreply.com"
+  },
+  "Logging": {
+    "IncludeScopes": true,
+    "LogLevel": {
+      "Default": "Error"
+    }
+  }
 }

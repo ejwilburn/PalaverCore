@@ -1,0 +1,34 @@
+version: '3.4'
+
+networks:
+  palavercore:
+    driver: bridge
+
+services:
+  palavercore:
+    image: ${DOCKER_REGISTRY-}palavercore
+    container_name: PalaverCore
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      DB_CONNECTION_STRING: host=db;port=5432;database=palavercore_dev;username=palavercore_dev;password=palavercore_pass
+    networks:
+      - palavercore
+
+  db:
+    image: postgres
+    container_name: PalaverCoreDB
+    ports:
+      - "5432:5432"
+    restart: always
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: md5
+      POSTGRES_USER: palavercore_dev
+      POSTGRES_PASSWORD: palavercore_pass
+    networks:
+      - palavercore

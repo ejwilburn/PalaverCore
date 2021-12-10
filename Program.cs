@@ -21,9 +21,12 @@ along with Palaver.  If not, see <http://www.gnu.org/licenses/>.
 using System.IO;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PalaverCore.Data;
 
 namespace PalaverCore;
 
@@ -31,7 +34,15 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        CreateHostBuilder(args).Build().Run();
+        var host = CreateHostBuilder(args).Build();
+
+        using(var scope = host.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<PalaverDbContext>();
+            db.Database.Migrate();
+        }
+
+        host.Run();
     }
 
     public static IHostBuilder CreateHostBuilder(string[] args)
