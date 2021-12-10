@@ -29,5 +29,4 @@ public class SearchResultsViewModel
     public List<SearchResultViewModel> results { get; set; }
     [Required]
     public bool success { get; set; } = true;
-
 }
