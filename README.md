@@ -12,6 +12,12 @@
 1) Modify the publish task in .vscode/tasks.json to fit your environment.
 2) Open the command pallette and choose Tasks: Run Task then choose publish.  The output will be placed in the release dir, deploy as needed.
 
+## Docker Compose
+
+In order to use Docker Compose, the port in the `urls` property in `appsettings.json` or `appsettings.<Environment>.json` much match the
+internal port in the `ports` section of the `palavercore` service in `docker-compose.yml`.  The connection string in app settings must also
+match the Postgres credentials in the `db` service in `docker-compose-yml` and the `host` must be set to `db`.
+
 ## Semantic UI Tasks - Ignore Currently
 
 **gulp build-sui** - rebuild Semantic UI CSS and JS files.
