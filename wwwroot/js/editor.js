@@ -33,6 +33,7 @@ class Editor {
     editingOrigText = null;
     editorLoaded = false;
     thread = null;
+    sendingReply = false;
 
     constructor(thread) {
         this.thread = thread;
@@ -104,17 +105,16 @@ class Editor {
     }
 
     closeEditor() {
-        if (this.editor) {
-            this.editor.destroy();
-            this.editorLoaded = false;
-            this.editor = null;
-            this.editing = null;
-            this.editingParentId = null;
-            this.editingCommentId = null;
-            this.editingOrigText = null;
-            $(this.editorForm).remove();
-            this.editorForm = null;
-        }
+        this.editor?.destroy();
+        this.editorLoaded = false;
+        this.editor = null;
+        this.editing = null;
+        this.editingParentId = null;
+        this.editingCommentId = null;
+        this.editingOrigText = null;
+        this.sendingReply = false;
+        $(this.editorForm)?.remove();
+        this.editorForm = null;
     }
 
     replyTo(parentId) {
@@ -123,8 +123,8 @@ class Editor {
             this.openEditor(this.thread.$thread.children('.comments'));
             return;
         }
-        this.editingParentId = parentId;
         this.openEditor(this.thread.$thread.find(`.comment[data-id="${parentId}"]>.comments`));
+        this.editingParentId = parentId;
     }
 
     setComment(comment) {
@@ -158,6 +158,13 @@ class Editor {
     }
 
     sendReply() {
+        // Don't post if in the middle of posting, prevents double/triple posting by hitting shift+enter quickly and repeatedly
+        // Gets cleared every time the editor is closed.
+        if (this.sendingReply) {
+            return;
+        }
+        this.sendingReply = true;
+
         let text = this.editor.getMarkdown();
         if (Util.isNullOrEmpty(text) || text === '<p><br></p>') {
             alert("Replies cannot be empty.");
@@ -182,7 +189,7 @@ class Editor {
                 "Text": tempDiv.innerHTML,
                 "Format": COMMENT_FORMAT,
                 "ThreadId": this.thread.threadId,
-                "ParentCommentId": (!Util.isNumber(parentCommentId) ? null : parentCommentId)
+                "ParentCommentId": !Util.isNumber(parentCommentId) ? null : parentCommentId
             });
         } else {
             this.thread.saveUpdatedComment({
