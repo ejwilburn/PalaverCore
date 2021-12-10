@@ -5,7 +5,7 @@
  * Availble settings are the same as in appsettings.json, with environment specific settings taking precedent.
  */
 {
-  "urls": "http://*/",
+  "urls": "http://*:5001/",
   "SiteRoot": "/Palaver",
   "CacheTemplates": false,
   "ConnectionStrings": {

@@ -5,7 +5,7 @@
  * values specified in this file.
  */
 {
-  "urls": "http://*/",
+  "urls": "http://*:5001/",
   "SiteRoot": "/Palaver",
   "CacheTemplates": true,
   "ConnectionStrings": {
