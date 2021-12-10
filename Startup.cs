@@ -54,7 +54,7 @@ public class Startup
 
         builder.AddEnvironmentVariables();
         Configuration = builder.Build();
-        SiteRoot = Configuration["SiteRoot"].ToString();
+        SiteRoot = Configuration["SiteRoot"];
         if (!SiteRoot.EndsWith("/"))
             SiteRoot += "/";
     }
