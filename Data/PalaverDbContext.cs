@@ -222,7 +222,7 @@ public class PalaverDbContext : IdentityDbContext<User, Role, int>
     }
 
     public async Task<List<Comment>> Search(string searchText) {
-        return await Comments.FromSqlRaw("SELECT * FROM search_comments({0})", new NpgsqlParameter("@searchText", searchText))
+        return await Comments.FromSqlRaw("SELECT * FROM search_comments({0}) LIMIT 5", new NpgsqlParameter("@searchText", searchText))
             .Include(c => c.User)
             .Include(c => c.Thread)
             .AsNoTrackingWithIdentityResolution()

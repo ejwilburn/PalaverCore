@@ -1,3 +1,7 @@
+@using Microsoft.AspNetCore.Identity
+
+@inject SignInManager<User> SignInManager
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -22,6 +26,8 @@
         <div id="mobileUnread" class="ui secondary button tablet mobile only" onclick="thread.goToNextUnread();"></div>
         <a class="header item tablet or lower media-query-hidden" href="~/">Palaver</a>
         <div class="right menu">
+@if (SignInManager.IsSignedIn(User))
+{
             <div class="ui right aligned category search item">
                 <div class="ui icon input">
                     <input class="prompt" type="text" placeholder="Search...">
@@ -29,6 +35,7 @@
                 </div>
                 <div id="searchResults" class="results"></div>
             </div>
+}
             @await Html.PartialAsync("_LoginPartial")
         </div>
     </div>
