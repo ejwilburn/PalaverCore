@@ -275,10 +275,14 @@ class Thread {
     addComment(comment) {
         let commentList = null,
             renderedComment = null;
+        const isAuthor = comment.UserId === this.userId;
 
-        if (comment.IsAuthor)
+        if (isAuthor) {
             comment.IsUnread = false;
-        else {
+            // This fixes an issue where one user has multiple windows opens and adds a comment in one
+            // then can't edit it in the other until they refresh the page.
+            comment.IsAuthor = true;
+        } else {
             comment.IsUnread = true;
             this.incrementThreadUnread(comment.ThreadId);
         }
@@ -296,7 +300,7 @@ class Thread {
 
         this.popThread(comment.ThreadId);
 
-        if (comment.IsAuthor) {
+        if (isAuthor) {
             this.editor.closeEditor();
             this.focusCommentId(comment.Id);
             this.clearBusy();
@@ -314,7 +318,7 @@ class Thread {
     }
 
     updateComment(comment) {
-        let isAuthor = comment.UserId === this.userId;
+        const isAuthor = comment.UserId === this.userId;
 
         if (isAuthor) {
             this.editor.closeEditor();
