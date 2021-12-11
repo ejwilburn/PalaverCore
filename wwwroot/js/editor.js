@@ -43,7 +43,6 @@ class Editor {
         this.cancelReply();
         $(openAt).append(TemplateRenderer.render('editor'));
         this.editorForm = $('#editorForm');
-        // this.editorLoaded = false;
         this.editor = new tuiEditor({
             el: document.querySelector('#editor'),
             height: 'auto',
@@ -62,10 +61,7 @@ class Editor {
                 focus: (editorMode, event) => {
                     // The load event below fires before the editor's UI is fully displayed, handle the load
                     // event on focus instead.
-                    // if (!this.editorLoaded) {
-                        document.querySelector('#editorCancel').scrollIntoViewIfNeeded();
-                        // this.editorLoaded = true;
-                    // }
+                    document.querySelector('#editorCancel').scrollIntoViewIfNeeded();
                     this.editor.off('focus');
                 },
                 keydown: (editorMode, event) => { return this.replyKeyPressed(editorMode, event); },

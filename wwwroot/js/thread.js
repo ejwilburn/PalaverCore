@@ -275,10 +275,14 @@ class Thread {
     addComment(comment) {
         let commentList = null,
             renderedComment = null;
+        const isAuthor = comment.UserId === this.userId;
 
-        if (comment.IsAuthor)
+        if (isAuthor) {
             comment.IsUnread = false;
-        else {
+            // This fixes an issue where one user has multiple windows opens and adds a comment in one
+            // then can't edit it in the other until they refresh the page.
+            comment.IsAuthor = true;
+        } else {
             comment.IsUnread = true;
             this.incrementThreadUnread(comment.ThreadId);
         }
@@ -296,7 +300,7 @@ class Thread {
 
         this.popThread(comment.ThreadId);
 
-        if (comment.IsAuthor) {
+        if (isAuthor) {
             this.editor.closeEditor();
             this.focusCommentId(comment.Id);
             this.clearBusy();
@@ -314,7 +318,7 @@ class Thread {
     }
 
     updateComment(comment) {
-        let isAuthor = comment.UserId === this.userId;
+        const isAuthor = comment.UserId === this.userId;
 
         if (isAuthor) {
             this.editor.closeEditor();
@@ -364,14 +368,15 @@ class Thread {
         if (!this.isNotificationAllowed())
             return;
 
-        let title = `Palaver thread posted by ${thread.UserName}.`;
-        let filteredThread = {
-            Title: $.trim(this.stripHtml(thread.Title).substring(0, NOTIFICATION_SNIPPET_SIZE))
+        const notificationTitle = `Palaver thread posted by ${thread.UserName}.`;
+        const strippedThreadTitle = $.trim(this.stripHtml(thread.Title));
+        const filteredThread = {
+            body: strippedThreadTitle.substring(0, Math.min(strippedThreadTitle.length, NOTIFICATION_SNIPPET_SIZE))
         };
 
-        let notification = new Notification(title, {
+        const notification = new Notification(notificationTitle, {
             icon: BASE_URL + 'images/new_message-icon.gif',
-            body: TemplateRenderer.render('threadNotification', filteredThread)
+            body: TemplateRenderer.render('notification', filteredThread)
         });
         notification.onclick = (event) => {
             event.preventDefault();
@@ -387,12 +392,15 @@ class Thread {
         if (!this.isNotificationAllowed())
             return;
 
-        let title = `Palaver comment posted by ${comment.UserName}.`;
-        let filteredComment = $.trim(this.stripHtml(comment.Text).substring(0, NOTIFICATION_SNIPPET_SIZE));
+        const title = `Palaver comment posted by ${comment.UserName}.`;
+        const strippedText = $.trim(this.stripHtml(comment.DisplayText));
+        const filteredComment = {
+            body: strippedText.substring(0, Math.min(strippedText.length, NOTIFICATION_SNIPPET_SIZE))
+        }
 
-        let notification = new Notification(title, {
+        const notification = new Notification(title, {
             icon: BASE_URL + 'images/new_message-icon.gif',
-            body: TemplateRenderer.render('commentNotification', filteredComment)
+            body: TemplateRenderer.render('notification', filteredComment)
         });
         notification.onclick = (event) => {
             event.preventDefault();
